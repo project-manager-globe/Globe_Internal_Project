@@ -4,11 +4,8 @@
   "description": "Project Updates",
   "type": "module",
   "scripts": {
-    "start": "parcel index.html --open",
-    "clean": "rm -rf dist/",
-    "build:parcel": "parcel build index.html --no-minify --no-source-maps --public-url ./",
-    "build": "npm run clean && npm run build:parcel",
-    "type": "module"
+    "start": "parcel index.html",
+    "build": "parcel build index.html"
   },
   "targets": {
     "default": {
