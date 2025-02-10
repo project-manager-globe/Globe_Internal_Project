@@ -236,3 +236,20 @@ top:1px;
   color: #FFF;
   top:1px;
   }
+
+
+  @media only screen and (max-width: 767px) {
+    .carousel{
+        display: none;
+    }
+}
+
+@media only screen and (max-width: 767px) {
+  .panel__item-img{
+      display: none;
+  }
+
+  .panel__item-imgwrap{
+    padding-left: 55px;
+  }
+}

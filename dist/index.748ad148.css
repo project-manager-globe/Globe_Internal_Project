@@ -214,4 +214,14 @@ a:visited {
   position: relative;
   top: 1px;
 }
+
+@media only screen and (width <= 767px) {
+  .carousel, .panel__item-img {
+    display: none;
+  }
+
+  .panel__item-imgwrap {
+    padding-left: 55px;
+  }
+}
 /*# sourceMappingURL=index.748ad148.css.map */

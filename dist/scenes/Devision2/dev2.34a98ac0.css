@@ -22,11 +22,6 @@ hr {
   margin: 100px auto;
 }
 
-a {
-  color: #181b49;
-  outline: none;
-}
-
 .login {
   color: var(--color-link);
   outline: none;

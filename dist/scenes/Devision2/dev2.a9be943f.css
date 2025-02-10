@@ -1,3 +1,88 @@
+@import "https://fonts.googleapis.com/css2?family=Sora:wght@100..800&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Righteous&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Fredericka+the+Great&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Domine&display=swap";
+*, :after, :before {
+  box-sizing: border-box;
+}
+
+:root {
+  font-size: 18px;
+}
+
+body {
+  width: 100%vw;
+  --color-text: #111;
+  --color-text-alt: #c1c1c3;
+  --color-bg: #f9fafe;
+  --color-link: #111;
+  --color-link-hover: #111;
+  --color-page: url("https://transparenttextures.com/patterns/scribble-light.png");
+  --color-info: #c0c0c2;
+  --color-btn: #6d79a1;
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  counter-reset: section;
+  --cursor-stroke: none;
+  --cursor-fill: #005afc;
+  --cursor-stroke-width: 1px;
+  --margin-images: 10px;
+  --aspect-ratio: 1 / 1.5;
+  --imgwidthmax: 1000px;
+  --size-title: 4rem;
+  --size-word: 1rem;
+  --size-note: 1rem;
+  --font-weight-title: 100;
+  background-color: #fff;
+  background-image: url("https://transparenttextures.com/patterns/scribble-light.png");
+  background-color: var(--color-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  font-family: niveau-grotesk, sans-serif;
+  font-size: .8rem;
+  overflow: hidden scroll;
+}
+
+a:visited {
+  font-family: Arial, Helvetica, sans-serif;
+  text-decoration: none;
+}
+
+.js .loading:before, .js .loading:after {
+  content: "";
+  z-index: 1000;
+  position: fixed;
+}
+
+.js .loading:before {
+  background: var(--color-bg);
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.js .loading:after {
+  opacity: .4;
+  background: var(--color-link);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  margin: -30px 0 0 -30px;
+  animation: .7s linear infinite alternate forwards loaderAnim;
+  top: 50%;
+  left: 50%;
+}
+
+@keyframes loaderAnim {
+  to {
+    opacity: 1;
+    transform: scale3d(.5, .5, 1);
+  }
+}
+
 .bgimg {
   color: #fff;
   background-position: center;
@@ -39,24 +124,34 @@
   height: 45px;
 }
 
+hr {
+  width: 40%;
+  margin: auto;
+}
+
+.myTopButton {
+  color: #4c5c7a;
+  cursor: pointer;
+  padding-left: 12px;
+  font-family: Georgia, Times New Roman, Times, serif;
+  font-size: 20px;
+}
+
+.myTopButton:hover {
+  color: #0137fb;
+  text-decoration: none;
+}
+
 .wh_footer {
   text-align: center;
   padding: .4em;
   font-size: 15px;
 }
 
-a:focus {
-  background: #d3d3d3;
+a:hover {
+  color: var(--color-link-hover);
   outline: none;
-}
-
-a:focus:not(:focus-visible) {
-  background: none;
-}
-
-a:focus-visible {
-  background: none;
-  outline: 2px solid;
+  text-decoration: none;
 }
 
 .cursor {
@@ -433,6 +528,16 @@ a:focus-visible {
 
 .js .panel__item--open {
   z-index: 1000;
+}
+
+@media only screen and (device-width <= 768px) {
+  .panel__item-img {
+    width: 20vw;
+    max-width: 50px;
+    max-height: 100px;
+    display: block;
+    position: relative;
+  }
 }
 
 @media screen and (width >= 767px) {

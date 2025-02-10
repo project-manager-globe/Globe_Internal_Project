@@ -54,7 +54,7 @@
     display: block;
     padding: 8em;
     margin: 0;
-    background: url('img/bub5.png') repeat;
+     /* background: url('img/bub5.png') repeat; */
     background-size:auto ;
     box-shadow: 0px 7px 21px -12px rgba(0, 0, 0, 0.3);
 }
@@ -63,7 +63,7 @@
     .wh_search_input{
     padding: .8em;
     margin: 0;
-    background: url('img/bub5.png') repeat;
+    /* background: url('img/bub5.png') repeat; */
     background-size:auto ;
     box-shadow: 0px 7px 21px -12px rgba(0, 0, 0, 0.3);
     }
