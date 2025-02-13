@@ -647,12 +647,12 @@ html, body {
   
   
 .skills-title.small {
-  padding: 15px 0 0 20px;
+  padding: 55px 0 0 20px;
   margin: 0 0 0.5rem;
   font-family: Fredericka the Great, sans-serif;
   font-size: 70px;
-  color: ghostwhite;
-  font-weight: 200;
+    color: ghostwhite;
+    font-weight: 200;
   }
 
 
@@ -751,7 +751,7 @@ html, body {
       min-height: 40vh;
       width: 100vw;
       background-size: cover;
-      background-color: #F2F2F2;
+      background-color: #979797;
       background-repeat: no-repeat;
 
     }
