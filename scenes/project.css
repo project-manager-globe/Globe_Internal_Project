@@ -663,8 +663,9 @@ html, body {
   }
 
   .my-skills1{
-    margin-left:50%;
-    margin: 2px auto 10px auto;
+    display:block;
+    width: 70%;
+    margin: 2px auto 2px auto;
     text-align: left;
     font-family: 'Domine', serif;
     color:ghostwhite;
@@ -675,9 +676,10 @@ html, body {
     }
 
     .my-skills2{
-      margin-right: 70%;
-      margin: 0;
-      text-align: left;
+      display:block;
+      width: 70%;
+      margin: 2px auto 2px auto;
+      text-align: right;
       font-family: 'Domine', serif;
       color: ghostwhite;
     }
@@ -744,13 +746,12 @@ html, body {
 /*-----
 -----------------------------------------KPI Section-----------------------------------------------------------------*/
     .work {
-      padding: 65px 0 0 20px;
-      margin: 0 0 0.5rem;
-      color: ghostwhite;
-      min-height: 90vh;
+      padding:0;
+      margin: 0;
+      min-height: 40vh;
       width: 100vw;
       background-size: cover;
-      /*background-image: url("../images/ictglobe.png"); */
+      background-color: #F2F2F2;
       background-repeat: no-repeat;
 
     }
