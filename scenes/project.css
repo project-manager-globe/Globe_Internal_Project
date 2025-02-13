@@ -679,7 +679,7 @@ html, body {
       margin: 0;
       text-align: right;
       font-family: 'Domine', serif;
-      color: #1b191a;
+      color: ghostwhite;
     }
 
     @media screen and (min-width: 420px) {
