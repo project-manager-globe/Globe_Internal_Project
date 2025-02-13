@@ -651,7 +651,7 @@ html, body {
   margin: 0 0 0.5rem;
   font-family: Fredericka the Great, sans-serif;
   font-size: 70px;
-  color: #1b191a;
+  color: ghostwhite;
   font-weight: 200;
   }
 
@@ -667,7 +667,7 @@ html, body {
     margin: 2px auto 10px auto;
     text-align: left;
     font-family: 'Domine', serif;
-    color:#1b191a;
+    color:ghostwhite;
   }
 
     .none{
@@ -811,7 +811,7 @@ html, body {
   }
       
 
-#workContainer, #snagContainer, #DevisionsContainer{
+#planningContainer, #snagContainer, #DevisionsContainer{
   display:inline-block;
   align-items: center;
   justify-content: left;
