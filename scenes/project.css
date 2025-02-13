@@ -904,7 +904,7 @@ html, body {
 }
 .line {
   opacity: 0;
-  animation: word-line-slide-out 0.25s forwards;
+  animation: word-line-slide-out 0.15s forwards;
   animation-timing-function: ease-out;
 }
 .line:nth-child(1n) {
@@ -1051,7 +1051,7 @@ html, body {
 
 #refresh:hover, .postlink:hover {
   border-color: #F2F2F2;
-  color:#516091;
+  color:#F2F2F2;
 }
 
 /*------------------------------------------------FinalContainer----------------------------------------------------*/
