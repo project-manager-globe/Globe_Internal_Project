@@ -1217,18 +1217,18 @@ html, body {
   text-align: center;
   border-color: #516091;
 }
-#buttons .postlink:hover {
+#buttons .postlink2:hover {
   border-color: #B3A398;
   text-decoration: none;
 }
 
-#buttons .postlink2:hover {
+#buttons .postlink:hover {
   border-color: #F2F2F2;
   color:#516091;
   text-decoration: none;
 }
 
-#refresh {
+#refresh2 {
   width: 170px;
   height: 40px;
   margin: 10px;
@@ -1250,7 +1250,7 @@ html, body {
   text-align: center;
 }
 
-#refresh2 {
+#refresh {
   width: 170px;
   height: 40px;
   margin: 10px;
@@ -1293,7 +1293,7 @@ html, body {
   }
 
 
-.postlink {
+.postlink2 {
   width: 170px;
   height: 40px;
   margin: 10px;
@@ -1315,7 +1315,7 @@ html, body {
   text-align: center;
 }
 
-.postlink2 {
+.postlink1 {
   width: 170px;
   height: 40px;
   margin: 10px;
@@ -1357,12 +1357,12 @@ html, body {
     }
   }
 
-#refresh:hover, .postlink:hover {
+#refresh2:hover, .postlink:hover {
   border-color: #B3A398;
   color:#516091;
 }
 
-#refresh2:hover {
+#refresh:hover {
   border-color: #F2F2F2;
   color:#516091;
 }
