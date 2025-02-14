@@ -615,8 +615,8 @@ html, body {
 
   /*-------------------------------------------Planning Container--------------------------------------------------------------------*/
   .plan {
-  padding: 65px 0 0 20px;
-  margin: 0 0 0.5rem;
+  padding:0;
+  margin: 0;
   min-height: 40vh;
   width: 100vw;
   background-size: cover;
@@ -817,7 +817,7 @@ html, body {
   justify-content: left;
   background-color: #979797;
   background-size: cover;
-  font: 36px/1.2 'Open Sans', sans-serif;
+
 }
 
 @media screen and (min-width: 360px) {
@@ -1067,7 +1067,7 @@ html, body {
   text-align: center;
 }
 
-.postlink1 {
+.postlink {
   width: 170px;
   height: 40px;
   margin: 10px;
@@ -1109,12 +1109,12 @@ html, body {
     }
   }
 
-#refresh2:hover, .postlink:hover {
+#refresh2:hover {
   border-color: #B3A398;
   color:#516091;
 }
 
-#refresh:hover {
+#refresh:hover .postlink:hover{
   border-color: #F2F2F2;
   color:#516091;
 }
