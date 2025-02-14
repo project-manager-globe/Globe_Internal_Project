@@ -11,8 +11,11 @@ html, body {
   background-size: cover;
 }
 
-.client::before{
-  content: "TEST CUSTOMER";
+
+.client::before {
+  font-weight: bold;
+  color: red;
+  content: "Reference ";
 }
 
 .main-title {
