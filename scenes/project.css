@@ -869,10 +869,10 @@ html, body {
   background-color:#F2F2F2;
   box-shadow: 0 1.1em 2em rgba(0, 0, 0, 0.3);
   color: #1b191a;
-  padding: 25px 0 0 60px ;
+  padding: 15px 0 0 60px ;
   animation: ui-slide-in-move 3.25s;
   animation-timing-function: cubic-bezier(0.03, 0.98, 0.5, 1);
-  transform-origin: left center;
+  transform-origin: left;
 }
 
 @media only screen and (max-device-width: 915px) and (orientation: landscape){
@@ -1021,7 +1021,7 @@ html, body {
   text-decoration: none;
   font-weight: bold;
   transition: all 0.3s;
-  text-align: center;
+  text-align: left;
 }
 
 @media only screen and (max-device-width: 430px) and (orientation: portrait){
