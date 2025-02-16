@@ -579,7 +579,7 @@ html, body {
 /*--------------------------------------------------Client Titles ------------------------------------------*/
 
 .about-title.small {
-  padding: 25px 0 0 20px;
+  padding: 15px 0 0 20px;
   margin: 0 0 0.5rem;
   font-family: Fredericka the Great, sans-serif;
   font-size: 70px;
@@ -626,7 +626,7 @@ html, body {
 
   
   .work-titleLight {
-    padding: 25px 0 0 20px;
+    padding: 15px 0 0 20px;
     margin: 0 0 0.5rem;
     font-family: Fredericka the Great, sans-serif;
     font-size: 70px;
@@ -776,7 +776,7 @@ html, body {
     margin: 20px 0 0 30px;
     text-align: left;
     font-family: 'Domine', serif;
-    color: ghostwhite;
+    color: #1b191a;
   }
       
 
@@ -826,12 +826,12 @@ html, body {
   transform-origin: 50% 50%;
 }
 .ui-slide-in {
-  width: 900px;
+  width: 700px;
   height: 150px;
   background-color:#F2F2F2;
   box-shadow: 0 1.1em 2em rgba(0, 0, 0, 0.3);
   color: #1b191a;
-  padding: 15px 0 0 60px ;
+  padding: 15px 0 0 30px ;
   animation: ui-slide-in-move 3.25s;
   animation-timing-function: cubic-bezier(0.03, 0.98, 0.5, 1);
   transform-origin: left;
@@ -871,10 +871,10 @@ html, body {
   font-weight: 500;
 }
 .line:nth-child(1n) {
-  animation-delay: 0.5s;
+  animation-delay: 0.4s;
 }
 .line:nth-child(2n) {
-  animation-delay: 0.75s;
+  animation-delay: 0.6s;
 }
 .line span {
   display: inline-block;
@@ -945,7 +945,7 @@ html, body {
 #refresh2 {
   width: 170px;
   height: 40px;
-  margin: 10px;
+  margin: 0;
   font-size: 18px;
   border: 4px solid #516091;
   color: #726761;
@@ -961,11 +961,11 @@ html, body {
   text-decoration: none;
   font-weight: bold;
   transition: all 0.3s;
-  text-align: center;
+  text-align: left;
 }
 
 #refresh {
-  width: 170px;
+  width: 150px;
   height: 40px;
   margin: 10px;
   font-size: 18px;
