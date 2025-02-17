@@ -648,6 +648,7 @@ html, body {
     text-align: left;
     font-family: 'Domine', serif;
     color:ghostwhite;
+    list-style: none;
   }
 
     .none{
@@ -663,6 +664,7 @@ html, body {
       text-align: right;
       font-family: 'Domine', serif;
       color: ghostwhite;
+      list-style: none;
     }
 
     @media screen and (min-width: 420px) {
