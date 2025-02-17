@@ -357,7 +357,7 @@ a:focus {
 
 .content__item-imgwrap {
   position: relative;
-  --imgwidth: 100%;
+  --imgwidth: 80%;
   margin: 0 auto;
   grid-area: 1 / 1 / 3 / 3;
   overflow: hidden;
@@ -379,7 +379,7 @@ a:focus {
   --overflow: 30px;
   height: calc(100% + (3 * var(--overflow)));
   top: calc(-1 * var(--overflow));
-  width: 100%;
+  width: 80%;
   position: absolute;
   background-size: cover;
   background-position: 50% 0%;
