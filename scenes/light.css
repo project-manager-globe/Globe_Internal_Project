@@ -403,7 +403,7 @@ a:focus {
 
 .content__item-title {
   position: relative;
-  font-size: 3.5rem;
+  font-size: 2.7rem;
   padding: 0 3vw;
   margin: calc(var(--size-title) * -1 / 2) 0 0 0;
   align-self: start;
