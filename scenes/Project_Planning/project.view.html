@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ICTGlobe Project Workspace</title>
+  
+  <script src="../credentials.js"></script>
+  <script>
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('id');
+        console.log("Dashboard redirected with Project ID:", projectId);
+        
+        if (!projectId) {
+            console.error("Redirect failed: No Project ID found in URL!");
+        }
+    };
+    
+    window.currentUserRole = 'admin';
+    window.currentUserName = 'estelle';
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const logBtn = document.getElementById('logoutBtn');
+        if (logBtn) {
+            logBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                sessionStorage.removeItem('isLoggedIn_ICT');
+                sessionStorage.removeItem('currentUser_ICT');
+                window.location.replace("../index.html"); 
+            });
+        }
+    });
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <link rel="stylesheet" type="text/css" href="../index.css" />
+  <link rel="stylesheet" type="text/css" href="../styles.css" /> 
+  <link rel="stylesheet" href="../project.css">
+  <link rel="stylesheet" href="../projects.css">
+
+  <style>
+    .content__START, strong.HOW { color: #005AFC !important; }
+    .table tbody tr td { color: #212529 !important; font-weight: normal !important; background: #ffffff !important; }
+    .kanban-board { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .kanban-column { flex: 1; min-width: 280px; background: #f8f9fa; border-radius: 8px; padding: 1rem; border: 1px solid #e9ecef; }
+    .kanban-column-header { font-weight: bold; padding-bottom: 0.75rem; margin-bottom: 1rem; border-bottom: 2px solid #dee2e6; color: #495057; display: flex; justify-content: space-between; align-items: center; }
+    .kanban-card { background: #ffffff; border-radius: 6px; padding: 1rem; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-left: 4px solid #005AFC; }
+    .update-log-container { background: #ffffff; border-radius: 8px; padding: 1.5rem; border: 1px solid #dee2e6; height: 380px; overflow-y: auto; }
+    .log-entry { padding-bottom: 0.75rem; margin-bottom: 0.75rem; border-bottom: 1px dashed #e9ecef; }
+  </style>
+</head>
+<body>
+
+<div class="container mt-4">
+    <a href="projects_dashboard.html" class="btn btn-sm btn-outline-secondary mb-3"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    
+    <h1 id="workspaceProjectName">Loading...</h1>
+    <h4 id="workspaceProjectToken" class="text-muted"></h4>
+    
+    <div class="row mt-4 mb-4">
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Sponsor</p>
+                <h5 id="metricSponsor">---</h5>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Classification</p>
+                <h5 id="metricClassification">---</h5>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <p class="mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Progress</p>
+                    <span id="workspaceStatusBadge" class="badge"></span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span id="metricProgressText" class="fw-bold fs-5">0%</span>
+                    <div class="progress w-100" style="height: 8px;">
+                        <div id="metricProgressBar" class="progress-bar bg-primary" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0 p-4">
+                <h4 class="mb-3">Task Board</h4>
+                <div class="kanban-board">
+                    <div class="kanban-column" id="colTodo">
+                        <div class="kanban-column-header">To Do <span class="badge bg-secondary" id="todoCount">0</span></div>
+                    </div>
+                    <div class="kanban-column" id="colInProgress">
+                        <div class="kanban-column-header">In Progress <span class="badge bg-primary" id="progressCount">0</span></div>
+                    </div>
+                    <div class="kanban-column" id="colResolved">
+                        <div class="kanban-column-header">Resolved <span class="badge bg-success" id="resolvedCount">0</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 p-4">
+                <h4 class="mb-3">Project Logs</h4>
+                <div class="update-log-container" id="workspaceAuditStream">
+                    <p class="text-muted text-center py-4">No activity recorded yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        let activeProjectId = urlParams.get('id');
+
+        if (!activeProjectId) {
+            alert("No project identifier specified.");
+        } else {
+            initializeWorkspace(activeProjectId);
+        }
+    });
+
+    function initializeWorkspace(projectId) {
+        const googleWebAppUrl = "https://script.google.com/macros/s/AKfycbwwhtmf-jkDhDY8uoYX97BDkKOkzeWLQMr3Mwqlntu1uNkB2XY9EGthIJe9CoOgvwrIUg/exec";
+        
+        fetch(`${googleWebAppUrl}?action=readPortfolio`)
+            .then(res => res.json())
+            .then(portfolioList => {
+                const projectData = portfolioList.find(p => p.id === projectId);
+                
+                if (projectData) {
+                    // Basic Metrics
+                    document.getElementById('workspaceProjectName').innerText = projectData.name;
+                    document.getElementById('workspaceProjectToken').innerText = `PROJ-${projectData.id.toUpperCase()}`;
+                    document.getElementById('metricSponsor').innerText = projectData.sponsor || "N/A";
+                    document.getElementById('metricClassification').innerText = projectData.type || "Internal Project";
+                    
+                    const progress = projectData.progress || 0;
+                    document.getElementById('metricProgressText').innerText = `${progress}%`;
+                    document.getElementById('metricProgressBar').style.width = `${progress}%`;
+
+                    // Status Badge
+                    const badge = document.getElementById('workspaceStatusBadge');
+                    badge.innerText = projectData.status || "Active";
+                    badge.className = "badge"; 
+                    if(projectData.status === "Planning") badge.classList.add('bg-info', 'text-dark');
+                    else if(projectData.status === "High Risk") badge.classList.add('bg-danger');
+                    else badge.classList.add('bg-primary');
+
+                    // Hydrate Kanban
+                    const tasks = projectData.tasks || [];
+                    const cols = { 'To Do': 'colTodo', 'In Progress': 'colInProgress', 'Resolved': 'colResolved' };
+                    
+                    tasks.forEach(task => {
+                        const container = document.getElementById(cols[task.status]);
+                        if(container) {
+                            const card = document.createElement('div');
+                            card.className = 'kanban-card';
+                            card.innerHTML = `<strong>${task.title}</strong><br><small class="text-muted">${task.description || ''}</small>`;
+                            container.appendChild(card);
+                        }
+                    });
+                    document.getElementById('todoCount').innerText = tasks.filter(t => t.status === 'To Do').length;
+                    document.getElementById('progressCount').innerText = tasks.filter(t => t.status === 'In Progress').length;
+                    document.getElementById('resolvedCount').innerText = tasks.filter(t => t.status === 'Resolved').length;
+
+                    // Hydrate Audit Stream
+                    const logs = projectData.logs || [];
+                    const auditStream = document.getElementById('workspaceAuditStream');
+                    if (logs.length > 0) {
+                        auditStream.innerHTML = logs.map(log => `
+                            <div class="log-entry">
+                                <small class="text-muted fw-bold">${new Date(log.timestamp).toLocaleDateString()}</small>
+                                <div>${log.message}</div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                     document.getElementById('workspaceProjectName').innerText = "Project Not Found";
+                }
+            })
+            .catch(err => console.error("Error loading workspace:", err));
+    }
+</script>
+</body>
+</html>

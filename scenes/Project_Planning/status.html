@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ICTGlobe Internal Updates</title>
+
+<script src="../../credentials.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+      // 1. Safe Session Authentication Check (Delayed until DOM is fully ready)
+      if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+          // Deep link save-state: Remembers exactly where you wanted to go
+          sessionStorage.setItem('redirect_target', window.location.href);
+          window.location.replace("../../index.html"); 
+          return; // Stop any further execution
+      }
+
+      // 2. Project Role-Guard Check
+      const currentUser = sessionStorage.getItem('currentUser_ICT');
+      
+      if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
+          const userData = authorizedUsers[currentUser];
+          const allowedProjects = userData.projects;
+          const role = userData.role;
+
+          // Match this tag identifier against your specific credentials array folder name
+          const currentProjectFolder = "nowtech"; 
+
+          if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+              alert("Access Denied: You do not hold credentials for this project panel.");
+              window.location.replace("../../index.html");
+          }
+      } else if (typeof authorizedUsers === 'undefined') {
+          console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+      }
+  });
+
+  // Active Logout Trigger
+  window.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+          logoutBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              sessionStorage.removeItem('isLoggedIn_ICT');
+              sessionStorage.removeItem('currentUser_ICT');
+              sessionStorage.removeItem('redirect_target'); // Keep cache clean on manual logouts
+              window.location.replace("../../index.html"); 
+          });
+      }
+  });
+</script>
+
+  <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Righteous&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fredericka+the+Great&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Domine&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.0.0/animate.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+  <link rel="stylesheet" type="text/css" href="../index.css" />
+  <link rel="stylesheet" href="../project.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>   
+  <script src="https://kit.fontawesome.com/268d442577.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+  <header class="navbar navbar-default wh_header" id="test">
+    <div class="topcontainer w-100">
+      <div class="bg-primary">
+        <nav class="navbar navbar-expand-md fixed-top navbar-dark">
+          <a class="navbar-brand" href="../../index.html">
+            <img src="./Pimages/ictglobe.png" height="40px" alt="ICTGlobe">
+          </a>
+          
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+          <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+            <ul class="navbar-nav ml-auto">
+              <li class="nav-item">
+                <a href="../../index.html" class="myTopButton">Project</a>
+              </li>
+              <li class="nav-item">
+                <a href="../../index.html#devisions" class="myTopButton">Divisions</a>
+              </li>
+              <li class="nav-item">
+                <a href="./strategy.html" class="myTopButton">Strategy</a>
+              </li>
+              <li class="nav-item">
+                <a href="./resources.html" class="myTopButton" data-project="resources">Resources</a>
+              </li>
+              <li class="nav-item">
+                <a href="https://ictglobe.com/" target="_blank" class="myTopButton">ICTGlobe</a>
+              </li>
+              <li class="nav-item">
+                 <a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main id="workContainer" class="me container" style="margin-top: 100px; margin-left:200px">
+    <p class="thead-dark">The following illustrates and describes our journey based on feedback and strategic planning as gathered from regular Exco sessions</p><br>
+
+    <h2 id="roll1" class="work-titleLight" style="color: #1b191a;"><strong>Rollout Processes for Development - Part 2</strong></h2><br>
+
+    <h3 id="recruit" class="me-row1"><strong>Recruitment:</strong></h3><br>
+    <h4 class="me-row1" id="def">1. Settings and Definitions</h4><br>
+    
+    <table class="table table-bordered w-50">
+      <thead class="thead-dark">
+        <tr>
+          <th>Timeline</th>
+          <th>Start Date</th>
+          <th>Deadline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>12 Days</td>
+          <td>28 Nov 2023</td>
+          <td>13 Dec 2023</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-muted"><em>*The below is not final and may be subject to change</em></p> 
+
+    <ul class="cbp_tmtimeline">
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2026</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 2 Days</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>One-pager candidate profile - templates</li>
+             </ul>                        
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 2 Days</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Client contracts - templates</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Client contracts - renewal settings</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 2 Days</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Candidate employment contracts - templates</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 3 Days</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Candidate questionnaire and skills - templates</li>
+             </ul>
+         </div>
+      </li>
+    </ul>
+
+    <br><hr><br>
+
+    <h4 id="place">2. Labour Requests and Placement</h4>
+    <table class="table table-bordered w-50">
+      <thead class="thead-dark">
+        <tr>
+          <th>Development</th>
+          <th>Start Date</th>
+          <th>Deadline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>13 Days</td>
+          <td>14 Dec 2023</td>
+          <td>8 Jan 2024</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ul class="cbp_tmtimeline">
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Capture request</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 2 Days</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Match skills and candidates and display results</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Ability to add or remove candidates to results</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 2 Days</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Send shortlist to client (link and email with PDFs)</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 2 Days</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Capture client response and set up interviews</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Capture client feedback from interviews</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Generate contract & dummy payslip - download or send</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 2 Days</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Generate rate application - download or send</li>
+             </ul>
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2023</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-phone"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 2 Days</h2>
+             <p>Module / Task</p>                            
+             <ul>
+                 <li>Finalise placement & convert candidate to employee</li>
+             </ul>
+         </div>
+      </li>
+    </ul>      
+
+    <br><hr><br>
+
+    <h4 id="can">3. Candidates</h4>
+    <table class="table table-bordered w-50">
+      <thead class="thead-dark">
+        <tr>
+          <th>Development</th>
+          <th>Start Date</th>
+          <th>Deadline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>4 Days</td>
+          <td>9 Jan 2024</td>
+          <td>12 Jan 2024</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ul class="cbp_tmtimeline">
+      <li>
+          <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+          <div class="cbp_tmicon cbp_tmicon-screen"></div>
+          <div class="cbp_tmlabel">
+              <h2>Development: 4 Days</h2>   
+              <p>Module / Task</p>                        
+              <ul>
+                  <li>Capture/update candidate details</li>
+              </ul>                        
+          </div>
+      </li>
+    </ul>
+
+    <br><hr><br>
+    <h3 id="finance"><strong>Financials:</strong></h3><br>
+
+    <h4 id="sett">1. Financial Settings and Definitions</h4>
+    <table class="table table-bordered w-50">
+      <thead class="thead-dark">
+        <tr>
+          <th>Development</th>
+          <th>Start Date</th>
+          <th>Deadline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>10 Days</td>
+          <td>15 Jan 2024</td>
+          <td>26 Jan 2024</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ul class="cbp_tmtimeline">
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>Unpaid invoice/account settings</li>
+             </ul>                        
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>Month start/end & invoice date settings</li>
+             </ul>                        
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>Markup/profit margin settings (based on rates)</li>
+             </ul>                        
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>Rate application settings</li>
+             </ul>                        
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 3 Days</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>SARS & tax tables settings</li>
+             </ul>                        
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 2 Days</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>Bank (Absa) export settings</li>
+             </ul>                        
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 1 Day</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>Timesheet due date settings</li>
+             </ul>                        
+         </div>
+      </li>
+    </ul>
+
+    <br><hr><br>
+
+    <h4 id="inv">2. Invoicing</h4>
+    <table class="table table-bordered w-50">
+      <thead class="thead-dark">
+        <tr>
+          <th>Development</th>
+          <th>Start Date</th>
+          <th>Deadline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>9 Days</td>
+          <td>29 Jan 2024</td>
+          <td>8 Feb 2024</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ul class="cbp_tmtimeline">
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 4 Days</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>CRUD invoices - grouping per client/site, invoice recipients, download, print, send, etc.</li>
+             </ul>                        
+         </div>
+      </li>
+      <li>
+         <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+         <div class="cbp_tmicon cbp_tmicon-screen"></div>
+         <div class="cbp_tmlabel">
+             <h2>Development: 5 Days</h2>   
+             <p>Module / Task</p>                        
+             <ul>
+                 <li>Numista/Accounting package integration - updating, payment capture, etc</li>
+             </ul>                        
+         </div>
+      </li>
+    </ul>      
+
+    <br><hr><br>
+
+    <h4 id="sal">3. Salaries</h4>
+    <table class="table table-bordered w-50">
+      <thead class="thead-dark">
+        <tr>
+          <th>Development</th>
+          <th>Start Date</th>
+          <th>Deadline</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>10 Days</td>
+          <td>9 Feb 2024</td>
+          <td>23 Feb 2024</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ul class="cbp_tmtimeline">
+       <li>
+           <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+           <div class="cbp_tmicon cbp_tmicon-screen"></div>
+           <div class="cbp_tmlabel">
+               <h2>Development: 1 Day</h2>   
+               <p>Module / Task</p>                        
+               <ul>
+                   <li>Bank export for salary payments</li>
+               </ul>                        
+           </div>
+       </li>
+       <li>
+           <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+           <div class="cbp_tmicon cbp_tmicon-screen"></div>
+           <div class="cbp_tmlabel">
+               <h2>Development: 1 Day</h2>   
+               <p>Module / Task</p>                        
+               <ul>
+                   <li>Create dummy salary advice</li>
+               </ul>                        
+           </div>
+       </li>
+       <li>
+           <time class="cbp_tmtime"><span>x/x/2024</span> <span>Pending</span></time>
+           <div class="cbp_tmicon cbp_tmicon-screen"></div>
+           <div class="cbp_tmlabel">
+               <h2>Development: 8 Days</h2>   
+               <p>Module / Task</p>                        
+               <ul>
+                   <li>Generate salaries & make available via link, download, email, etc</li>
+               </ul>                        
+           </div>
+       </li>
+    </ul>
+    
+    <br>
+    <p class="text-center font-weight-bold"><em>Our goal is to have this part of the development project completed timeously.</em></p> 
+  </main>
+
+  <footer class="navbar navbar-default wh_footer mt-5">
+    <div class="footer-container mx-auto text-center">
+      <div>
+        <img src="./Pimages/ictglobe.png" alt="ICTLabs" width="100px"> 
+        <strong>Projects made easy</strong>
+      </div>
+    </div>
+  </footer>
+    
+  <script src='https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js'></script>
+  <script src='https://cdn.jsdelivr.net/npm/gsap@3.0.1/dist/gsap.min.js'></script>
+  <script src="../script.js"></script>
+  <script src="../restart.js"></script>
+</body>
+</html>

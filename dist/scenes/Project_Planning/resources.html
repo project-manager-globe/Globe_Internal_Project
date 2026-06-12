@@ -2,7 +2,44 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Project Base</title>
+  <title>ICTGlobe Internal Updates</title>
+<script src="/index.e9a59d41.js"></script>
+<script>window.addEventListener('DOMContentLoaded', ()=>{
+    // 1. Safe Session Authentication Check
+    if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+        sessionStorage.setItem('redirect_target', window.location.href);
+        window.location.replace("../../index.html");
+        return;
+    }
+    // 2. Project Role-Guard Check
+    const currentUser = sessionStorage.getItem('currentUser_ICT');
+    if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
+        const userData = authorizedUsers[currentUser];
+        const allowedProjects = userData.projects;
+        const role = userData.role;
+        // CHANGE THIS LINE HERE:
+        const currentProjectFolder = "resources";
+        if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+            alert("Access Denied: You do not hold credentials for this project panel.");
+            window.location.replace("../../index.html");
+        }
+    } else if (typeof authorizedUsers === 'undefined') console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+});
+// Active Logout Trigger
+window.addEventListener('DOMContentLoaded', ()=>{
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        sessionStorage.removeItem('isLoggedIn_ICT');
+        sessionStorage.removeItem('currentUser_ICT');
+        sessionStorage.removeItem('redirect_target');
+        window.location.replace("../../index.html");
+    });
+});
+
+</script>
+
+
 <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,63 +57,39 @@
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-<link rel="stylesheet" type="text/css" href="/scenes/Project_Planning/client.a9be943f.css">
-<link rel="stylesheet" type="text/css" href="/scenes/Project_Planning/client.34a98ac0.css"> 
-<link rel="stylesheet" href="/scenes/Project_Planning/client.02076d37.css">
-<!--<link rel="stylesheet" href="/css/index.css">-->
+<link rel="stylesheet" type="text/css" href="/scenes/Project_Planning/strategy.a9be943f.css">
+<link rel="stylesheet" type="text/css" href="/scenes/Project_Planning/strategy.34a98ac0.css"> 
+<link rel="stylesheet" href="/scenes/Project_Planning/strategy.02076d37.css">
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>  
   
 <script src="https://kit.fontawesome.com/268d442577.js" crossorigin="anonymous"></script>
 
-
+<script src="/index.e9a59d41.js"></script>
 
 </head>
 
-<header class="navbar navbar-default wh_header" id="test" ;="">
-  <div class="topcontainer">
-     <body>
-      
-      <div class="bg-primary">
-        <nav class="navbar  navbar-expand-md fixed-top navbar-dark">
+    <!-- ==================== CORPORATE TOP NAVBAR ==================== -->
+    <header class="navbar navbar-default wh_header" id="test">
+        <div class="topcontainer w-100">
+            <div class="bg-primary">
+                <nav class="navbar navbar-expand-md fixed-top navbar-dark">
+                    <a class="navbar-brand" href="/"><img src="/ictglobe.9abb1c45.png" height="40px" alt="ICTGlobe"></a>
+                    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item"><a href="/scenes/Project_Planning/strategy.html" class="myTopButton">Strategy</a></li>
+                            <li class="nav-item"><a href="/index.html#devisions" class="myTopButton">Devisions</a></li>
+                            <li class="nav-item"><a href="/scenes/Project_Planning/resources.html" class="myTopButton" data-project="resources">Resources</a></li>
+                            <li class="nav-item"><a href="/scenes/Project_Planning/projects.html" class="myTopButton">Projects</a></li>
 
-         <a class="navbar-brand" href="/"><img src="/ictglobe.9abb1c45.png" height="40px" alt="ICTGlobe"> </a>
-    
-
-
- <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
-     <ul class="navbar-nav ml-auto">
-
-     <!-- <li>
-            <span class="myTopButton" onclick="openNav()"> Sites</span>
-        </li>
-        -->
-        <li class="nav-item">
-          <a href="/index.html#project" class="myTopButton">Project</a>
-        </li>
-        <li class="nav-item">
-            <a href="/index.html#devisions" class="myTopButton">Devisions</a>
-        </li>
-        <li class="nav-item">
-            <a href="/scenes/Project_Planning/client.html" class="myTopButton">Client</a>
-        </li>
-        <li class="nav-item">
-          <a href="/scenes/Project_Planning/resources.html" class="myTopButton">Resources</a>
-        </li>
-        <li class="nav-item">
-          <a href="https://ictglobe.com/" target="_blank" class="myTopButton">ICTGlobe</a>
-        </li>
-
- 
-        </ul>
-
-
-                        </div></nav>
-                        </div>
-
-                </body></div>
-     
-  </header>
+                            <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137fb; font-weight: bold">Logout</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
 	
 <body>
 <main>
@@ -88,99 +101,99 @@
     <section class="content" id="project">
     
     <h2 class="content__START ">Project Resources & Training</h2>
-    <h2 class="intro2"><strong>Knowledge</strong> is power,   <span class="HOW"><strong>learning</strong></span> a previlege!</h2>
+    <h2 class="intro2"><span class="HOW"><strong>Knowledge</strong></span> is power,   <span class="HOW"><strong>learning</strong></span> a previlege!</h2>
     <h3 class="content__subtitle" style="text-align: left">The success of your business is important to us. This section provides some helpfull resources including, important, example and training documents, video's, links and any recomendations in line with your project and services.</h3>
-    <h5 class="content__subtitle" style="text-align: left"><strong>*Some information may be password protected. Kindly contact your line manager in order to obtain passwords if required.</strong></h5>
+    <h5 class="content__subtitle" style="text-align: left; font-size: small"><strong>*Some information may be password protected. Kindly contact your line manager in order to obtain passwords if required.</strong></h5>
       
    </section>
 
         <div class="top-container">
-            <h1>ICTGlobe Documents</h1>     
+            <h1>Software Documentation</h1>     
                     
             <div class="wrapper">
                   <div class="media">
                     <div class="layer">
-                        <p><a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
-                            <a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>
-                      </div>
-                    <img src="/teamBoat.d5bedd48.png" alt="Document" width="250" height="250">
+                        <p><a href="/scenes/Project_Planning/Pdocs/Numista.pdf" target="_blank"><strong></strong></a>Numista Software Manual<br>
+                            <!--<a href="./Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>-->
+                      </p></div>
+                    <img src="/paper.bf4b0da4.jpg" alt="Document" width="250" height="350">
                 </div>   
                 
                 <div class="media">
                     <div class="layer">
-                        <p><a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
-                            <a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>
-                      </div>
-                    <img src="/teamBoat.d5bedd48.png" alt="Document" width="250" height="250">
+                        <p><a href="/scenes/Project_Planning/Pdocs/ClientZone.pdf" target="_blank"><strong>Client Zone</strong></a><br>
+                            <!--<a href="./Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>-->
+                      </p></div>
+                    <img src="/design.4e5cd6b1.jpg" alt="Document" width="250" height="250">
                 </div>  
 
                 <div class="media">
                     <div class="layer">
-                        <p><a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
-                            <a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>
-                      </div>
-                    <img src="/teamBoat.d5bedd48.png" alt="Document" width="250" height="250">
+                        <p><a href="/scenes/Project_Planning/Pdocs/VSP_reseller.pdf" target="_blank"><strong>VSP Software Manual</strong></a><br>
+                            <!--<a href="./Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>-->
+                      </p></div>
+                    <img src="/paper.bf4b0da4.jpg" alt="Document" width="250" height="350">
                 </div>  
           </div>
         </div>
 
         <div class="next-container">
-            <h1>Resource Documents</h1>     
-                    
-            <div class="wrapper">
-                  <div class="media">
-                    <div class="layer">
-                        <p><a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
-                            <a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>
-                      </div>
-                    <img src="/teamBoat.d5bedd48.png" alt="Document" width="250" height="250">
-                </div>   
-                
-                <div class="media">
-                    <div class="layer">
-                        <p><a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
-                            <a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>
-                      </div>
-                    <img src="/teamBoat.d5bedd48.png" alt="Document" width="250" height="250">
-                </div>  
-
-                <div class="media">
-                    <div class="layer">
-                        <p><a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
-                            <a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>
-                      </div>
-                    <img src="/teamBoat.d5bedd48.png" alt="Document" width="250" height="250">
-                </div>  
-          </div>
-        </div>
-
-        <div class="last-container">
             <h1>Training Resources</h1>     
                     
             <div class="wrapper">
                   <div class="media">
                     <div class="layer">
-                        <p><a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
-                            <a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>
+                        <p><a href="/scenes/Project_Planning/Pdocs/Numista%20New%20Customer.mp4" target="_blank"><strong>Numista New Customer</strong></a><br>
+                            <a href="/scenes/Project_Planning/Pdocs/New%20Customer%20Invoice.mp4" target="_blank"><strong>Customer Invoices</strong></a></p>
                       </div>
-                    <img src="/teamBoat.d5bedd48.png" alt="Document" width="250" height="250">
+                    <img src="/office.bbda82fc.jpg" alt="Document" width="250" height="250">
                 </div>   
                 
                 <div class="media">
                     <div class="layer">
-                        <p><a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
-                            <a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>
+                        <p><a href="/scenes/Project_Planning/Pdocs/BasicQuote.mp4" target="_blank"><strong>Basic Numista Quotation</strong></a><br>
+                            <a href="/scenes/Project_Planning/Pdocs/QuoteTool.mp4" target="_blank"><strong>Numista Quotation Tool</strong></a></p>
                       </div>
-                    <img src="/teamBoat.d5bedd48.png" alt="Document" width="250" height="250">
+                    <img src="/paper.bf4b0da4.jpg" alt="Document" width="250" height="250">
                 </div>  
 
                 <div class="media">
                     <div class="layer">
-                        <p><a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
-                            <a href="/scenes/Project_Planning/Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>
-                      </div>
-                    <img src="/teamBoat.d5bedd48.png" alt="Document" width="250" height="250">
-                </div>  
+                        <p><a href="/scenes/Project_Planning/Pdocs/soon.mp4" target="_blank"><strong>Coming Soon...</strong></a><br>
+                            <!--<a href="./Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>-->
+                      </p></div>
+                    <img src="/office.bbda82fc.jpg" alt="Document" width="250" height="250">
+                </div>   
+          </div>
+        </div>
+
+        <div class="last-container">
+          <h1><span class="HOW">ICTGlobe Documentation</span></h1>     
+                    
+          <div class="wrapper">
+                <div class="media">
+                  <div class="layer">
+                      <p><a href="/scenes/Project_Planning/Pdocs/Nowtech%20-%20Project%20Brief%20[V1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.1]</strong></a><br>
+                          <!--<a href="./Pdocs/SG_Implementation[V1.1].pdf#toolbar=0" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>-->
+                    </p></div>
+                  <img src="/paper.bf4b0da4.jpg" alt="Document" width="250" height="250">
+              </div>   
+              
+              <div class="media">
+                  <div class="layer">
+                      <p><a href="/scenes/Project_Planning/Pdocs/soon.mp4" target="_blank"><strong>Coming Soon ...</strong></a><br>
+                          <!--<a href="" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>-->
+                  </p></div>
+                  <img src="/Couch.3c450125.png" alt="Document" width="250" height="350">
+              </div>  
+
+              <div class="media">
+                  <div class="layer">
+                      <p><a href="/scenes/Project_Planning/Pdocs/soon.mp4" target="_blank"><strong>Coming Soon ...</strong></a><br>
+                          <!--<a href="" target="_blank"><strong></strong></a></p>-->
+                  </p></div>
+                  <img src="/paper.bf4b0da4.jpg" alt="Document" width="250" height="250">
+              </div>  
           </div>
         </div>
      
@@ -188,13 +201,13 @@
  
   
 
-<footer class="navbar navbar-default wh_footer">
-  <div class=" footer-container mx-auto ">
-      <div>
-        <img style="font-size: 20px" src="/ictglobe.9abb1c45.png" alt="ICTLabs" width="100px" hight="5px"> <strong>Projects made easy</strong>
-      </div>
-  </div>
-  </footer>
+        <footer class="navbar navbar-default wh_footer">
+          <div class="footer-container mx-auto">
+            <div>
+             <a href="https://ictglobe.com/" target="_blank" style="color: inherit; text-decoration: none"><img style="font-size: 20px" src="/ictglobe.9abb1c45.png" alt="ICTGlobe" width="100px"></a> <strong>Projects made easy</strong>
+            </div>
+          </div>
+        </footer>
 
   </div>
 </main>

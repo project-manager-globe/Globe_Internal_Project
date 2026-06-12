@@ -2,7 +2,53 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8">
-  <title>Nowtech Project Plan</title>
+  <title>ICTGlobe Internal Updates</title>
+<script src="../../credentials.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+      // 1. Safe Session Authentication Check (Delayed until DOM is fully ready)
+      if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+          // Deep link save-state: Remembers exactly where you wanted to go
+          sessionStorage.setItem('redirect_target', window.location.href);
+          window.location.replace("../../index.html"); 
+          return; // Stop any further execution
+      }
+
+      // 2. Project Role-Guard Check
+      const currentUser = sessionStorage.getItem('currentUser_ICT');
+      
+      if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
+          const userData = authorizedUsers[currentUser];
+          const allowedProjects = userData.projects;
+          const role = userData.role;
+
+          // Match this tag identifier against your specific credentials array folder name
+          const currentProjectFolder = "nowtech"; 
+
+          if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+              alert("Access Denied: You do not hold credentials for this project panel.");
+              window.location.replace("../../index.html");
+          }
+      } else if (typeof authorizedUsers === 'undefined') {
+          console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+      }
+  });
+
+  // Active Logout Trigger
+  window.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+          logoutBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              sessionStorage.removeItem('isLoggedIn_ICT');
+              sessionStorage.removeItem('currentUser_ICT');
+              sessionStorage.removeItem('redirect_target'); // Keep cache clean on manual logouts
+              window.location.replace("../../index.html"); 
+          });
+      }
+  });
+</script>
+
   <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,55 +73,30 @@
     
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> 
 <script src="https://kit.fontawesome.com/268d442577.js" crossorigin="anonymous"></script>
+<script src="../../credentials.js"></script>
+
 </head>
 
-<header class="navbar navbar-default wh_header" id="test" ;>
-  <div class="topcontainer">
-     <body>
-      
-      <div class="bg-primary">
-        <nav class="navbar  navbar-expand-md fixed-top navbar-dark">
+    <!-- ==================== CORPORATE TOP NAVBAR ==================== -->
+    <header class="navbar navbar-default wh_header" id="test">
+        <div class="topcontainer w-100">
+            <div class="bg-primary">
+                <nav class="navbar navbar-expand-md fixed-top navbar-dark">
+                    <a class="navbar-brand" href="/"><img src="./Pimages/ictglobe.png" height="40px" alt="ICTGlobe"></a>
+                    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item"><a href="./strategy.html" class="myTopButton">Strategy</a></li>
+                            <li class="nav-item"><a href="../../index.html#devisions" class="myTopButton">Devisions</a></li>
+                            <li class="nav-item"><a href="./resources.html" class="myTopButton" data-project="resources">Resources</a></li>
+                            <li class="nav-item"><a href="./projects.html" class="myTopButton">Projects</a></li>
 
-         <a class="navbar-brand" href="/" ><img src="./Pimages/ictglobe.png"  height="40px" alt="ICTGlobe"> </a>
-    
-
-
- <div class ="collapse navbar-collapse" id="navbarTogglerDemo02">
-     <ul class="navbar-nav ml-auto">
-
-     <!-- <li>
-            <span class="myTopButton" onclick="openNav()"> Sites</span>
-        </li>
-        -->
-      
-        <li class="nav-item">
-          <a href="/index.html/#project"  class="myTopButton">Project</a>
-        </li>
-        <li class="nav-item">
-            <a href="/index.html/#devisions"  class="myTopButton">Devisions</a>
-        </li>
-        <li class="nav-item">
-            <a href="./client.html"  class="myTopButton">Client</a>
-        </li>
-        <li class="nav-item">
-          <a href="./resources.html"  class="myTopButton">Resources</a>
-        </li>
-        <li class="nav-item">
-          <a href="https://ictglobe.com/" target="_blank"  class="myTopButton">ICTGlobe</a>
-        </li>
-
- 
-        </ul>
-
-
-                        </nav>
-                        </div>
-
-                </div>
-     </div>
-  </header>
-
-
+                            <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
     <body >
   
 
@@ -83,8 +104,8 @@
       <main >
         <div data-scroll class="page page--layout-2" >
           <div>
-          <h1 class="page__title"># Services and Products</h1>
-          <p style="color: #f3f3f3; font-size: 30px;  padding-left: 150px; text-align: left;">What They Like. &nbsp &nbsp  What They Do. &nbsp &nbsp  What Makes <strong>NOWTECH</strong>.</p>
+          <h3 class="page__title">Services and Products</h3>
+          <p style="color: #f3f3f3; font-size: 30px;  padding-left: 150px; text-align: left;">What We Like. &nbsp &nbsp  What We Do. &nbsp &nbsp  What Makes <strong>ICTGlobe</strong>.</p>
         </div>
     
     
@@ -93,15 +114,16 @@
             <div class="content__item content__item--expand" style="--aspect-ratio: 250/250">
               <div class="content__item-imgwrap">
                 <div class="content__item-img" style="
-                      background-image: url(./Pimages/drones.png);
+                      background-image: url(./Pimages/ServicesPhone.png);
                     "></div>
               </div>
-              <h2 class="content__item-title" style="color: #f3f3f3;">Drones of Stuff</h2>   
+              <h3 class="content__item-title" style="color: #f3f3f3;">Reliable, Affordable Voice</h3>   
               <p class="content__item-description">
-                Bound to their word,<br>
-                every interaction with<br>
-                their customers are<br>
-                taken seriously.
+                Operating on our own network,<br>
+                we are bound to our word.<br>
+                With crystal-clear voice options<br>
+                like VoIP, IP PBX and Cloud PBX,<br>
+                our dedicated team can help clients to choose the right solution.
               </p>          
             </div>
     
@@ -109,17 +131,16 @@
             <div class="content__item content__item--expand" style="--aspect-ratio: 250/250">
                 <div class="content__item-imgwrap"> 
                   <div class="content__item-img" style="
-                                          background-image: url(./Pimages/solar.png);
+                                          background-image: url(./Pimages/ServicesWiFi.png);
                                       "></div>
                 </div>
-                <h2 class="content__item-title" style="color: #f3f3f3;">Solar</h2>
+                <h2 class="content__item-title" style="color: #f3f3f3;">Connectivity</h2>
                 <p class="content__item-description" style="text-align: right;">
-                  With high quality products,  <br>
-                  professional installations and <br>
-                  reliable after sales support,<br>
-                  Nowtech specializes in<br>
-                  providing purpose driven<br>
-                  Solar solutions to clients.<br>         
+                  Best high-speed internet,  <br>
+                  covering homes & businesses<br>
+                  all over South Africa.<br>
+                  Fast, reliable, connected<br>
+                  - that's the <strong>ICTGlobe</strong> guarentee!<br>        
                 <br><br><br><br>
                 </p>
               </div>
@@ -129,17 +150,17 @@
             <div class="content__item content__item--expand" style="--aspect-ratio: 250/250">
               <div class="content__item-imgwrap">
                 <div class="content__item-img" style="
-                      background-image: url(./Pimages/CCTV.png);
-                    "></div>
+                      background-image: url(./Pimages/ServicesCloud.png);
+                    "></div>/
               </div>
-              <h2 class="content__item-title" style="color: #f3f3f3;">Security</h2>
+              <h2 class="content__item-title" style="color: #f3f3f3;">Cloud Services</h2>
               <p class="content__item-description">
-                CCTV security systems fit for both<br>
-                business and private use. With a Nowtech<br>
-                CCTV system, clients can manage<br>
-                commercial risk and overall security.<br>
-                whilst managing staff, production facilities<br>
-                and movement.<br>         
+                We <strong>specialize</strong> in delifering <br>
+                cloud hosting solutions to help<br>
+                businesses of all sizes.<br>
+                Focusing on security, scalability and performance,our range of<br>
+               cloud services is designed<br>
+                to meet customer specific needs.<br> 
               <br><br><br><br>
               </p>
             </div>
@@ -148,16 +169,15 @@
             <div class="content__item content__item--expand" style="--aspect-ratio: 250/250">
                 <div class="content__item-imgwrap">
                   <div class="content__item-img" style="
-                                          background-image: url(./Pimages/internet.png);
+                                          background-image: url(./Pimages/ServicesBI.png);
                                       "></div>
                 </div>
-                <h2 class="content__item-title" style="color: #f3f3f3;">Internet Access</h2> 
+                <h2 class="content__item-title" style="color: #f3f3f3;">Business Intelligence</h2> 
                 <p class="content__item-description" style="text-align: right;">
-                  Fibre,<br>
-                  Fibre to air,<br>
-                  LTE and Hotspots,
-                  Nowtech ensures connections<br>
-                  to stable internet services.<br>        
+                  Collect, analyze, and interpret data.<br>
+                  Turn raw data into meaningful<br>
+                  and actionable insights that<br>
+                  can help businesses make better decisions.<br>    
                 <br><br><br><br>
                 </p>
               </div>
@@ -166,14 +186,16 @@
             <div class="content__item content__item--expand" style="--aspect-ratio: 250/250">
               <div class="content__item-imgwrap">
                 <div class="content__item-img" style="
-                      background-image: url(./Pimages/busHosting.png);
+                      background-image: url(./Pimages/ServicesPaaS.jpg);
                     "></div>
               </div>
-              <h2 class="content__item-title" style="color: #f3f3f3;">Business Hosting</h2>
+              <h2 class="content__item-title" style="color: #f3f3f3;">Platform as a Service</h2>
               <p class="content__item-description">
-                Microsoft Office 365 Architecture<br>
-                Domain & Webhosting<br>
-                Linux Hosting<br>                     
+                We offer a growing variety of services within the ICTGlobe ecosystem.<br>
+                From Point-Of -Sales Software<br>
+                to VSP management software.<br>  
+                enjoy the benefits of streamlined business management tools<br>
+                backed by the power and strength of the <strong>ICTGlobe</strong> infrustructure.<br>
               <br><br><br><br>
               </p>
             </div>
@@ -186,11 +208,11 @@
                                           background-image: url(./Pimages/data_Cloud.png);
                                       "></div>
                 </div>
-                <h2 class="content__item-title" style="color: #f3f3f3;">Data Cloud</h2>
+                <h2 class="content__item-title" style="color: #f3f3f3;">ICT Industry Growth</h2>
                 <p class="content__item-description" style="text-align: right;">
-                  This organization is committed<br>
-                  to caring for their customers<br>
-                  and their connections to stable internet services.<br>        
+                  ICTGlobe offers growth initiatives within the ICT industry.<br>
+                  We recognise its dynamic nature and have made assisting<br>
+                  the growth of our partners a top priority.<br>        
                 <br><br><br><br>
                 </p>
             </div>
@@ -198,63 +220,18 @@
     
           </div>
         </div>
-
       </main>  
-      <button class="scrollToTopBtn">
-        <svg version="1.1" id="Layer_1" xmlns="https://www.w3.org/2000/svg" xmlns:xlink="https://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 512.001 512.001" style="enable-background:new 0 0 512.001 512.001;" xml:space="preserve">
-          <path d="M403.015,296.471L264.5,108.591c-4.22-5.725-12.778-5.725-16.999,0l-138.515,187.88
-      c-5.14,6.972-0.162,16.826,8.499,16.826h277.03C403.177,313.297,408.155,303.443,403.015,296.471z" />
-          <path d="M413.693,288.598L275.18,100.718c-4.471-6.066-11.641-9.688-19.178-9.688s-14.707,3.621-19.178,9.688
-      L156.992,209h-34.146L256.001,28.39l136.335,184.924c4.348,5.898,12.653,7.154,18.552,2.806c5.898-4.348,7.154-12.655,2.805-18.552
-      L275.18,9.688C270.708,3.621,263.537,0,256.001,0s-14.707,3.621-19.178,9.688L98.308,197.568c-5.365,7.279-6.166,16.813-2.09,24.884
-      c4.077,8.071,12.226,13.083,21.268,13.083h19.943l-39.121,53.063c-5.365,7.279-6.166,16.813-2.09,24.884
-      c4.077,8.071,12.226,13.083,21.268,13.083h45.236V483.23c0,15.864,12.907,28.771,28.771,28.771h129.015
-      c15.864,0,28.771-12.907,28.771-28.771v-88.805c0-15.864-12.907-28.771-28.771-28.771h-78.976c-7.326,0-13.268,5.94-13.268,13.268
-      c0,7.328,5.941,13.268,13.268,13.268h78.976c1.233,0,2.236,1.003,2.236,2.236v88.805c0,1.233-1.003,2.236-2.236,2.236H191.493
-      c-1.233,0-2.236-1.003-2.236-2.236V326.565h205.257c9.042,0,17.191-5.014,21.268-13.083
-      C419.86,305.411,419.059,295.877,413.693,288.598z M122.846,300.03L256.001,119.42l133.154,180.61L122.846,300.03L122.846,300.03z" />
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-          <g>
-          </g>
-        </svg>
-      </button>
+     
     
     </div>
     </div>
-    <footer class="navbar navbar-default wh_footer">
-      <div class=" footer-container mx-auto ">
-          <div>
-            <img  style="font-size: 20px;" src="./Pimages/ictglobe.png" alt="ICTLabs" width="100px" hight="5px" > <strong>Projects made easy</strong>
+        <footer class="navbar navbar-default wh_footer">
+          <div class="footer-container mx-auto">
+            <div>
+             <a href="https://ictglobe.com/" target="_blank" style="text-decoration: none; color: inherit;"><img style="font-size: 20px;" src="./Pimages/ictglobe.png" alt="ICTGlobe" width="100px"></a> <strong>Projects made easy</strong>
+            </div>
           </div>
-      </div>
-   </footer>
+        </footer>
     <!-- partial -->
       <script src='https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js'></script>
     <script src='https://cdn.jsdelivr.net/npm/gsap@3.0.1/dist/gsap.min.js'></script><script  src="../script.js"></script>

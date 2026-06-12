@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>ICTGlobe Internal Updates</title>
+<script src="../../credentials.js"></script>
+<script>
+  // 1. Safe Session Authentication Check (Delayed until DOM is fully ready)
+  if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+      // Deep link save-state: Remembers exactly where you wanted to go
+      sessionStorage.setItem('redirect_target', window.location.href);
+      window.location.replace("../../index.html"); 
+  } else {
+      // Execute role-guards if authenticated
+      window.addEventListener('DOMContentLoaded', () => {
+          const currentUser = sessionStorage.getItem('currentUser_ICT');
+          
+          if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
+              const userData = authorizedUsers[currentUser];
+              const allowedProjects = userData.projects;
+              const role = userData.role;
+
+              // Match this tag identifier against your specific credentials array folder name
+              const currentProjectFolder = "strategy"; 
+
+              if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+                  alert("Access Denied: You do not hold credentials for this project panel.");
+                  window.location.replace("../../index.html");
+              }
+          } else if (typeof authorizedUsers === 'undefined') {
+              console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+          }
+      });
+  }
+
+  // Active Logout Trigger
+  window.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+          logoutBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              sessionStorage.removeItem('isLoggedIn_ICT');
+              sessionStorage.removeItem('currentUser_ICT');
+              sessionStorage.removeItem('redirect_target'); // Keep cache clean on manual logouts
+              window.location.replace("../../index.html"); 
+          });
+      }
+  });
+</script>
+
+<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Righteous&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredericka+the+Great&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.0.0/animate.min.css">
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css'>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+<link rel="stylesheet" type="text/css" href="../index.css" />
+<link rel="stylesheet" type="text/css" href="../styles.css" /> 
+<link rel="stylesheet" href="../project.css">
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>  
+<script src="https://kit.fontawesome.com/268d442577.js" crossorigin="anonymous"></script>
+
+<style>
+  .strategy-badge { background: #0137FB; color: white; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
+  .engine-card { border: 2px solid #eef2f3; border-radius: 16px; padding: 25px; background: white; transition: all 0.3s ease; height: 100%; }
+  .engine-card:hover { transform: translateY(-5px); border-color: #0137FB; box-shadow: 0 10px 25px rgba(1,55,251,0.1); }
+  .hub-feature { border-left: 4px solid #0137FB; padding-left: 15px; margin-bottom: 20px; }
+  .tier-card { border-radius: 16px; background: #fff; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; position: relative; overflow: hidden; }
+  .tier-card.featured { border: 3px solid #0137FB; }
+  .tier-card.featured .popular-tag { position: absolute; top: 15px; right: -30px; background: #0137FB; color: white; padding: 4px 30px; transform: rotate(45deg); font-size: 0.75rem; font-weight: bold; }
+  .eco-box { background: #f8f9fa; border: 1px dashed #ced4da; border-radius: 12px; padding: 20px; text-align: center; height: 100%; transition: all 0.2s; }
+  .eco-box:hover { background: #fff; border-style: solid; border-color: #0137FB; }
+  .text-highlight { color: #0137FB; font-weight: 700; }
+  
+  /* Side menu style optimization */
+  .menu .element { padding: 12px 15px; display: flex; align-items: center; justify-content: space-between; text-decoration: none !important; }
+
+  /* --- 3D Card Flip Animation Styles --- */
+  .flip-card-container { perspective: 1000px; height: 460px; margin-bottom: 30px; }
+  .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; }
+  .flip-card-container:hover .flip-card-inner { transform: rotateY(180deg); }
+  .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); }
+  .flip-card-front { background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 1px solid #dee2e6; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+  .flip-card-container.featured .flip-card-front { background: linear-gradient(135deg, #0137FB 0%, #0026b3 100%); color: white; border: none; }
+  .flip-card-back { background: white; transform: rotateY(180deg); padding: 25px 25px 75px 25px; text-align: left; border: 1px solid #dee2e6; display: flex; flex-direction: column; }
+  .flip-card-container.featured .flip-card-back { border: 3px solid #0137FB; }
+  .card-icon-wrap { width: 90px; height: 90px; border-radius: 50%; background: #f0f4ff; color: #0137FB; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 2.5rem; box-shadow: 0 4px 10px rgba(1, 55, 251, 0.1); }
+  .flip-card-container.featured .card-icon-wrap { background: rgba(255, 255, 255, 0.2); color: white; box-shadow: none; }
+
+  /* Text Enhancements */
+  .dark-title { color: #111111 !important; font-weight: 800; }
+  .dark-text { color: #212529 !important; font-weight: 500; }
+  .dark-subtext { color: #495057 !important; }
+  .flip-card-front .front-sub { color: #495057; }
+  .flip-card-container.featured .flip-card-front .front-sub { color: #e0e0e0; }
+
+  /* --- High-Impact Global Alliance Pop-Up Canvas --- */
+  .eco-card-wrapper { height: 380px; display: flex; align-items: flex-end; }
+  .eco-box-interactive { background: #ffffff; border: 1px solid #dee2e6; border-radius: 16px; padding: 30px 20px; text-align: center; width: 100%; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.03); cursor: pointer; z-index: 1; }
+  .eco-box-interactive:hover { border-color: #0137FB; box-shadow: 0 12px 35px rgba(1, 55, 251, 0.15); }
+  .eco-char-circle { width: 110px; height: 110px; border-radius: 50%; margin: -60px auto 20px auto; overflow: hidden; background: #f0f4ff; border: 4px solid #ffffff; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 8px 20px rgba(0,0,0,0.12); position: relative; z-index: 5; }
+  .eco-char-circle img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+  .eco-box-interactive:hover .eco-char-circle { border-color: #0137FB; transform: translateY(-40px) scale(1.5); box-shadow: 0 15px 30px rgba(1, 55, 251, 0.3); }
+  .eco-box-interactive:hover .eco-char-circle img { transform: scale(1.1); }
+  .eco-icon-fallback { width: 110px; height: 110px; border-radius: 50%; background: #f0f4ff; color: #0137FB; border: 4px solid #ffffff; display: flex; align-items: center; justify-content: center; margin: -60px auto 20px auto; font-size: 2.2rem; box-shadow: 0 8px 20px rgba(0,0,0,0.12); transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .eco-box-interactive:hover .eco-icon-fallback { background: #0137FB; color: white; border-color: #0137FB; transform: translateY(-40px) scale(1.5); box-shadow: 0 15px 30px rgba(1, 55, 251, 0.3); }
+
+  /* Unique Decorative Formats for PPT Additions */
+  .pillar-block { border-top: 4px solid #0137FB; background: #fafafa; border-radius: 0 0 12px 12px; padding: 20px; transition: background 0.3s; }
+  .pillar-block:hover { background: #f0f4ff; }
+  .prod-badge { font-size: 0.75rem; padding: 3px 8px; background: #e0e7ff; color: #0137FB; border-radius: 6px; font-weight: bold; }
+  .flow-node { position: relative; padding: 15px; border: 1px solid #dee2e6; border-radius: 10px; background: white; }
+  .kpi-metric { font-family: 'Righteous', sans-serif; font-size: 2.2rem; color: #0137FB; line-height: 1; }
+
+  /* --- SCREENSHOT SLIDE & EXPAND ENGINES --- */
+@keyframes slideExpandLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-150px) scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideExpandRight {
+  0% {
+    opacity: 0;
+    transform: translateX(150px) scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Classes to apply to your screenshot containers */
+.screenshot-slide-left {
+  animation: slideExpandLeft 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.screenshot-slide-right {
+  animation: slideExpandRight 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+/* Container setup to ensure full content alignment without breaking page bounds */
+.screenshot-wrapper {
+  overflow: hidden;
+  padding: 15px 0;
+  width: 100%;
+}
+/* --- SCREENSHOT HOVER MAXIMIZER --- */
+.screenshot-container {
+  position: relative;
+  width: 100%;
+  padding: 20px 0;
+  display: flex;
+  justify-content: center;
+}
+
+.interactive-screenshot {
+  width: 100%;
+  max-width: 1100px; /* Aligns with your main container max-width */
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease;
+  cursor: zoom-in;
+  position: relative;
+  z-index: 1;
+}
+
+/* The Hover Trigger: Scales up the size and increases depth */
+.interactive-screenshot:hover {
+  transform: scale(1.25); /* Increases overall visual height/width by 25% */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  z-index: 1050; /* Pops it over side menus and headers for absolute clarity */
+}
+</style>
+</head>
+
+   <!-- ==================== CORPORATE TOP NAVBAR ==================== -->
+    <header class="navbar navbar-default wh_header" id="test">
+        <div class="topcontainer w-100">
+            <div class="bg-primary">
+                <nav class="navbar navbar-expand-md fixed-top navbar-dark">
+                    <a class="navbar-brand" href="/"><img src="./Pimages/ictglobe.png" height="40px" alt="ICTGlobe"></a>
+                    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item"><a href="./strategy.html" class="myTopButton">Strategy</a></li>
+                            <li class="nav-item"><a href="../../index.html#devisions" class="myTopButton">Devisions</a></li>
+                            <li class="nav-item"><a href="./resources.html" class="myTopButton" data-project="resources">Resources</a></li>
+                            <li class="nav-item"><a href="./projects.html" class="myTopButton">Projects</a></li>
+
+                            <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+<body>
+<input type="checkbox" id="menu-toggle" checked>
+<div class="menu dflex">
+  <div class="elements-container dflex">
+    <a class="element" href="#companyContainer" style="padding-top: 70px;">
+      <span><i class="fas fa-rocket me-2"></i> Company Overview</span>
+    </a>
+    <a class="element" href="#pillarsContainer">
+      <span><i class="fas fa-th-large me-2"></i> Strategice Pillars</span>
+    </a>
+    <a class="element" href="#productsContainer">
+      <span><i class="fas fa-boxes me-2"></i> Products & Innovation</span>
+    </a>
+    <a class="element" href="#alignmentContainer">
+      <span><i class="fas fa-project-diagram me-2"></i> Departmental Alignment</span>
+    </a>
+    <a class="element" href="#dualTrackContainer">
+      <span><i class="fas fa-tachometer-alt me-2"></i> Dual-Track Engines</span>   
+    </a>
+    <a class="element" href="#resellerHubContainer">
+      <span><i class="fas fa-cubes me-2"></i> The Reseller Hub</span>   
+    </a>
+    <a class="element" href="#supportMatrixContainer">
+      <span><i class="fas fa-layer-group me-2"></i> Support Tier Matrix</span>
+    </a>
+    <a class="element" href="#bcpEcosystemContainer">
+      <span><i class="fas fa-globe me-2"></i> BCO Ecosystem</span>
+    </a>
+    <a class="element" href="#kpiContainer">
+      <span><i class="fas fa-flag-checkered me-2"></i> Milestones & KPI Targets</span>
+    </a>
+  </div>
+
+  <div class="menu-container-btn">
+    <div class="menu-toggle-btn">
+      <label class="menu-btn text-center" for="menu-toggle">
+          <i class="fa fa-close"></i>
+          <i class="fa fa-bars"></i>
+        </label>
+    </div>
+  </div>
+</div>
+
+<!-- Intro Section -->
+  <div id="topContainer" class="hello"> 
+     <div class="eg" style="opacity: 60%;">
+      <div class="border-corner">
+        <div>
+          <h1 class="subtitle"><strong>Greetings!</strong></h1>
+          <div class="subtitle"> Welcome to your strategic digital story</div>
+          <h1 class="main-title small"> ICTGlobe </h1>
+            <div class="subtitle"> Each new story has a start,<br>each company, a begining, <br>ongoing efforts must be... <br><strong class="bold-text"> never ending!</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Company Overview Section -->
+  <div id="client" class="me">
+    <h1 class="about-title small" id="companyContainer" >Solutions made... EASY! </h1><br><br>
+    <div class="me-row1">
+      <h3>Welcome to your <em>digital</em> story ICTGlobe!</h3>
+      <p class="me-row1">Since we care about you, our valued employees, and our organizational needs and requirements, we took some time remind you about YOU.</p><br>
+      <p class="me-row1"><i>Here is what you should allready know...</i></p>
+      <p class="me-row1">Situated in Centurion and Stellenbosch, South Africa, ICTGlobe stands as a premier Tier 1 ICASA-licensed telecommunications and end-to-end service provider.</p><br>
+      <p class="me-row1">Operating on a foundation of agility and innovation, we don't believe in one-size-fits-all technology, choosing instead to accelerate business growth through our highly customized ICT ecosystems.</p><br>
+      
+      <p class="me-row1">Our dedicated team at ICTGlobe owns and operates our very own state-of-the-art Tier 3 data centre and interconnected voice platform. We specialize in deploying massive, mission-critical 
+        infrastructure—from crystal-clear corporate VoIP and 3CX unified communications to resilient business fibre, cloud hosting environments, and advanced cybersecurity frameworks.</p>
+      <p class="me-row1">Directly peered with over 95% of South African networks, we ensure the lowest possible latency and back  our services with a strict 99.999% network uptime guarantee.</p><br>
+      <p class="me-row1"> With over two decades of experience in the fast-evolving telecommunications landscape, ICTGlobe strive to eliminate operational friction and turn technology into an effortless driver of growth.  </p><br>
+      <p class="me-row1">Committed to absolute business continuity, our infrastructure features twin backup generators and a 24/7 technical team. ICTGlobe provides our clients with one unified strategy and a single point of ultimate accountability, so that they can connect, collaborate, and lead with absolute confidence. </p><br>
+      <br>
+     
+      <div class="panel__item">
+        <div>
+          <img  src="./Pimages/handshake.png" alt="Video Intro" width="800px" style="padding-left: 300px"/>
+        </div>
+      </div>
+
+    <p class="me-row1" >Need a recap of our  wide range of <a href="/scenes/Project_Planning/services.html"><strong>Products & Services</strong></a> to suit every clients' need?</p>
+    </div>
+    <br><br><br>
+
+<!-- INTERACTIVE STRATEGY CONTAINERS -->
+<div class="container py-5 px-4" style="margin-left: auto; margin-right: auto; max-width: 1100px;">
+
+  <!-- Strategice Pillars Section -->
+  <section id="pillarsContainer" class="mb-5 py-4 border-bottom">
+    <div class="text-center mb-5">
+      <h2 class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif; font-size: 2.5rem; color: #111;">Strategice Pillars</h2>
+      <p class="text-muted">The fundamental bedrocks guiding organizational velocity and execution paths.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="pillar-block">
+          <div class="h5 font-weight-bold mb-2 dark-title"><i class="fas fa-handshake text-primary me-2"></i> 1.</div>
+          <div class=" h5 text-highlight"> Channel Growth</div>
+          <p class="small text-muted m-0">Grow partner base, increase revenue, enter new geographies through structured acquisition and lifecycle management</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pillar-block">
+          <div class="h5 font-weight-bold mb-2 dark-title"><i class="fas fa-shield-alt text-primary me-2"></i> 2.</div>
+          <div class=" h5 text-highlight"> Product Innovation</div>
+          <p class="small text-muted m-0">Continuously advance product depth — owned infrastructure and proprietary products are the competitive moat</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pillar-block">
+          <div class="h5 font-weight-bold mb-2 dark-title"><i class="fas fa-expand-arrows-alt text-primary me-2"></i> 3.</div>
+          <div class=" h5 text-highlight"> Platfrom & Infrastructure</div>
+          <p class="small text-muted m-0">Build and scale the Reseller Hub and own the national network and Tier 3 data centre</p>
+        </div>
+      </div>
+      <div class="row g-4">
+      <div class="col-md-4">
+        <div class="pillar-block">
+          <div class="h5 font-weight-bold mb-2 dark-title"><i class="fas fa-shield-alt text-primary me-2"></i> 4. </div>
+          <div class=" h5 text-highlight">SLA-Driven Support</div>
+          <p class="small text-muted m-0">Transform support from cost centre to a tiered recurring revenue product with measurable commitments</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pillar-block">
+          <div class="h5 font-weight-bold mb-2 dark-title"><i class="fas fa-expand-arrows-alt text-primary me-2"></i> 5.</div>
+          <div class=" h5 text-highlight"> Partner Enablement</div>
+          <p class="small text-muted m-0">Training, certification, and incentive programmes that drive partner independence and commercial growth</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="pillar-block">
+          <div class="h5 font-weight-bold mb-2 dark-title"><i class="fas fa-handshake text-primary me-2"></i> 6.</div>
+          <div class=" h5 text-highlight"> Global BCP Integration</div>
+          <p class="small text-muted m-0">Cross-entity alignment with ICTDigital, ICTEngage, and Global MSP, bundled solutions no competitor replicates</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products & Innovation Section -->
+  <section id="productsContainer" class="mb-5 py-4 border-bottom">
+    <div class="text-center mb-5">
+      <h2 class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif; font-size: 2.5rem; color: #111;">Products & Innovation</h2>
+      <p class="text-muted">Evolving our software systems to maintain a powerful, defensible technology moat.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="p-4 bg-white border rounded-4 shadow-sm">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h4 class="font-weight-bold dark-title m-0">VoIP & Unified 3CX Evolution</h4>
+            <span class="prod-badge">Active Deployment</span>
+          </div>
+          <p class="small text-muted">Deep architectural integrations across custom SIP routing clusters and hyper-stable partitions to safeguard massive high-density multi-tenant traffic environments.</p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="p-4 bg-white border rounded-4 shadow-sm">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <h4 class="font-weight-bold dark-title m-0">Automated Provisioning Hub</h4>
+            <span class="prod-badge">Next-Gen Pipeline</span>
+          </div>
+          <p class="small text-muted">Building automated API mapping tools to link provisioning queues directly into carrier circuits, taking human delay out of the equation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Departmental Alignment Section -->
+  <section id="alignmentContainer" class="mb-5 py-4 border-bottom">
+    <!-- Strategy Architecture Screenshot Section -->
+<section id="governanceMatrixContainer" class="mb-5 py-4 border-bottom">
+  <div class="text-center mb-4">
+    <h2 style="font-family: 'Righteous', sans-serif;">Operational Governance & Departmental Framework</h2>
+    <p class="text-muted">Every team has a defined, accountable role — with clear KPI ownership</p>
+  </div>
+  
+  <div class="container">
+    <div class="row">
+      <div class="col-12 screenshot-container">
+        <!-- Referencing image_33f27c.png verbatim -->
+        <img src="./Pimages/deparments.png" class="interactive-screenshot" alt="ICTGlobe Governance Framework">
+      </div>
+    </div>
+  </div>
+</section>
+  </section>
+
+  <!-- Dual-Track Engines Section -->
+  <section id="dualTrackContainer" class="mb-5 py-4">
+    <div class="text-center mb-5">
+      <span class="strategy-badge">STRATEGIC GTM FRAMEWORK</span>
+      <h2 class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif; font-size: 2.5rem; color: #111;">Dual-Track Engines</h2>
+      <p class="text-muted">Accelerating growth for the 2026–2027 cycle through two distinct, complementary tracks.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <div class="engine-card">
+          <div class="d-flex align-items-center mb-3">
+            <div class="p-3 bg-light rounded-circle text-primary me-3"><i class="fas fa-users fa-2x"></i></div>
+            <h4 class="m-0 font-weight-bold">Track 1: Channel at Scale</h4>
+          </div>
+          <p class="text-muted">Partners independently sell, deliver, and manage the full ICTGlobe portfolio to their local clients using the Reseller Hub as their primary operational backbone framework.</p>
+          <ul class="list-unstyled pt-2 text-secondary">
+            <li><i class="fas fa-check text-success me-2"></i> Partner Enablement & Certification</li>
+            <li><i class="fas fa-check text-success me-2"></i> Tiered SLA support at every single tier</li>
+            <li><i class="fas fa-check text-success me-2"></i> Dynamic Partner Independence Incentives</li>
+          </ul>
+          <div class="mt-4 p-3 rounded text-center" style="background-color: #f0f4ff;">
+            <span class="text-highlight d-block h5 mb-0">15% – 30%</span>
+            <small class="text-muted">Targeted Revenue Uplift Per Active Partner</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="engine-card">
+          <div class="d-flex align-items-center mb-3">
+            <div class="p-3 bg-light rounded-circle text-primary me-3"><i class="fas fa-building fa-2x"></i></div>
+            <h4 class="m-0 font-weight-bold">Track 2: Enterprise by Design</h4>
+          </div>
+          <p class="text-muted">Our specialized Enterprise Division actively seeks large, complex deals directly, leveraging transparent Joint Venture (JV) agreements for partner-originated pipelines.</p>
+          <ul class="list-unstyled pt-2 text-secondary">
+            <li><i class="fas fa-check text-success me-2"></i> Strategic Deal Desk support access</li>
+            <li><i class="fas fa-check text-success me-2"></i> Structured JV Partner Rewards Systems</li>
+            <li><i class="fas fa-check text-success me-2"></i> Hard target: Never walk away from complex scale</li>
+          </ul>
+          <div class="mt-4 p-3 rounded text-center" style="background-color: #f0f4ff;">
+            <span class="text-highlight d-block h5 mb-0">30% – 50%</span>
+            <small class="text-muted">Faster Targeted Time-to-Revenue Cycles</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- The Reseller Hub Section -->
+  <section id="resellerHubContainer" class="mb-5 py-5 rounded-4" style="background: #fdfdfd; border: 1px solid #eee; padding: 30px;">
+    <div class="row align-items-center">
+      <div class="col-lg-5 mb-4 mb-lg-0">
+        <span class="strategy-badge">OUR COMPETITIVE MOAT</span>
+        <h2 class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif;">The Reseller Hub</h2>
+        <p class="text-secondary mt-3">"The Ultimate Operating System for ICT Resellers." By deeply embedding our provisioning tools directly into how our partners manage operations, we increase switching costs and guarantee high structural retention.</p>
+        <div class="p-3 bg-white border rounded shadow-sm d-flex align-items-center mt-4">
+          <i class="fas fa-shield-alt fa-2x text-warning me-3"></i>
+          <div>
+            <h6 class="m-0 font-weight-bold">20% - 40% Churn Reduction</h6>
+            <small class="text-muted">Projected long-term stability metrics</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-7">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="hub-feature">
+              <h5>Single Unified Interface</h5>
+              <p class="small text-muted">One single management dashboard for all ordering, billing, provisioning, and tracking tickets.</p>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="hub-feature">
+              <h5>Automated Provisioning</h5>
+              <p class="small text-muted">Eliminating all manual operational delays to step up provisioning timeframes safely.</p>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="hub-feature">
+              <h5>Real-Time Analytics</h5>
+              <p class="small text-muted">Enterprise-grade reporting dashboards to check client performance variables instantly.</p>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="hub-feature">
+              <h5>Billing Automation</h5>
+              <p class="small text-muted">Seamless invoicing synchronization to drop admin overhead down to zero errors.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Support Tier Matrix Section -->
+  <section id="supportMatrixContainer" class="mb-5 py-4">
+    <div class="text-center mb-5">
+      <span class="strategy-badge">REVENUE TRANSFORMATION</span>
+      <h2  class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif;">Support Tier Matrix</h2>
+      <p class="dark-subtext">Hover over a card to reveal its targeted service level agreements.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      
+      <!-- CARD 1: STANDARD -->
+      <div class="col-md-4">
+        <div class="flip-card-container">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <div class="card-icon-wrap">
+                <i class="fas fa-layer-group"></i>
+              </div>
+              <h3  class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif; letter-spacing: 1px;">STANDARD</h3>
+              <p class="front-sub small px-3 m-0">Base Operational Support Framework</p>
+              <span class="badge bg-dark mt-3">Hover to inspect</span>
+            </div>
+            <div class="flip-card-back">
+              <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-layer-group text-primary me-2 font-size: 1.2rem;"></i>
+                <h4  class="mt-2 font-weight-bold" m-0>Standard Tier</h4>
+              </div>
+              <p class="dark-subtext small mb-2">All active base partners framework agreements</p>
+              <hr class="my-2">
+              <ul class="list-unstyled small dark-text m-0">
+                <li class="mb-2"><i class="fas fa-clock me-2 text-primary"></i> 08:00 - 17:00 | Mon - Fri</li>
+                <li class="mb-2"><i class="fas fa-reply me-2 text-primary"></i> 4-Hour Response Baseline</li>
+                <li class="mb-2"><i class="fas fa-ticket-alt me-2 text-primary"></i> Portal-based Ticket Logging</li>
+                <li class="mb-2"><i class="fas fa-file-invoice me-2 text-primary"></i> Monthly SLA Reporting Metrics</li>
+              </ul>
+              <div class="position-absolute bottom-0 start-0 end-0 p-3 bg-light text-center font-weight-bold small dark-subtext" style="border-radius: 0 0 16px 16px; border-top: 1px solid #dee2e6;">
+                Included in base package
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 2: PREMIUM -->
+      <div class="col-md-4">
+        <div class="flip-card-container featured">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <div class="card-icon-wrap">
+                <i class="fas fa-star"></i>
+              </div>
+              <h3  class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif; letter-spacing: 1px; color: white;">PREMIUM</h3>
+              <p class="front-sub small px-3 m-0">High-Priority Growth Architecture</p>
+              <span class="badge bg-light text-primary mt-3">Hover to inspect</span>
+            </div>
+            <div class="flip-card-back">
+              <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-star text-primary me-2 font-size: 1.2rem;"></i>
+                <h4  class="mt-2 font-weight-bold" text-highlight m-0>Premium Tier</h4>
+              </div>
+              <p class="dark-subtext small mb-2">For scaling partners requiring urgent turnarounds</p>
+              <hr class="my-2">
+              <ul class="list-unstyled small dark-text m-0">
+                <li class="mb-2"><i class="fas fa-clock me-2 text-primary"></i> 07:00 - 20:00 | Mon - Sat</li>
+                <li class="mb-2"><i class="fas fa-bolt me-2 text-primary"></i> 2-Hour Response Window</li>
+                <li class="mb-2"><i class="fas fa-phone-alt me-2 text-primary"></i> Dedicated Escalation Hotline</li>
+                <li class="mb-2"><i class="fas fa-chart-line me-2 text-primary"></i> Proactive Monitoring Alerts</li>
+              </ul>
+              <div class="position-absolute bottom-0 start-0 end-0 p-3 text-center font-weight-bold small text-white" style="background: #0137FB; border-radius: 0 0 16px 16px;">
+                Monthly Premium Surcharge
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CARD 3: ENTERPRISE -->
+      <div class="col-md-4">
+        <div class="flip-card-container">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <div class="card-icon-wrap">
+                <i class="fas fa-crown"></i>
+              </div>
+              <h3  class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif; letter-spacing: 1px;">ENTERPRISE</h3>
+              <p class="front-sub small px-3 m-0">Strategic Joint Venture Capabilities</p>
+              <span class="badge bg-dark mt-3">Hover to inspect</span>
+            </div>
+            <div class="flip-card-back">
+              <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-crown text-primary me-2 font-size: 1.2rem;"></i>
+                <h4  class="mt-2 font-weight-bold">Enterprise Tier</h4>
+              </div>
+              <p class="dark-subtext small mb-2">Strategic accounts and specialized JV options</p>
+              <hr class="my-2">
+              <ul class="list-unstyled small dark-text m-0">
+                <li class="mb-2"><i class="fas fa-infinity me-2 text-primary"></i> 24 / 7 / 365 Full Coverage</li>
+                <li class="mb-2"><i class="fas fa-star me-2 text-primary"></i> 30-Min High Response SLA</li>
+                <li class="mb-2"><i class="fas fa-user-shield me-2 text-primary"></i> Named Service Controller</li>
+                <li class="mb-2"><i class="fas fa-tachometer-alt me-2 text-primary"></i> Executive QBR Dashboards</li>
+              </ul>
+              <div class="position-absolute bottom-0 start-0 end-0 p-3 bg-light text-center font-weight-bold small dark-subtext" style="border-radius: 0 0 16px 16px; border-top: 1px solid #dee2e6;">
+                Strategic Pricing Matrix
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- BCO Ecosystem Section -->
+  <section id="bcpEcosystemContainer" class="mb-5 py-4">
+    <div class="text-center mb-5">
+      <span class="strategy-badge">ECOSYSTEM SYNCHRONIZATION</span>
+      <h2 class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif;">BCO Ecosystem</h2>
+      <p class="dark-subtext">Hover over the business units to see our synchronized operations activate.</p>
+    </div>
+
+    <div class="row g-4 pt-5">
+      
+      <!-- ENTITY 1: ICTDIGITAL -->
+      <div class="col-md-3 col-6">
+        <div class="eco-card-wrapper">
+          <div class="eco-box-interactive">
+            <div class="eco-char-circle">
+              <img src="./Pimages/digital.png" alt="ICTDigital Hero">
+            </div>
+            <h5 class="mt-2 font-weight-bold"><strong>ICTDigital</strong></h5>
+            <p class="small dark-subtext m-0">Marketing, Brand Architecture & Digital Inbound Assets</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENTITY 2: ICTENGAGE -->
+      <div class="col-md-3 col-6">
+        <div class="eco-card-wrapper">
+          <div class="eco-box-interactive">
+            <div class="eco-char-circle">
+              <img src="./Pimages/engage.png" alt="ICTEngage Hero">
+            </div>
+            <h5 class="mt-2 font-weight-bold"><strong>ICTEngage</strong></h5>
+            <p class="small dark-subtext m-0">Talent Development, Certification & Strategic Staff Training</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENTITY 3: ONERO -->
+      <div class="col-md-3 col-6">
+        <div class="eco-card-wrapper">
+          <div class="eco-box-interactive">
+            <div class="eco-char-circle">
+              <img src="./Pimages/MSP.png" alt="MSP Hero">
+            </div>
+            <h5 class="mt-2 font-weight-bold"><strong>Global MSP</strong></h5>
+            <p class="small dark-subtext m-0">Complementary Enterprise Delivery & Cross-Sell Solutions</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ENTITY 4: ICTFORUM -->
+      <div class="col-md-3 col-6">
+        <div class="eco-card-wrapper">
+          <div class="eco-box-interactive">
+            <div class="eco-icon-fallback">
+              <i class="fas fa-comments"></i>
+            </div>
+            <h5 class="mt-2 font-weight-bold"><strong>ICTforum</strong></h5>
+            <p class="small dark-subtext m-0">Partner Communities, Networking & Shared Alignment Hubs</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Executive Action Banner -->
+    <div class="mt-5 p-4 rounded text-center text-white" style="background: linear-gradient(135deg, #0137FB 0%, #0026b3 100%); box-shadow: 0 4px 15px rgba(1, 55, 251, 0.15);">
+      <h5 class="m-0 font-weight-bold" style="letter-spacing: 0.5px;">
+        <i class="fas fa-quote-left me-2 text-warning"></i> Every person owns a piece of the execution. The strategy is set, now it's time to deliver. <i class="fas fa-quote-right ms-2 text-warning"></i>
+      </h5>
+    </div>
+  </section>
+
+  <!-- Milestones & KPI Targets Section -->
+  <section id="kpiContainer" class="mb-5 py-4">
+    <div class="text-center mb-5">
+      <h2 class="mt-2 font-weight-bold" style="font-family: 'Righteous', sans-serif; font-size: 2.5rem; color: #111;">Milestones & KPI Targets</h2>
+      <p class="text-muted">Tracking strategic execution velocities across our core platform workstreams.</p>
+    </div>
+    <div class="row g-4 text-center">
+      <div class="col-md-3 col-6">
+        <div class="p-3 border rounded-4 bg-white shadow-sm">
+          <div class="kpi-metric mb-1">99.999%</div>
+          <small class="font-weight-bold dark-text uppercase d-block mb-1">Network Uptime</small>
+          <p class="small text-muted m-0">Strict infrastructure operational assurance baseline target.</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="p-3 border rounded-4 bg-white shadow-sm">
+          <div class="kpi-metric mb-1">&lt; 30m</div>
+          <small class="font-weight-bold dark-text uppercase d-block mb-1">Enterprise Response</small>
+          <p class="small text-muted m-0">Urgent high-tier corporate escalation turnaround windows.</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="p-3 border rounded-4 bg-white shadow-sm">
+          <div class="kpi-metric mb-1">Zero</div>
+          <small class="font-weight-bold dark-text uppercase d-block mb-1">Provisioning Friction</small>
+          <p class="small text-muted m-0">Targeted administrative system sync latency overhead limits.</p>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="p-3 border rounded-4 bg-white shadow-sm">
+          <div class="kpi-metric mb-1">100%</div>
+          <small class="font-weight-bold dark-text uppercase d-block mb-1">Ecosystem Unity</small>
+          <p class="small text-muted m-0">Cross-divisional sync across active subsidiary workstreams.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ==================== FOOTER ==================== -->
+      <footer class="navbar navbar-default wh_footer">
+        <div class="footer-container mx-auto">
+            <div>
+               <a href="https://ictglobe.com/" target="_blank" style="text-decoration: none; color: inherit;"><img style="font-size: 20px;" src="./Pimages/ictglobe.png" alt="ICTGlobe" width="100px"></a>
+                <strong>Projects made easy</strong>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

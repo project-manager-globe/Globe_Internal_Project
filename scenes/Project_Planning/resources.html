@@ -2,7 +2,53 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8">
-  <title>Nowtech Project Plan</title>
+  <title>ICTGlobe Internal Updates</title>
+<script src="../../credentials.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+      // 1. Safe Session Authentication Check
+      if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+          sessionStorage.setItem('redirect_target', window.location.href);
+          window.location.replace("../../index.html"); 
+          return; 
+      }
+
+      // 2. Project Role-Guard Check
+      const currentUser = sessionStorage.getItem('currentUser_ICT');
+      
+      if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
+          const userData = authorizedUsers[currentUser];
+          const allowedProjects = userData.projects;
+          const role = userData.role;
+
+          // CHANGE THIS LINE HERE:
+          const currentProjectFolder = "resources"; 
+
+          if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+              alert("Access Denied: You do not hold credentials for this project panel.");
+              window.location.replace("../../index.html");
+          }
+      } else if (typeof authorizedUsers === 'undefined') {
+          console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+      }
+  });
+
+  // Active Logout Trigger
+  window.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+          logoutBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              sessionStorage.removeItem('isLoggedIn_ICT');
+              sessionStorage.removeItem('currentUser_ICT');
+              sessionStorage.removeItem('redirect_target'); 
+              window.location.replace("../../index.html"); 
+          });
+      }
+  });
+</script>
+
+
 <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,60 +69,36 @@
 <link rel="stylesheet" type="text/css" href="../index.css" />
 <link rel="stylesheet" type="text/css" href="../styles.css" /> 
 <link rel="stylesheet" href="../project.css">
-<!--<link rel="stylesheet" href="/css/index.css">-->
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>  
   
 <script src="https://kit.fontawesome.com/268d442577.js" crossorigin="anonymous"></script>
 
-
+<script src="../../credentials.js"></script>
 
 </head>
 
-<header class="navbar navbar-default wh_header" id="test" ;>
-  <div class="topcontainer">
-     <body>
-      
-      <div class="bg-primary">
-        <nav class="navbar  navbar-expand-md fixed-top navbar-dark">
+    <!-- ==================== CORPORATE TOP NAVBAR ==================== -->
+    <header class="navbar navbar-default wh_header" id="test">
+        <div class="topcontainer w-100">
+            <div class="bg-primary">
+                <nav class="navbar navbar-expand-md fixed-top navbar-dark">
+                    <a class="navbar-brand" href="/"><img src="./Pimages/ictglobe.png" height="40px" alt="ICTGlobe"></a>
+                    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item"><a href="./strategy.html" class="myTopButton">Strategy</a></li>
+                            <li class="nav-item"><a href="../../index.html#devisions" class="myTopButton">Devisions</a></li>
+                            <li class="nav-item"><a href="./resources.html" class="myTopButton" data-project="resources">Resources</a></li>
+                            <li class="nav-item"><a href="./projects.html" class="myTopButton">Projects</a></li>
 
-         <a class="navbar-brand" href="/" ><img src="./Pimages/ictglobe.png"  height="40px" alt="ICTGlobe"> </a>
-    
-
-
- <div class ="collapse navbar-collapse" id="navbarTogglerDemo02">
-     <ul class="navbar-nav ml-auto">
-
-     <!-- <li>
-            <span class="myTopButton" onclick="openNav()"> Sites</span>
-        </li>
-        -->
-        <li class="nav-item">
-          <a href="/index.html/#project"  class="myTopButton">Project</a>
-        </li>
-        <li class="nav-item">
-            <a href="/index.html/#devisions"  class="myTopButton">Devisions</a>
-        </li>
-        <li class="nav-item">
-            <a href="./client.html"  class="myTopButton">Client</a>
-        </li>
-        <li class="nav-item">
-          <a href="./resources.html"  class="myTopButton">Resources</a>
-        </li>
-        <li class="nav-item">
-          <a href="https://ictglobe.com/" target="_blank"  class="myTopButton">ICTGlobe</a>
-        </li>
-
- 
-        </ul>
-
-
-                        </nav>
-                        </div>
-
-                </div>
-     </div>
-  </header>
+                            <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
 	
 <body >
 <main>
@@ -168,7 +190,7 @@
               
               <div class="media">
                   <div class="layer">
-                      <p><a href="" target="_blank"><strong>Coming Soon ...</strong></a><br>
+                      <p><a href="./Pdocs/soon.mp4" target="_blank"><strong>Coming Soon ...</strong></a><br>
                           <!--<a href="" target="_blank"><strong>ICTGlobe Project Brief[V.2]</strong></a></p>-->
                   </div>
                   <img src="./Pimages/Couch.png" alt="Document"width="250" height="350" />
@@ -176,7 +198,7 @@
 
               <div class="media">
                   <div class="layer">
-                      <p><a href="" target="_blank"><strong>Coming Soon...</strong></a><br>
+                      <p><a href="./Pdocs/soon.mp4" target="_blank"><strong>Coming Soon ...</strong></a><br>
                           <!--<a href="" target="_blank"><strong></strong></a></p>-->
                   </div>
                   <img src="./Pimages/paper.jpg" alt="Document"width="250" height="250" />
@@ -188,13 +210,13 @@
  
   
 
-<footer class="navbar navbar-default wh_footer">
-  <div class=" footer-container mx-auto ">
-      <div>
-        <img  style="font-size: 20px;" src="./Pimages/ictglobe.png" alt="ICTLabs" width="100px" hight="5px" > <strong>Projects made easy</strong>
-      </div>
-  </div>
-  </footer>
+        <footer class="navbar navbar-default wh_footer">
+          <div class="footer-container mx-auto">
+            <div>
+             <a href="https://ictglobe.com/" target="_blank" style="text-decoration: none; color: inherit;"><img style="font-size: 20px;" src="./Pimages/ictglobe.png" alt="ICTGlobe" width="100px"></a> <strong>Projects made easy</strong>
+            </div>
+          </div>
+        </footer>
 
   </div>
 </main>

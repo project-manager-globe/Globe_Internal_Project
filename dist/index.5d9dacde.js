@@ -597,20 +597,20 @@ function hmrAccept(bundle /*: ParcelRequire */ , id /*: string */ ) {
 
 },{}],"1Z4Rq":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
-var _utils = require("./utils");
-var _panel = require("./panel");
-var _cursor = require("./cursor");
-var _cursorDefault = parcelHelpers.interopDefault(_cursor);
+var _utilsJs = require("./utils.js");
+var _panelJs = require("./panel.js");
+var _cursorJs = require("./cursor.js");
+var _cursorJsDefault = parcelHelpers.interopDefault(_cursorJs);
 const panels = [
     ...document.querySelectorAll('.panel')
 ];
 // Preload all images
-(0, _utils.preloadImages)().then(()=>{
+(0, _utilsJs.preloadImages)().then(()=>{
     // remove loader (loading class) 
     document.body.classList.remove('loading');
-    panels.forEach((panel)=>new (0, _panel.Panel)(panel));
+    panels.forEach((panel)=>new (0, _panelJs.Panel)(panel));
     // initialize custom cursor
-    const cursor = new (0, _cursorDefault.default)(document.querySelector('.cursor'));
+    const cursor = new (0, _cursorJsDefault.default)(document.querySelector('.cursor'));
     // mouse effects on all links and others
     [
         ...document.querySelectorAll('a, .panel__item-imgwrap, button')
@@ -620,7 +620,7 @@ const panels = [
     });
 });
 
-},{"./utils":"eYK4L","./panel":"6x2Pn","./cursor":"3kBc4","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eYK4L":[function(require,module,exports,__globalThis) {
+},{"./utils.js":"eYK4L","./panel.js":"6x2Pn","./cursor.js":"3kBc4","@parcel/transformer-js/src/esmodule-helpers.js":"gkKU3"}],"eYK4L":[function(require,module,exports,__globalThis) {
 var parcelHelpers = require("@parcel/transformer-js/src/esmodule-helpers.js");
 parcelHelpers.defineInteropFlag(exports);
 parcelHelpers.export(exports, "preloadImages", ()=>preloadImages);

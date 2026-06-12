@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ICTGlobe Project Management Hub</title>
+  
+  <script src="../../credentials.js"></script>
+  <script>
+    if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+        sessionStorage.setItem('redirect_target', window.location.href);
+        window.location.replace("../../index.html"); 
+    } else {
+        window.addEventListener('DOMContentLoaded', () => {
+            const currentUser = sessionStorage.getItem('currentUser_ICT');
+            if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
+                const userData = authorizedUsers[currentUser];
+                const allowedProjects = userData.projects || [];
+                const role = userData.role;
+                
+                window.currentUserRole = role;
+                window.currentUserName = currentUser;
+                window.currentUserAllowedProjects = allowedProjects; 
+
+                window.checkWorkspaceAccess = function(projectToken) {
+                    if (role === 'admin' || allowedProjects.includes('all') || allowedProjects.includes('projects_dashboard')) {
+                        return true;
+                    }
+                    return allowedProjects.map(p => p.toLowerCase()).includes(projectToken.toLowerCase());
+                };
+
+                if (role === 'admin') {
+                    document.querySelectorAll('.admin-only-action').forEach(b => b.style.setProperty('display', 'inline-block', 'important'));
+                }
+            }
+        });
+    }
+
+   window.addEventListener('DOMContentLoaded', () => {
+        const logBtn = document.getElementById('logoutBtn');
+        if (logBtn) {
+            logBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                sessionStorage.removeItem('isLoggedIn_ICT');
+                sessionStorage.removeItem('currentUser_ICT');
+                window.location.replace("../../index.html"); 
+            });
+        }
+
+        // --- NEW ADD TASK LOGIC (UPDATED) ---
+
+        document.addEventListener('click', function(e) {
+            // 1. Handle "Add Task" Button Click -> Populate Users & Show Modal
+            if (e.target && e.target.id === 'btnAddTask') {
+                e.preventDefault();
+                const taskFormOverlay = document.getElementById('taskFormOverlay');
+                const assigneeSelect = document.getElementById('tAssignee');
+                
+                if (typeof authorizedUsers !== 'undefined' && assigneeSelect) {
+                    assigneeSelect.innerHTML = '<option value="">Select Assignee...</option>';
+                    Object.keys(authorizedUsers).forEach(user => {
+                        const opt = document.createElement('option');
+                        opt.value = user;
+                        opt.textContent = user;
+                        assigneeSelect.appendChild(opt);
+                    });
+                }
+                if (taskFormOverlay) taskFormOverlay.style.display = 'flex';
+            }
+
+            if (e.target && (e.target.id === 'closeTaskFormBtn' || e.target.id === 'cancelTaskBtn')) {
+                const taskFormOverlay = document.getElementById('taskFormOverlay');
+                if (taskFormOverlay) taskFormOverlay.style.display = 'none';
+            }
+        });
+
+        const createTaskForm = document.getElementById('createTaskForm');
+        if (createTaskForm) {
+            createTaskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const pId = (typeof activeWorkspaceProjectId !== 'undefined') ? activeWorkspaceProjectId : null;
+                if (!pId) { alert("Error: No project selected."); return; }
+
+                const payload = {
+                    action: "appendTask",
+                    projectId: pId,
+                    title: document.getElementById('tTitle').value,
+                    description: document.getElementById('tDesc').value,
+                    assignee: document.getElementById('tAssignee').value,
+                    status: document.getElementById('tStatus').value,
+                    note: document.getElementById('tNote').value,
+                    creator: window.currentUserName 
+                };
+
+                const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+
+                fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(() => {
+                    alert("Task sent to server!");
+                    createTaskForm.reset();
+                    document.getElementById('taskFormOverlay').style.display = 'none';
+                    if (typeof activeWorkspaceProjectId !== 'undefined') fetchProjectTasks(activeWorkspaceProjectId); 
+                })
+                .catch(err => {
+                    console.error("Fetch Error:", err);
+                    alert("Error: Check console for details.");
+                });
+            });
+        }
+    });
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="../index.css" />
+  <link rel="stylesheet" type="text/css" href="../styles.css" /> 
+  <link rel="stylesheet" href="../project.css">
+
+  <style>
+    .content__START, strong.HOW { color: #005AFC !important; }
+    .table tbody tr td { color: #212529 !important; font-weight: normal !important; background: #ffffff !important; }
+    .insights-card h2, .recent-orders h3 { color: #212529 !important; }
+    
+    .clickable-cat-card { cursor: pointer; transition: all 0.2s ease; }
+    .clickable-cat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,90,252,0.15) !important; border-color: #005AFC !important; }
+    .clickable-cat-card.active-filter { border: 2px solid #005AFC !important; background-color: rgba(0, 90, 252, 0.03) !important; }
+
+    .custom-modal-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 99999 !important; display: none; align-items: center !important; justify-content: center !important; }
+    .custom-modal-window { background: #ffffff !important; width: 100% !important; max-width: 520px !important; min-height: auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important; padding: 28px !important; box-sizing: border-box !important; }
+    .custom-modal-window input, .custom-modal-window select, .custom-modal-window textarea { width: 100% !important; display: block !important; margin-top: 4px !important; }
+
+    .chart-box { background: #ffffff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.03); height: 320px; }
+    
+    .bar-graph-container { 
+        display: flex; 
+        align-items: flex-end; 
+        justify-content: flex-start !important; 
+        gap: 6px !important;
+        height: 200px; 
+        padding-top: 20px; 
+        border-bottom: 2px solid #e2e8f0; 
+        width: 100%; 
+        position: relative; 
+    }
+    
+    .graph-pillar-group { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        width: 100%; 
+        max-width: 55px !important; 
+        height: 100%; 
+        justify-content: flex-end; 
+        flex-grow: 1 !important;
+    }
+    .graph-pillar { 
+        width: 100%; 
+        background: linear-gradient(180deg, #005AFC 0%, #3b82f6 100%); 
+        border-radius: 4px 4px 0 0 !important; 
+        position: relative; 
+        cursor: pointer; 
+    }
+    .graph-label { text-align: center; font-size: 10px !important; font-weight: 500; color: #64748b; margin-top: 6px; width: 100%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+    .donut-segment { transform: rotate(-90deg); transform-origin: center; }
+
+    /* KANBAN AND OVERLAY SURGICAL DRAWERS */
+    .kanban-board { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 15px; }
+    .kanban-column { flex: 1; min-width: 240px; background: #f8f9fa; border-radius: 8px; padding: 1rem; border: 1px solid #e9ecef; display: flex; flex-direction: column; }
+    .kanban-column-header { font-weight: bold; padding-bottom: 0.75rem; margin-bottom: 1rem; border-bottom: 2px solid #dee2e6; color: #495057; display: flex; justify-content: space-between; align-items: center; }
+    .task-list { min-height: 200px; display: flex; flex-direction: column; gap: 0.75rem; }
+    .kanban-card { background: #ffffff; border-radius: 6px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-left: 4px solid #005AFC; position: relative; }
+    .update-log-container { background: #ffffff; border-radius: 8px; padding: 1.5rem; border: 1px solid #dee2e6; height: 380px; overflow-y: auto; }
+    .log-entry { padding-bottom: 0.75rem; margin-bottom: 0.75rem; border-bottom: 1px dashed #e9ecef; font-size: 0.85rem; }
+    
+    .sliding-panel-drawer { position: fixed; top: 0; height: 100vh; background: #ffffff; box-shadow: 0 0 30px rgba(0,0,0,0.15); z-index: 10050; transition: transform 0.3s ease-out; padding: 25px; overflow-y: auto; box-sizing: border-box; }
+    #leftViewPanel { left: 0; width: 560px; transform: translateX(-100%); border-right: 1px solid #dee2e6; }
+    #leftViewPanel.open-panel { transform: translateX(0); }
+    #rightUpdateSidebar { right: 0; width: 420px; transform: translateX(100%); border-left: 1px solid #dee2e6; }
+    #rightUpdateSidebar.open-panel { transform: translateX(0); }
+    .drawer-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 10040; display: none; }
+    .tall-select { height: auto !important; min-height: 120px; }
+  </style>
+</head>
+<body>
+
+   <header class="navbar navbar-default wh_header" id="test">
+        <div class="topcontainer w-100">
+            <div class="bg-primary">
+                <nav class="navbar navbar-expand-md fixed-top navbar-dark">
+                    <a class="navbar-brand" href="/"><img src="./Pimages/ictglobe.png" height="40px" alt="ICTGlobe"></a>
+                    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item"><a href="./strategy.html" class="myTopButton">Strategy</a></li>
+                            <li class="nav-item"><a href="../../index.html#devisions" class="myTopButton">Devisions</a></li>
+                            <li class="nav-item"><a href="./resources.html" class="myTopButton" data-project="resources">Resources</a></li>
+                            <li class="nav-item"><a href="./projects.html" class="myTopButton">Projects</a></li>
+                            <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+  <div class="container-fluid px-4 mt-4 pb-5">
+    
+    <div id="mainDashboardView" class="dashboard-container" style="display: block !important; width: 100% !important;">
+        <main>
+            <div class="text-center mb-5 mt-3">
+                <h1 class="content__START font-weight-bold m-0" style="font-size: 2.6rem; letter-spacing: -0.5px;">SLiM Project Suite</h1>
+                <p class="text-secondary mt-1 mb-0" style="font-size: 1.15rem; font-family: 'Roboto', sans-serif;">
+                    <strong class="HOW">S</strong>trategy &middot; <strong class="HOW">L</strong>eadership &middot; <strong class="HOW">I</strong>mprove &middot; <strong class="HOW">M</strong>easure
+                </p>
+            </div>
+
+            <div class="row g-4 mb-4">
+              <div class="col-md-3">
+                <div class="insights-card">
+                  <div class="card-icon" style="background: #005AFC;"><i class="fas fa-cubes"></i></div>
+                  <h5 class="text-muted mb-1">Total Projects</h5>
+                  <h2 class="font-weight-bold" id="kpiTotalCount">0 Projects</h2>
+                  <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress-bar" id="pbTotal" style="width: 100%; background-color: #005AFC;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="insights-card">
+                  <div class="card-icon" style="background: #3498db;"><i class="fas fa-spinner fa-spin"></i></div>
+                  <h5 class="text-muted mb-1">In Progress</h5>
+                  <h2 class="font-weight-bold" id="kpiInProgressCount">0 Tracks</h2>
+                  <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress-bar bg-info" id="pbInProgress" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="insights-card">
+                  <div class="card-icon" style="background: #ffbe22;"><i class="fas fa-hourglass-half"></i></div>
+                  <h5 class="text-muted mb-1">Active Hypercare</h5>
+                  <h2 class="font-weight-bold" id="kpiReviewCount">0 Areas</h2>
+                  <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress-bar bg-warning" id="pbHypercare" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="insights-card">
+                  <div class="card-icon" style="background: #2ed573;"><i class="fas fa-check-double"></i></div>
+                  <h5 class="text-muted mb-1">Signed-Off</h5>
+                  <h2 class="font-weight-bold" id="kpiCompleteCount">0 Closed</h2>
+                  <div class="progress mt-2" style="height: 5px;">
+                    <div class="progress-bar bg-success" id="pbSignedOff" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="font-weight-bold m-0 text-secondary" style="font-size: 1.05rem;">Filter Registry by Classification</h4>
+                <button class="btn btn-sm btn-link text-primary p-0 text-decoration-none fw-bold" id="clearClassificationFilter" style="display: none;"><i class="fas fa-times-circle me-1"></i> Clear Filter (Back to All Projects)</button>
+            </div>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3"><div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Internal Project"><div><span class="text-muted small d-block">Internal Projects</span><strong class="h4 m-0 text-dark" id="catInternal">0</strong></div><i class="fas fa-network-wired text-primary fa-lg"></i></div></div>
+                <div class="col-md-3"><div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Enterprise Project"><div><span class="text-muted small d-block">Enterprise Projects</span><strong class="h4 m-0 text-dark" id="catEnterprise">0</strong></div><i class="fas fa-building text-info fa-lg"></i></div></div>
+                <div class="col-md-3"><div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Special Project"><div><span class="text-muted small d-block">Special Projects</span><strong class="h4 m-0 text-dark" id="catSpecial">0</strong></div><i class="fas fa-star text-warning fa-lg"></i></div></div>
+                <div class="col-md-3"><div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Client Project"><div><span class="text-muted small d-block">Client Projects</span><strong class="h4 m-0 text-dark" id="catClient">0</strong></div><i class="fas fa-handshake text-success fa-lg"></i></div></div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-8">
+                    <div class="chart-box">
+                        <h5 class="font-weight-bold text-dark m-0">Project Execution Progress Matrix</h5>
+                        <small class="text-muted">Real-time dynamic lifecycle completions tracker</small>
+                        <div class="bar-graph-container" id="chartBarWrapper"></div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="chart-box d-flex flex-column align-items-center justify-content-center position-relative">
+                        <h5 class="font-weight-bold text-dark align-self-start position-absolute top-0 start-0 m-3 mb-0" style="font-size:1rem;">Phase Breakout</h5>
+                        <svg width="160" height="160" viewBox="0 0 42 42" class="donut-chart" id="wsDonutSvg">
+                            <circle class="donut-hole" cx="21" cy="21" r="15.915" fill="#fff"></circle>
+                            <circle class="donut-ring" cx="21" cy="21" r="15.915" fill="transparent" stroke="#e2e8f0" stroke-width="4"></circle>
+                            <circle id="donutSeg1" class="donut-segment" cx="21" cy="21" r="15.915" fill="transparent" stroke="#005AFC" stroke-width="4" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
+                            <circle id="donutSeg2" class="donut-segment" cx="21" cy="21" r="15.915" fill="transparent" stroke="#ffbe22" stroke-width="4" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
+                            <circle id="donutSeg3" class="donut-segment" cx="21" cy="21" r="15.915" fill="transparent" stroke="#2ed573" stroke-width="4" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
+                        </svg>
+                        <div class="d-flex justify-content-center gap-3 mt-3 w-100 x-small" style="font-size: 0.75rem;">
+                            <span><i class="fas fa-circle text-primary me-1"></i>Exec/Plan</span>
+                            <span><i class="fas fa-circle text-warning me-1"></i>Risk/Stab</span>
+                            <span><i class="fas fa-circle text-success me-1"></i>Signed-Off</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recent-orders" id="registryAnchor">
+              <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+                <div>
+                   <h3 class="font-weight-bold m-0" id="registryTitle">Project Portfolio Registry</h3>
+                   <p class="text-muted small m-0" id="registrySubtitle">Central operational tracks managed within the system suite.</p>
+                </div>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                  <div class="btn-group btn-group-sm" role="group" id="filterBtnGroup">
+                    <button type="button" class="btn btn-outline-secondary filter-btn active" data-filter="all">All Projects</button>
+                    <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="New">New</button>
+                    <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="Planning">Planning</button>
+                    <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="Execution">Execution</button>
+                    <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="High Risk">High Risk</button>
+                    <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="Stabilization">Stabilization</button>
+                    <button type="button" class="btn btn-outline-secondary filter-btn" data-filter="Signed-Off">Signed-Off</button>
+                  </div>
+                  
+                  <button class="btn btn-sm btn-success px-3 admin-only-action" id="openFormBtn" style="display: none;">
+                    <i class="fas fa-plus me-2"></i>New Project
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Project System Identifier</th>
+                      <th>Sponsor & Classification</th>
+                      <th>Overall Progress Target</th>
+                      <th>Current Project Phase</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="liveTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="singleWorkspaceView" style="display: none; padding-top: 20px;">
+        <button id="closeWorkspaceBtn" class="btn btn-sm btn-outline-secondary mb-3">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard Registry
+        </button>
+        
+        <h1 id="wsProjectName">Loading...</h1>
+        <h4 id="wsProjectToken" class="text-muted"></h4>
+        
+        <div class="row mt-4 mb-4">
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm">
+                    <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Sponsor</p>
+                    <h5 id="wsSponsor">---</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm">
+                    <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Classification</p>
+                    <h5 id="wsClassification">---</h5>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <p class="mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Progress</p>
+                        <span id="wsStatusBadge" class="badge"></span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="wsProgressText" class="fw-bold fs-5">0%</span>
+                        <div class="progress w-100" style="height: 8px;">
+                            <div id="wsProgressBar" class="progress-bar bg-primary" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0 p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="m-0">Task Board</h4>
+                        <button id="btnAddTask" class="btn btn-sm btn-outline-primary admin-only-action" style="display:none;">
+                            <i class="fas fa-plus"></i> Add Task
+                        </button>
+                    </div>
+                    
+                    <div class="kanban-board">
+                        <div class="kanban-column" id="col-New"><div class="kanban-column-header"><span>New</span> <span class="badge bg-secondary rounded-pill" id="badge-New">0</span></div><div class="task-list" id="list-New"></div></div>
+                        <div class="kanban-column" id="col-InProgress"><div class="kanban-column-header"><span>In Progress</span> <span class="badge bg-info rounded-pill" id="badge-InProgress">0</span></div><div class="task-list" id="list-InProgress"></div></div>
+                        <div class="kanban-column" id="col-UnderReview"><div class="kanban-column-header"><span>Under Review</span> <span class="badge bg-warning text-dark rounded-pill" id="badge-UnderReview">0</span></div><div class="task-list" id="list-UnderReview"></div></div>
+                        <div class="kanban-column" id="col-Done"><div class="kanban-column-header"><span>Done</span> <span class="badge bg-success rounded-pill" id="badge-Done">0</span></div><div class="task-list" id="list-Done"></div></div>
+                        <div class="kanban-column" id="col-Cancelled"><div class="kanban-column-header"><span>Cancelled</span> <span class="badge bg-dark rounded-pill" id="badge-Cancelled">0</span></div><div class="task-list" id="list-Cancelled"></div></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 p-4">
+                    <h4 class="mb-3">Project Logs</h4>
+                    <div class="update-log-container" id="wsAuditStream">
+                        <p class="text-muted text-center py-4">No activity recorded yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  </div>
+
+  <div class="custom-modal-overlay" id="customFormOverlay">
+    <div class="custom-modal-window">
+        <form id="createProjectForm">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h5 class="font-weight-bold text-primary m-0">Deploy New Project</h5>
+                <button type="button" class="btn-close" id="closeFormXBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-secondary mb-1">Project Name</label>
+              <input type="text" id="pName" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold text-secondary mb-1">Unique Token ID</label>
+              <input type="text" id="pId" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Authorized Team Members</label>
+                <select id="pTeam" class="form-select form-select-sm tall-select" multiple required size="5"></select>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                  <label class="form-label small fw-bold text-secondary mb-1">Functional Sponsor</label>
+                  <input type="text" id="pSponsor" class="form-control form-control-sm" required>
+                </div>
+                <div class="col-6">
+                  <label class="form-label small fw-bold text-secondary mb-1">Classification Group</label>
+                  <select id="pClass" class="form-select form-select-sm">
+                      <option value="Internal Project">Internal Project</option>
+                      <option value="Enterprise Project">Enterprise Project</option>
+                      <option value="Special Project">Special Project</option>
+                      <option value="Client Project">Client Project</option>
+                  </select>
+                </div>
+            </div>
+            <div class="row g-2 mb-4">
+              <div class="col-6">
+                <label class="form-label small fw-bold text-secondary mb-1">Current Phase</label>
+                <select id="pStatus" class="form-select form-select-sm">
+                    <option value="New" selected>New</option> 
+                    <option value="Planning">Planning</option>
+                    <option value="Execution">Execution</option>
+                    <option value="High Risk">High Risk</option>
+                    <option value="Stabilization">Stabilization</option>
+                    <option value="Signed-Off">Signed-Off</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-bold text-secondary mb-1">Starting Progress (%)</label>
+                <input type="number" id="pProgress" class="form-control form-control-sm" min="0" max="100" value="0">
+              </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-light btn-sm px-3 border" id="cancelFormBtn">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm px-3" style="background-color: #005AFC;">Commit to Master Sheet</button>
+            </div>
+        </form>
+    </div>
+  </div>
+
+  <div class="custom-modal-overlay" id="taskFormOverlay">
+    <div class="custom-modal-window">
+        <form id="createTaskForm">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h5 class="font-weight-bold text-primary m-0">Generate Operational Task</h5>
+                <button type="button" class="btn-close" id="closeTaskFormBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Task Title / Instruction</label>
+                <input type="text" id="tTitle" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Description</label>
+                <textarea id="tDesc" class="form-control form-control-sm" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Assign To</label>
+                <select id="tAssignee" class="form-control form-control-sm"></select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Initial Status</label>
+                <select id="tStatus" class="form-control form-control-sm">
+                    <option value="New">New</option>
+                    <option value="InProgress">In Progress</option>
+                    <option value="UnderReview">Under Review</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Initial Note</label>
+                <textarea id="tNote" class="form-control form-control-sm" rows="2"></textarea>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" id="cancelTaskBtn" class="btn btn-light btn-sm px-3 border">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm px-3" style="background-color: #005AFC;">Create Task</button>
+            </div>
+        </form>
+    </div>
+  </div>
+
+  <div class="drawer-backdrop" id="panelBackdrop"></div>
+
+  <div class="sliding-panel-drawer" id="leftViewPanel">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+        <h5 class="fw-bold text-dark m-0"><i class="fas fa-eye me-2 text-primary"></i>Task Master Overview</h5>
+        <button type="button" id="closeLeftPanelBtn" class="btn-close border-0 bg-transparent fs-4">&times;</button>
+    </div>
+    <div id="leftPanelContent"></div>
+  </div>
+
+  <div class="sliding-panel-drawer" id="rightUpdateSidebar">
+    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+        <h5 class="fw-bold text-primary m-0"><i class="fas fa-edit me-2"></i>Action Modifier Panel</h5>
+        <button type="button" id="closeRightPanelBtn" class="btn-close border-0 bg-transparent fs-4">&times;</button>
+    </div>
+    <div id="rightPanelContent"></div>
+  </div>
+
+  <script>
+    const webAppUrl = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+    let masterProjectsData = [];
+    let activeWorkspaceProjectId = null;
+    let activeTasksCache = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+        loadDashboardData();
+        setupClassificationFilters();
+        setupStatusTabFilters();
+        setupModalHooks();
+        setupSurgicalDrawerEvents();
+    });
+
+    function loadDashboardData() {
+        fetch(`${webAppUrl}?action=readDashboard`)
+        .then(res => res.json())
+        .then(data => {
+            masterProjectsData = data;
+            calculateKPIs(data);
+            renderProjectsTable(data);
+            renderProgressMatrix(data);
+            renderPhaseBreakoutDonut(data);
+        })
+        .catch(err => console.error("KPI Sync Error:", err));
+    }
+
+    function calculateKPIs(projects) {
+        document.getElementById("kpiTotalCount").textContent = `${projects.length} Projects`;
+        const inProgress = projects.filter(p => p.status === 'Execution').length;
+        const hypercare = projects.filter(p => p.status === 'Stabilization' || p.status === 'High Risk').length;
+        const signoff = projects.filter(p => p.status === 'Signed-Off').length;
+
+        document.getElementById("kpiInProgressCount").textContent = `${inProgress} Tracks`;
+        document.getElementById("kpiReviewCount").textContent = `${hypercare} Areas`;
+        document.getElementById("kpiCompleteCount").textContent = `${signoff} Closed`;
+
+        const total = projects.length || 1;
+        document.getElementById("pbInProgress").style.width = `${(inProgress/total)*100}%`;
+        document.getElementById("pbHypercare").style.width = `${(hypercare/total)*100}%`;
+        document.getElementById("pbSignedOff").style.width = `${(signoff/total)*100}%`;
+
+        // Classification Card Totals Configuration
+        document.getElementById("catInternal").textContent = projects.filter(p => p.classification === 'Internal Project').length;
+        document.getElementById("catEnterprise").textContent = projects.filter(p => p.classification === 'Enterprise Project').length;
+        document.getElementById("catSpecial").textContent = projects.filter(p => p.classification === 'Special Project').length;
+        document.getElementById("catClient").textContent = projects.filter(p => p.classification === 'Client Project').length;
+    }
+
+    function renderProjectsTable(projects) {
+        const tbody = document.getElementById("liveTableBody");
+        tbody.innerHTML = "";
+        
+        projects.forEach(p => {
+            const tr = document.createElement("tr");
+            let badgeClass = "bg-secondary";
+            if(p.status === 'Execution') badgeClass="bg-info";
+            if(p.status === 'High Risk') badgeClass="bg-danger";
+            if(p.status === 'Stabilization') badgeClass="bg-warning text-dark";
+            if(p.status === 'Signed-Off') badgeClass="bg-success";
+
+            tr.innerHTML = `
+                <td>
+                    <span class="fw-bold text-primary d-block">${p.name}</span>
+                    <small class="text-muted text-uppercase fw-bold" style="font-size:0.7rem;">${p.id}</small>
+                </td>
+                <td>
+                    <span class="d-block text-dark small fw-bold">${p.sponsor || '---'}</span>
+                    <span class="badge bg-light text-secondary border">${p.classification || 'Unclassified'}</span>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center gap-2" style="max-width:180px;">
+                        <span class="small fw-bold text-dark">${p.progress}%</span>
+                        <div class="progress flex-grow-1" style="height:6px;">
+                            <div class="progress-bar bg-primary" style="width:${p.progress}%"></div>
+                        </div>
+                    </div>
+                </td>
+                <td><span class="badge ${badgeClass}">${p.status}</span></td>
+                <td>
+                    <button class="btn btn-sm btn-primary view-workspace-btn btn-enter-workspace" data-token="${p.id}">Workspace</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        document.querySelectorAll(".btn-enter-workspace").forEach(btn => {
+            btn.addEventListener("click", function() {
+                const token = this.getAttribute("data-token");
+                const project = masterProjectsData.find(p => p.id === token);
+                if(project) {
+                    if (typeof window.checkWorkspaceAccess === 'function' && !window.checkWorkspaceAccess(project.id)) {
+                        alert("Access Restricted: You are not assigned to this project suite scope.");
+                        return;
+                    }
+                    openWorkspace(project);
+                }
+            });
+        });
+    }
+
+    function openWorkspace(p) {
+        activeWorkspaceProjectId = p.id;
+        document.getElementById("mainDashboardView").style.setProperty("display", "none", "important");
+        document.getElementById("singleWorkspaceView").style.setProperty("display", "block", "important");
+
+        document.getElementById("wsProjectName").textContent = p.name;
+        document.getElementById("wsProjectToken").textContent = `ID: ${p.id.toUpperCase()}`;
+        document.getElementById("wsSponsor").textContent = p.sponsor || '---';
+        document.getElementById("wsClassification").textContent = p.classification || '---';
+        document.getElementById("wsProgressText").textContent = `${p.progress}%`;
+        document.getElementById("wsProgressBar").style.width = `${p.progress}%`;
+
+        let badge = document.getElementById("wsStatusBadge");
+        badge.textContent = p.status;
+        badge.className = "badge bg-primary";
+        if(p.status === 'High Risk') badge.className = "badge bg-danger";
+        if(p.status === 'Stabilization') badge.className = "badge bg-warning text-dark";
+        if(p.status === 'Signed-Off') badge.className = "badge bg-success";
+
+        fetchProjectTasks(p.id);
+    }
+
+    function fetchProjectTasks(projectId) {
+        ["New", "InProgress", "UnderReview", "Done", "Cancelled"].forEach(st => {
+            document.getElementById(`list-${st}`).innerHTML = `<p class="text-muted small text-center p-2">Loading...</p>`;
+        });
+
+        fetch(`${webAppUrl}?action=readTasks&projectId=${projectId}`)
+        .then(res => res.json())
+        .then(tasks => {
+            activeTasksCache = tasks;
+            populateAuditTrailLogStream(tasks);
+            ["New", "InProgress", "UnderReview", "Done", "Cancelled"].forEach(st => {
+                document.getElementById(`list-${st}`).innerHTML = "";
+                document.getElementById(`badge-${st}`).textContent = "0";
+            });
+
+            let counts = { New: 0, InProgress: 0, UnderReview: 0, Done: 0, Cancelled: 0 };
+
+            tasks.forEach(task => {
+                // Dynamic verification handler to support both uppercase and lowercase keys securely
+                const tStatus = task.Status || task.status || "New";
+                const tTitle = task.Title || task.title || "Untitled Task";
+                const tDesc = task.Description || task.description || "";
+                const tAssignee = task.Assignee || task.assignee || "";
+                const tId = task.Id || task.id;
+
+                const targetCol = document.getElementById(`list-${tStatus}`);
+                if (!targetCol) return;
+
+                counts[tStatus]++;
+                
+                const assignedUsers = tAssignee ? tAssignee.split(',').map(u => u.trim().toLowerCase()) : [];
+                const loggedInUser = (window.currentUserName || '').toLowerCase();
+                const isAssigned = assignedUsers.includes(loggedInUser);
+                const isAdmin = window.currentUserRole === 'admin';
+                const hasModifierRights = isAssigned || isAdmin;
+
+                const card = document.createElement("div");
+                card.className = "kanban-card mb-2";
+                card.style.borderLeftColor = tStatus === 'Done' ? '#2ed573' : (tStatus === 'UnderReview' ? '#ffbe22' : '#005AFC');
+                
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <strong class="text-dark d-block" style="font-size:0.9rem;">${tTitle}</strong>
+                        <button class="btn btn-xs text-primary p-0 btn-view-task" data-task-id="${tId}"><i class="fas fa-expand-alt"></i></button>
+                    </div>
+                    <p class="text-muted small mb-2 text-truncate" style="max-width:220px;">${tDesc || 'No descriptive context.'}</p>
+                    <div class="mb-2 d-flex align-items-center gap-1">
+                        <i class="fas fa-user-circle text-secondary" style="font-size:0.8rem;"></i>
+                        <span class="text-secondary fw-bold" style="font-size:0.75rem;">${tAssignee || 'Unassigned'}</span>
+                    </div>
+                    <div class="border-top pt-2 mt-1 d-flex align-items-center justify-content-between gap-1">
+                        <select class="form-select form-select-sm inline-status-modifier" data-task-id="${tId}" style="font-size:0.7rem; padding:1px 3px; width:auto; height:24px;">
+                            <option value="New" ${tStatus === 'New' ? 'selected' : ''}>New</option>
+                            <option value="InProgress" ${tStatus === 'InProgress' ? 'selected' : ''}>In Progress</option>
+                            <option value="UnderReview" ${tStatus === 'UnderReview' ? 'selected' : ''}>Under Review</option>
+                            <option value="Done" ${tStatus === 'Done' ? 'selected' : ''}>Done</option>
+                            <option value="Cancelled" ${tStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                        ${hasModifierRights ? `<button class="btn btn-xs btn-primary btn-modify-task" data-task-id="${tId}" style="font-size:0.65rem; padding:2px 6px;">Update</button>` : ''}
+                    </div>
+                `;
+                targetCol.appendChild(card);
+            });
+
+            Object.keys(counts).forEach(key => {
+                document.getElementById(`badge-${key}`).textContent = counts[key];
+            });
+        })
+        .catch(err => console.error("Error drawing tasks execution vector:", err));
+    }
+
+    function populateAuditTrailLogStream(tasks) {
+        const stream = document.getElementById("wsAuditStream");
+        stream.innerHTML = "";
+        let logsCount = 0;
+        
+        tasks.forEach(t => {
+            const note = t.Note || t.note;
+            const assignee = t.Assignee || t.assignee;
+            const title = t.Title || t.title;
+            const stamp = t.Timestamp || t.timestamp;
+
+            if(note) {
+                logsCount++;
+                const entry = document.createElement("div");
+                entry.className = "log-entry shadow-sm p-2 bg-light border-start border-primary rounded mb-2";
+                entry.innerHTML = `
+                    <div class="d-flex justify-content-between text-muted x-small mb-1 fw-bold">
+                        <span><i class="fas fa-user me-1"></i>${assignee || 'System'}</span>
+                        <span>${stamp || 'Recent'}</span>
+                    </div>
+                    <p class="m-0 text-dark fw-normal" style="font-size:0.8rem;"><strong>${title}:</strong> ${note}</p>
+                `;
+                stream.appendChild(entry);
+            }
+        });
+        if(logsCount === 0) {
+            stream.innerHTML = `<p class="text-muted text-center py-4">No logged workflow notes or modifications recorded.</p>`;
+        }
+    }
+
+    function setupSurgicalDrawerEvents() {
+        document.getElementById("closeLeftPanelBtn").addEventListener("click", closeDrawers);
+        document.getElementById("closeRightPanelBtn").addEventListener("click", closeDrawers);
+        document.getElementById("panelBackdrop").addEventListener("click", closeDrawers);
+
+        document.addEventListener("change", function(e) {
+            if(e.target && e.target.classList.contains("inline-status-modifier")) {
+                const taskId = e.target.getAttribute("data-task-id");
+                const newStatus = e.target.value;
+                commitTaskStateChange(taskId, newStatus, "Status selector configuration update.");
+            }
+        });
+
+        document.addEventListener("click", function(e) {
+            const viewBtn = e.target.closest(".btn-view-task");
+            if(viewBtn) {
+                openLeftViewDrawer(viewBtn.getAttribute("data-task-id"));
+            }
+
+            const updateBtn = e.target.closest(".btn-modify-task");
+            if(updateBtn) {
+                openRightUpdateDrawer(updateBtn.getAttribute("data-task-id"));
+            }
+        });
+    }
+
+    function openLeftViewDrawer(taskId) {
+        const task = activeTasksCache.find(t => String(t.Id || t.id) === String(taskId));
+        if(!task) return;
+
+        const tTitle = task.Title || task.title || "Untitled Task";
+        const tDesc = task.Description || task.description || "No details provided.";
+        const tAssignee = task.Assignee || task.assignee || "";
+        const tStatus = task.Status || task.status || "New";
+        const tNote = task.Note || task.note || "No notes attached.";
+
+        const content = document.getElementById("leftPanelContent");
+        content.innerHTML = `
+            <div class="card p-3 border-0 bg-light shadow-sm mb-3">
+                <h4 class="text-primary fw-bold mb-1">${tTitle}</h4>
+                <hr class="my-2">
+                <p class="text-dark mb-0" style="font-size:0.95rem;">${tDesc}</p>
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Assigned Operators Matrix</label>
+                <div class="p-2 border rounded bg-white d-flex flex-wrap gap-1 align-items-center">
+                    <i class="fas fa-users text-muted me-1"></i>
+                    ${tAssignee ? tAssignee.split(',').map(u => `<span class="badge bg-primary px-2 py-1">${u.trim()}</span>`).join('') : '<span class="text-muted small">No active resources assigned.</span>'}
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Status Track</label>
+                <span class="badge bg-dark px-3 py-2 fs-6 rounded">${tStatus}</span>
+            </div>
+            <hr>
+            <h6 class="fw-bold text-secondary mb-2"><i class="fas fa-history me-1"></i>Latest Modification Note</h6>
+            <div class="p-2 border rounded bg-light">
+                <p class="small text-dark p-1 mb-0 bg-white border rounded shadow-sm">${tNote}</p>
+            </div>
+        `;
+
+        document.getElementById("panelBackdrop").style.display = "block";
+        document.getElementById("leftViewPanel").classList.add("open-panel");
+    }
+
+    function openRightUpdateDrawer(taskId) {
+        const task = activeTasksCache.find(t => String(t.Id || t.id) === String(taskId));
+        if(!task) return;
+
+        const tTitle = task.Title || task.title || "Untitled Task";
+        const tAssignee = task.Assignee || task.assignee || "";
+        const tStatus = task.Status || task.status || "New";
+        const tId = task.Id || task.id;
+
+        const content = document.getElementById("rightPanelContent");
+        const isAdmin = window.currentUserRole === 'admin';
+
+        let adminMarkup = "";
+        if(isAdmin && typeof authorizedUsers !== 'undefined') {
+            let userOptions = Object.keys(authorizedUsers).map(u => `<option value="${u}">${u}</option>`).join('');
+            adminMarkup = `
+                <div class="card p-3 border-danger mb-3 bg-white shadow-sm">
+                    <label class="fw-bold text-danger small d-block mb-1 text-uppercase"><i class="fas fa-user-shield me-1"></i>Admin Resource Modifier</label>
+                    <div class="mb-2" id="adminAssigneesContainer">
+                        ${tAssignee ? tAssignee.split(',').map(u => `
+                            <span class="badge bg-light text-dark border p-2 mb-1 d-inline-flex align-items-center gap-2">
+                                ${u.trim()} 
+                                <i class="fas fa-times-circle text-danger remove-user-pill" data-user="${u.trim()}" style="cursor:pointer;"></i>
+                            </span>
+                        `).join('') : '<span class="text-muted small">No current members.</span>'}
+                    </div>
+                    <div class="input-group input-group-sm mt-2">
+                        <select id="adminAddUserSelect" class="form-select form-select-sm">
+                            <option value="">Choose User...</option>
+                            ${userOptions}
+                        </select>
+                        <button class="btn btn-danger btn-sm" id="btnAdminAddUserToTask">Add</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        content.innerHTML = `
+            <div class="mb-3">
+                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Task Topic</label>
+                <input type="text" class="form-control form-control-sm" value="${tTitle}" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Active Assignees Overview</label>
+                <div class="p-2 border rounded bg-light small fw-bold text-secondary">
+                    <i class="fas fa-id-badge text-muted me-1"></i>${tAssignee || 'None'}
+                </div>
+            </div>
+            ${adminMarkup}
+            <div class="mb-3">
+                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Append Workflow Action Note</label>
+                <textarea class="form-control form-control-sm" id="upTaskNote" rows="3" placeholder="Describe progress update or blocker notes..."></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Shift Board Phase State</label>
+                <select class="form-select form-select-sm" id="upTaskStatus">
+                    <option value="New" ${tStatus === 'New' ? 'selected' : ''}>New</option>
+                    <option value="InProgress" ${tStatus === 'InProgress' ? 'selected' : ''}>In Progress</option>
+                    <option value="UnderReview" ${tStatus === 'UnderReview' ? 'selected' : ''}>Under Review</option>
+                    <option value="Done" ${tStatus === 'Done' ? 'selected' : ''}>Done</option>
+                    <option value="Cancelled" ${tStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+            </div>
+            <button class="btn btn-sm btn-primary w-100 fw-bold py-2 shadow-sm" id="btnSaveTaskUpdates" data-task-id="${tId}" style="background-color: #005AFC;">
+                Commit Modifications
+            </button>
+        `;
+
+        document.getElementById("panelBackdrop").style.display = "block";
+        document.getElementById("rightUpdateSidebar").classList.add("open-panel");
+
+        document.getElementById("btnSaveTaskUpdates").addEventListener("click", function() {
+            const noteText = document.getElementById("upTaskNote").value;
+            const statusVal = document.getElementById("upTaskStatus").value;
+            commitTaskStateChange(tId, statusVal, noteText);
+        });
+
+        if(isAdmin && document.getElementById("btnAdminAddUserToTask")) {
+            document.getElementById("btnAdminAddUserToTask").addEventListener("click", function() {
+                const selectedUser = document.getElementById("adminAddUserSelect").value;
+                if(!selectedUser) return;
+                let currentList = tAssignee ? tAssignee.split(',').map(s => s.trim()) : [];
+                if(!currentList.includes(selectedUser)) {
+                    currentList.push(selectedUser);
+                    updateTaskAssigneesRemote(tId, currentList.join(', '));
+                }
+            });
+
+            document.querySelectorAll(".remove-user-pill").forEach(pill => {
+                pill.addEventListener("click", function() {
+                    const uToRemove = this.getAttribute("data-user");
+                    let currentList = tAssignee ? tAssignee.split(',').map(s => s.trim()) : [];
+                    currentList = currentList.filter(u => u !== uToRemove);
+                    updateTaskAssigneesRemote(tId, currentList.join(', '));
+                });
+            });
+        }
+    }
+
+    function updateTaskAssigneesRemote(taskId, newAssigneeList) {
+        const payload = {
+            action: "updateTaskAssignees",
+            taskId: taskId,
+            projectId: activeWorkspaceProjectId,
+            assignee: newAssigneeList,
+            modifier: window.currentUserName
+        };
+
+        fetch(webAppUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            alert("Resource assignees updated successfully!");
+            closeDrawers();
+            fetchProjectTasks(activeWorkspaceProjectId);
+        });
+    }
+
+    function commitTaskStateChange(taskId, status, note) {
+        const payload = {
+            action: "updateTaskStatus",
+            taskId: taskId,
+            projectId: activeWorkspaceProjectId,
+            status: status,
+            note: note || "State updated via task modifier drawer.",
+            modifier: window.currentUserName || "System User"
+        };
+
+        fetch(webAppUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            closeDrawers();
+            fetchProjectTasks(activeWorkspaceProjectId);
+        })
+        .catch(err => console.error("Update Transaction Refused Error:", err));
+    }
+
+    function closeDrawers() {
+        document.getElementById("leftViewPanel").classList.remove("open-panel");
+        document.getElementById("rightUpdateSidebar").classList.remove("open-panel");
+        document.getElementById("panelBackdrop").style.display = "none";
+    }
+
+    function setupClassificationFilters() {
+        document.querySelectorAll(".clickable-cat-card").forEach(card => {
+            card.addEventListener("click", function() {
+                const cat = this.getAttribute("data-category");
+                document.querySelectorAll(".clickable-cat-card").forEach(c => c.classList.remove("active-filter"));
+                this.classList.add("active-filter");
+                document.getElementById("clearClassificationFilter").style.display = "inline-block";
+                
+                const filtered = masterProjectsData.filter(p => p.classification === cat);
+                renderProjectsTable(filtered);
+            });
+        });
+
+        document.getElementById("clearClassificationFilter").addEventListener("click", function() {
+            this.style.display = "none";
+            document.querySelectorAll(".clickable-cat-card").forEach(c => c.classList.remove("active-filter"));
+            renderProjectsTable(masterProjectsData);
+        });
+    }
+
+    function setupStatusTabFilters() {
+        document.querySelectorAll(".filter-btn").forEach(btn => {
+            btn.addEventListener("click", function() {
+                document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+                this.classList.add("active");
+                const filter = this.getAttribute("data-filter");
+                
+                if(filter === 'all') {
+                    renderProjectsTable(masterProjectsData);
+                } else {
+                    const filtered = masterProjectsData.filter(p => p.status === filter);
+                    renderProjectsTable(filtered);
+                }
+            });
+        });
+    }
+
+    function setupModalHooks() {
+        const openBtn = document.getElementById("openFormBtn");
+        const cancelBtn = document.getElementById("cancelFormBtn");
+        const overlay = document.getElementById("customFormOverlay");
+        const closeX = document.getElementById("closeFormXBtn");
+        const teamSelect = document.getElementById("pTeam");
+
+        if(openBtn) {
+            openBtn.addEventListener("click", () => {
+                if(typeof authorizedUsers !== 'undefined' && teamSelect) {
+                    teamSelect.innerHTML = "";
+                    Object.keys(authorizedUsers).forEach(u => {
+                        let opt = document.createElement("option");
+                        opt.value = u;
+                        opt.textContent = u;
+                        teamSelect.appendChild(opt);
+                    });
+                }
+                overlay.style.display = "flex";
+            });
+        }
+        if(cancelBtn) cancelBtn.addEventListener("click", () => overlay.style.display = "none");
+        if(closeX) closeX.addEventListener("click", () => overlay.style.display = "none");
+
+        document.getElementById("closeWorkspaceBtn").addEventListener("click", () => {
+            document.getElementById("singleWorkspaceView").style.setProperty("display", "none", "important");
+            document.getElementById("mainDashboardView").style.setProperty("display", "block", "important");
+            loadDashboardData();
+        });
+
+        document.getElementById("createProjectForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const selectedOptions = Array.from(teamSelect.selectedOptions).map(o => o.value);
+            
+            const payload = {
+                action: "appendProject",
+                name: document.getElementById("pName").value,
+                id: document.getElementById("pId").value,
+                team: selectedOptions,
+                sponsor: document.getElementById("pSponsor").value,
+                classification: document.getElementById("pClass").value,
+                status: document.getElementById("pStatus").value,
+                progress: document.getElementById("pProgress").value
+            };
+
+            fetch(webAppUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                alert("New project suite deployed successfully!");
+                overlay.style.display = "none";
+                document.getElementById("createProjectForm").reset();
+                loadDashboardData();
+            });
+        });
+    }
+
+    function renderProgressMatrix(projects) {
+        const wrapper = document.getElementById("chartBarWrapper");
+        wrapper.innerHTML = "";
+        
+        let slice = projects.slice(0, 12);
+        slice.forEach(p => {
+            const group = document.createElement("div");
+            group.className = "graph-pillar-group";
+            
+            const pillar = document.createElement("div");
+            pillar.className = "graph-pillar";
+            pillar.style.height = `${p.progress}%`;
+            pillar.setAttribute("data-value", p.progress);
+            
+            const label = document.createElement("div");
+            label.className = "graph-label";
+            label.textContent = p.name;
+            label.setAttribute("title", p.name);
+
+            group.appendChild(pillar);
+            group.appendChild(label);
+            wrapper.appendChild(group);
+        });
+    }
+
+    function renderPhaseBreakoutDonut(projects) {
+        const total = projects.length || 1;
+        const group1 = projects.filter(p => p.status === 'New' || p.status === 'Planning' || p.status === 'Execution').length;
+        const group2 = projects.filter(p => p.status === 'High Risk' || p.status === 'Stabilization').length;
+        const group3 = projects.filter(p => p.status === 'Signed-Off').length;
+
+        const pct1 = (group1 / total) * 100;
+        const pct2 = (group2 / total) * 100;
+        const pct3 = (group3 / total) * 100;
+
+        const seg1 = document.getElementById("donutSeg1");
+        const seg2 = document.getElementById("donutSeg2");
+        const seg3 = document.getElementById("donutSeg3");
+
+        if(seg1 && seg2 && seg3) {
+            seg1.setAttribute("stroke-dasharray", `${pct1} 100`);
+            seg1.setAttribute("stroke-dashoffset", "0");
+
+            seg2.setAttribute("stroke-dasharray", `${pct2} 100`);
+            seg2.setAttribute("stroke-dashoffset", `-${pct1}`);
+
+            seg3.setAttribute("stroke-dasharray", `${pct3} 100`);
+            seg3.setAttribute("stroke-dashoffset", `-${pct1 + pct2}`);
+        }
+    }
+  </script>
+</body>
+</html>

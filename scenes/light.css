@@ -541,3 +541,146 @@ a:focus {
     grid-area: 1 / 1 / 4 / 2;
   }
 }
+
+/* ==========================================
+   SLiM Project Suite - Core Dashboard Styles
+   ========================================== */
+
+:root {
+  --color-primary: #0137FB;
+  --color-danger: #d9534f;
+  --color-success: #28a745;
+  --color-warning: #ffc107;
+  --color-white: #ffffff;
+  --color-light: rgba(132, 139, 200, 0.18);
+  --color-dark: #212529;
+  --color-background: #f8f9fa;
+  
+  --card-border-radius: 16px;
+  --border-radius-1: 0.4rem;
+  --border-radius-2: 0.8rem;
+  --card-padding: 1.5rem;
+  --box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.05);
+}
+
+/* --- EXTENDED DARK THEME VARIABLE OVERLAYS --- */
+.dark-theme-variables {
+  --color-background: #181a1e;
+  --color-white: #202528;
+  --color-dark: #edeffd;
+  --color-light: rgba(0, 0, 0, 0.4);
+  --box-shadow: 0 2rem 3rem rgba(0, 0, 0, 0.4);
+}
+
+/* --- BASE HOOKS --- */
+body {
+  background-color: var(--color-background) !important;
+  font-family: 'Roboto', sans-serif;
+  color: var(--color-dark);
+  padding-top: 80px; /* Space for fixed navbar alignment */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* --- MODERN CSS GRID LAYOUT SHELL --- */
+.dashboard-container {
+  display: grid;
+  width: 94%;
+  margin: 0 auto;
+  gap: 1.8rem;
+  grid-template-columns: auto; /* Responsive single-column fallback */
+}
+
+@media screen and (min-width: 992px) {
+  .dashboard-container {
+    grid-template-columns: auto 24rem; /* Main tracking matrix + Right update sidebar panel */
+  }
+}
+
+/* --- THEME TOGGLER UI ENGINE --- */
+.theme-toggler {
+  background: rgba(132, 139, 200, 0.18);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 1.6rem;
+  width: 4.2rem;
+  cursor: pointer;
+  border-radius: 0.4rem;
+  padding: 2px;
+}
+
+.theme-toggler i {
+  font-size: 1.2rem;
+  width: 50%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.theme-toggler i.active {
+  background: var(--color-primary);
+  color: white;
+  border-radius: 0.4rem;
+}
+
+/* --- CARD COMPONENTS --- */
+.insights-card {
+  background: var(--color-white) !important;
+  color: var(--color-dark) !important;
+  padding: var(--card-padding);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--box-shadow);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.insights-card:hover {
+  box-shadow: 0 1.5rem 2.5rem rgba(1, 55, 251, 0.08);
+  transform: translateY(-3px);
+}
+
+.card-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* --- DATA TRACKING TRANSITION TABLES --- */
+.recent-orders {
+  margin-top: 2rem;
+  background: var(--color-white) !important;
+  color: var(--color-dark) !important;
+  padding: var(--card-padding);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.recent-orders table {
+  width: 100%;
+  text-align: left;
+}
+
+.table {
+  color: var(--color-dark) !important;
+}
+
+.table-light {
+  --bs-table-bg: rgba(255, 255, 255, 0.05) !important;
+  --bs-table-color: var(--color-dark) !important;
+}
+
+.status-badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: var(--border-radius-1);
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: white;
+}

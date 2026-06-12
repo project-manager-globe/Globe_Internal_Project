@@ -2,7 +2,52 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8">
-  <title>Nowtech Project Plan</title>
+  <title>ICTGlobe Internal Updates</title>
+<script src="../../credentials.js"></script>
+<script>
+  window.addEventListener('DOMContentLoaded', () => {
+      // 1. Safe Session Authentication Check
+      if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+          sessionStorage.setItem('redirect_target', window.location.href);
+          window.location.replace("../../index.html"); 
+          return; 
+      }
+
+      // 2. Project Role-Guard Check
+      const currentUser = sessionStorage.getItem('currentUser_ICT');
+      
+      if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
+          const userData = authorizedUsers[currentUser];
+          const allowedProjects = userData.projects;
+          const role = userData.role;
+
+          // CHANGE THIS LINE HERE:
+          const currentProjectFolder = "exco"; 
+
+          if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+              alert("Access Denied: You do not hold credentials for this project panel.");
+              window.location.replace("../../index.html");
+          }
+      } else if (typeof authorizedUsers === 'undefined') {
+          console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+      }
+  });
+
+  // Active Logout Trigger
+  window.addEventListener('DOMContentLoaded', () => {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+          logoutBtn.addEventListener('click', (e) => {
+              e.preventDefault();
+              sessionStorage.removeItem('isLoggedIn_ICT');
+              sessionStorage.removeItem('currentUser_ICT');
+              sessionStorage.removeItem('redirect_target'); 
+              window.location.replace("../../index.html"); 
+          });
+      }
+  });
+</script>
+
 <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,6 +74,7 @@
   
 <script src="https://kit.fontawesome.com/268d442577.js" crossorigin="anonymous"></script>
 
+<script src="../../credentials.js"></script>
 
 
 </head>
@@ -38,40 +84,32 @@
      <body>
       
       <div class="bg-primary">
-        <nav class="navbar  navbar-expand-md fixed-top navbar-dark">
-
-         <a class="navbar-brand" href="/" ><img src="./Pimages/ictglobe.png"  height="40px" alt="ICTGlobe"> </a>
+<nav class="navbar navbar-expand-md fixed-top navbar-dark">
+    <a class="navbar-brand" href="/"><img src="./Pimages/ictglobe.png" height="40px" alt="ICTGlobe"></a>
     
-
-
- <div class ="collapse navbar-collapse" id="navbarTogglerDemo02">
-     <ul class="navbar-nav ml-auto">
-
-     <!-- <li>
-            <span class="myTopButton" onclick="openNav()"> Sites</span>
-        </li>
-        -->
-        <li class="nav-item">
-          <a href="/index.html/#project"  class="myTopButton">Project</a>
-        </li>
-        <li class="nav-item">
-            <a href="/index.html/#devisions"  class="myTopButton">Devisions</a>
-        </li>
-        <li class="nav-item">
-            <a href="./client.html"  class="myTopButton">Client</a>
-        </li>
-        <li class="nav-item">
-          <a href="./resources.html"  class="myTopButton">Resources</a>
-        </li>
-        <li class="nav-item">
-          <a href="https://ictglobe.com/" target="_blank"  class="myTopButton">ICTGlobe</a>
-        </li>
-
- 
+    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a href="/index.html/#project" class="myTopButton">Project</a>
+            </li>
+            <li class="nav-item">
+                <a href="/index.html/#devisions" class="myTopButton">Devisions</a>
+            </li>
+            <li class="nav-item">
+                <a href="./strategy.html" class="myTopButton">Strategy</a>
+            </li>
+            <li class="nav-item">
+                <a href="./resources.html" class="myTopButton" data-project="resources">Resources</a>
+            </li>
+            <li class="nav-item">
+                <a href="https://ictglobe.com/" target="_blank" class="myTopButton">ICTGlobe</a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a>
+            </li>
         </ul>
-
-
-                        </nav>
+    </div>
+</nav>
                         </div>
 
                 </div>
@@ -150,7 +188,7 @@
      
       <div class="panel__item">
         <div>
-          <img  src="./Pimages/ITcanWork.png" alt="Video Intro" width="700px" style="padding-left: 200px"/>
+          <img  src="./Pimages/handshake.png" alt="Video Intro" width="700px" style="padding-left: 200px"/>
         </div>
       </div>
 

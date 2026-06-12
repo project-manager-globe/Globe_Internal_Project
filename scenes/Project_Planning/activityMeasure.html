@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICTGlobe Onboarding Tracker</title>
+    
+    <!-- 1. External Icon Libraries & Layout Framework Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.0.0/animate.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600;700&family=Roboto&display=swap" rel="stylesheet">
+
+    <!-- 2. Bootstrap Core Framework CSS Stylesheets -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://getbootstrap.com/docs/5.3/assets/css/docs.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- 3. Central System Stylesheets -->
+    <link rel="stylesheet" type="text/css" href="../index.css" />
+    <link rel="stylesheet" type="text/css" href="../styles.css" /> 
+    <link rel="stylesheet" href="../project.css">
+
+    <!-- 4. Bootstrap Framework Dependencies Javascript Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>  
+    <script src="https://kit.fontawesome.com/268d442577.js" crossorigin="anonymous"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;500;600;700&display=swap');
+
+        *, *::after, *::before { box-sizing: border-box; }
+        body {
+            background-image: url("https://transparenttextures.com/patterns/scribble-light.png");
+            background-color: #F9FAFE;
+            color: #111;
+            margin: 0;
+            font-family: 'Sora', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            padding-top: 85px;
+        }
+
+        .HOW { color: #005AFC; font-weight: 500; }
+        .intro { font-weight: 600; margin: 40px 0 10px 0; font-size: 2.3rem; padding-left: 5vw; }
+        .intro3 { font-weight: 300; padding-left: 5vw; margin-bottom: 25px; font-size: 1.1rem; color: #555; }
+
+        /* KPI Dashboard Bar Matching Branch Card Styling Elements */
+        .summary-dashboard-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            padding: 0 5vw;
+            margin-bottom: 35px;
+        }
+        .summary-mini-card {
+            background: #ffffff;
+            border: 1px solid #e1e1e3;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .summary-mini-card:hover {
+            transform: translateY(-3px); 
+            border-color: #005AFC; 
+            box-shadow: 0px 10px 25px rgba(0, 90, 252, 0.1);
+        }
+        .summary-icon-box {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .bg-blue-light { background: #eef4ff; color: #005AFC; }
+        .bg-orange-light { background: #fff2ea; color: #FF6700; }
+        .bg-green-light { background: #e6fbf2; color: #00D47E; }
+        .bg-red-light { background: #fff1f1; color: #c70c12; }
+        .summary-card-text h4 { margin: 0; font-size: 0.75rem; text-transform: uppercase; color: #666; }
+        .summary-card-text p { margin: 3px 0 0 0; font-size: 1.3rem; font-weight: bold; }
+
+        /* Structural Framework Lists */
+        .month-section { padding: 0 5vw; margin-bottom: 50px; }
+        .month-header { font-size: 1.5rem; border-bottom: 2px solid #e1e1e3; padding-bottom: 10px; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; }
+        .branches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; }
+        
+        .branch-card {
+            background: #ffffff;
+            border: 1px solid #e1e1e3;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0px 6px 18px rgba(0,0,0,0.04);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .branch-card:hover { transform: translateY(-3px); border-color: #005AFC; box-shadow: 0px 10px 25px rgba(0, 90, 252, 0.1); }
+        .branch-name { font-size: 1.2rem; font-weight: 600; margin: 0 0 15px 0; display: flex; justify-content: space-between; align-items: center; }
+        .branch-name span.badge { font-size: 0.75rem; background: #eef4ff; padding: 4px 10px; border-radius: 20px; color: #005AFC; }
+
+        .data-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #f0f0f2; font-size: 0.9rem; min-height: 38px; align-items: center; }
+        .data-row:last-child { border-bottom: none; }
+        .data-label { color: #666; }
+        .data-value { font-weight: 700; }
+        .empty-placeholder { color: #c0c0c2; font-style: italic; font-weight: 300; }
+        .card-footer-hint { margin-top: 15px; font-size: 0.75rem; color: #005AFC; text-align: right; font-weight: bold; }
+
+        /* Sliding Detail Drawers */
+        .detail-drawer {
+            position: fixed; top: 0; width: 100%; max-width: 520px; height: 100%;
+            background: #ffffff; background-image: url("https://transparenttextures.com/patterns/scribble-light.png");
+            box-shadow: 0px 0px 40px rgba(0, 0, 0, 0.12); z-index: 2000;
+            display: flex; flex-direction: column;
+        }
+        #clientDrawer { right: -550px; transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        #clientDrawer.open { right: 0; }
+        
+        #summaryDrawer { left: -550px; transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1); border-right: 1px solid #e1e1e3; }
+        #summaryDrawer.open { left: 0; }
+
+        .drawer-header { padding: 30px; border-bottom: 1px solid #e1e1e3; position: relative; background: #fff; }
+        .drawer-close { position: absolute; top: 30px; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #666; }
+        .drawer-close:hover { color: #c70c12; }
+        #clientDrawer .drawer-close { right: 30px; }
+        #summaryDrawer .drawer-close { right: 30px; }
+        
+        .drawer-title { font-size: 1.4rem; margin: 0 0 5px 0; }
+        .drawer-subtitle { font-size: 0.85rem; color: #666; margin: 0; }
+        .drawer-body { padding: 30px; overflow-y: auto; flex-grow: 1; }
+
+        .client-list-item { background: #ffffff; border: 1px solid #e1e1e3; border-radius: 8px; padding: 18px; margin-bottom: 15px; position: relative; }
+        .client-item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 1px solid #f0f0f2; padding-bottom: 8px; }
+        .client-name-text { font-size: 1rem; font-weight: 600; margin: 0; color: #111; }
+        .client-type-tag { font-size: 0.7rem; font-weight: bold; text-transform: uppercase; color: #005AFC; background: #eef4ff; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+        
+        .status-badge { font-size: 0.65rem; font-weight: bold; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
+        .status-new { background: #eef4ff; color: #005AFC; }
+        .status-active { background: #e6fbf2; color: #00D47E; }
+        .status-suspended { background: #fff2ea; color: #FF6700; }
+        .status-inactive { background: #f4f4f6; color: #777; }
+
+        .client-note-box { margin-top: 12px; padding: 10px; background: #fdfdfd; border-left: 3px solid #b5b5b8; font-size: 0.8rem; color: #444; border-radius: 0 4px 4px 0; line-height: 1.4; }
+        .drawer-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.2); z-index: 1999; display: none; backdrop-filter: blur(1px); }
+        .loading-screen { text-align: center; padding: 100px 0; font-size: 1.2rem; color: #666; }
+        .spinner { animation: spin 1s linear infinite; color: #005AFC; font-size: 2rem; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+   <!-- ==================== CORPORATE TOP NAVBAR ==================== -->
+    <header class="navbar navbar-default wh_header" id="test">
+        <div class="topcontainer w-100">
+            <div class="bg-primary">
+                <nav class="navbar navbar-expand-md fixed-top navbar-dark">
+                    <a class="navbar-brand" href="/"><img src="./Pimages/ictglobe.png" height="40px" alt="ICTGlobe"></a>
+                    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                        <ul class="navbar-nav ml-auto">
+                            <li class="nav-item"><a href="./strategy.html" class="myTopButton">Strategy</a></li>
+                            <li class="nav-item"><a href="../../index.html#devisions" class="myTopButton">Devisions</a></li>
+                            <li class="nav-item"><a href="./resources.html" class="myTopButton" data-project="resources">Resources</a></li>
+                            <li class="nav-item"><a href="./projects.html" class="myTopButton">Projects</a></li>
+
+                            <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <header>
+        <h2 class="content__START ">Onboarding Activity Tracker</h2>
+        <p class="intro3">Live operational measurement pulled directly from the active distribution worksheet.</p>
+    </header>
+
+    <!-- Interactive Summary Card Grid -->
+    <section class="summary-dashboard-strip">
+        <div class="summary-mini-card" id="card-total" onclick="openSummaryDrawer('total', 'Total Pipeline')">
+            <div class="summary-icon-box bg-blue-light"><i class="fa-solid fa-folder-tree"></i></div>
+            <div class="summary-card-text">
+                <h4>Total Pipeline</h4>
+                <p id="stat-total">--</p>
+            </div>
+        </div>
+        <div class="summary-mini-card" id="card-pending" onclick="openSummaryDrawer('pending', 'New Onboardings')">
+            <div class="summary-icon-box bg-orange-light"><i class="fa-solid fa-hourglass-start"></i></div>
+            <div class="summary-card-text">
+                <h4>New / Onboarding</h4>
+                <p id="stat-pending">--</p>
+            </div>
+        </div>
+        <div class="summary-mini-card" id="card-active" onclick="openSummaryDrawer('active', 'Active Accounts')">
+            <div class="summary-icon-box bg-green-light"><i class="fa-solid fa-circle-check"></i></div>
+            <div class="summary-card-text">
+                <h4>Active Accounts</h4>
+                <p id="stat-active">--</p>
+            </div>
+        </div>
+        <div class="summary-mini-card" id="card-inactive" onclick="openSummaryDrawer('inactive', 'Inactive Accounts')">
+            <div class="summary-icon-box bg-red-light"><i class="fa-solid fa-circle-xmark"></i></div>
+            <div class="summary-card-text">
+                <h4>Inactive Accounts</h4>
+                <p id="stat-inactive">--</p>
+            </div>
+        </div>
+    </section>
+
+    <main id="dashboard-content">
+        <div class="loading-screen">
+            <div class="spinner"><i class="fa-solid fa-spinner"></i></div>
+            Retrieving real-time workspace metrics...
+        </div>
+    </main>
+
+    <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeAllDrawers()"></div>
+
+    <!-- LEFT SIDE DRAWER -->
+    <div class="detail-drawer" id="summaryDrawer">
+        <div class="drawer-header">
+            <button class="drawer-close" onclick="closeAllDrawers()"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="drawer-title" id="summaryDrawerTitle">Pipeline Category</h2>
+            <p class="drawer-subtitle">Workspace Overview Index</p>
+        </div>
+        <div class="drawer-body" id="summaryDrawerBody"></div>
+    </div>
+
+    <!-- RIGHT SIDE DRAWER -->
+    <div class="detail-drawer" id="clientDrawer">
+        <div class="drawer-header">
+            <button class="drawer-close" onclick="closeAllDrawers()"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="drawer-title" id="drawerTitle">Regional Allocation</h2>
+            <p class="drawer-subtitle" id="drawerSubtitle">Breakdown Summary</p>
+        </div>
+        <div class="drawer-body" id="drawerBody"></div>
+    </div>
+
+    <footer class="navbar navbar-default wh_footer">
+        <div class="footer-container mx-auto">
+            <div>
+               <a href="https://ictglobe.com/" target="_blank" style="text-decoration: none; color: inherit;"><img style="font-size: 20px;" src="./Pimages/ictglobe.png" alt="ICTGlobe" width="100px"></a>
+                <strong>Projects made easy</strong>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../credentials.js"></script>
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbzdrGbkVUTBZ8QA9JICOUbYFJI2xbHlP8omJidJtaOvRl1KrkzLIfynXiutPsPurP-5-w/exec";
+        
+        var masterClientRegistry = {};
+        var summaryCategoryRegistry = { total: [], pending: [], active: [], inactive: [] };
+
+        // Prioritized Property Selection Engine (Does not filter out empty strings)
+        function dynamicLookup(obj, targetKeys, columnLetter) {
+            if (!obj) return null;
+
+            // Tier 1: If Apps Script output is a raw array, map directly by structural column letter
+            if (Array.isArray(obj) && columnLetter) {
+                let idx = columnLetter.toUpperCase().charCodeAt(0) - 65;
+                return obj[idx] !== undefined ? obj[idx] : null;
+            }
+
+            // Tier 2: Check for direct column letter property names inside the JSON object
+            if (columnLetter) {
+                let letter = columnLetter.toUpperCase();
+                let numIdx = letter.charCodeAt(0) - 65;
+                let letterKeys = [
+                    letter, letter.toLowerCase(), 
+                    'col' + letter, 'col' + letter.toLowerCase(),
+                    'column' + letter, 'column' + (numIdx + 1),
+                    String(numIdx), numIdx
+                ];
+                for (let lKey of letterKeys) {
+                    if (obj[lKey] !== undefined) {
+                        return obj[lKey];
+                    }
+                }
+            }
+
+            // Normalize target search keywords
+            let normalizedTargets = targetKeys.map(k => k.toLowerCase().replace(/[^a-z0-9]/g, ''));
+
+            // Tier 3: Strict exact match on clean header names
+            for (let key in obj) {
+                let normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (normalizedTargets.includes(normalizedKey)) {
+                    return obj[key];
+                }
+            }
+
+            // Tier 4: Safe substring matching with explicit guard filters
+            for (let key in obj) {
+                let normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                for (let target of normalizedTargets) {
+                    if (target === 'id' && normalizedKey.includes('date')) continue; // Prevent ID mismatching Dates
+                    if (normalizedKey.includes(target) || target.includes(normalizedKey)) {
+                        return obj[key];
+                    }
+                }
+            }
+
+            return null;
+        }
+
+window.addEventListener('DOMContentLoaded', () => {
+    // 1. Safe Session Authentication Check
+    if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+        sessionStorage.setItem('redirect_target', window.location.href);
+        window.location.replace("../../index.html"); 
+        return;
+    }
+
+    // 2. Project Role-Guard Check
+    const currentUser = sessionStorage.getItem('currentUser_ICT');
+    
+    if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
+        const userData = authorizedUsers[currentUser];
+        const allowedProjects = userData.projects;
+        const role = userData.role;
+
+        // Set the file's identifier to match the onboarding tracker project key
+        const currentProjectFolder = "activityMeasures"; 
+
+        if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+            alert("Access Denied: You do not hold credentials for this project panel.");
+            window.location.replace("../../index.html");
+            return; // Stop processing metrics if access is denied
+        }
+    } else if (typeof authorizedUsers === 'undefined') {
+        console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+    }
+
+    // 3. If user passes authorization checks, fetch the dashboard metrics cleanly
+    fetchDashboardMetrics();
+});
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    sessionStorage.removeItem('isLoggedIn_ICT');
+                    sessionStorage.removeItem('currentUser_ICT');
+                    sessionStorage.removeItem('redirect_target'); 
+                    window.location.replace("../../index.html"); 
+                });
+            }
+        });
+
+        async function fetchDashboardMetrics() {
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error("API server connection failed.");
+                const data = await response.json();
+                
+                if (data.error) {
+                    handleLoadingError(data.error);
+                    return;
+                }
+                renderDashboard(data);
+            } catch (err) {
+                handleLoadingError(err);
+            }
+        }
+
+        function renderDashboard(data) {
+            summaryCategoryRegistry = { total: [], pending: [], active: [], inactive: [] };
+
+            if (data.months) {
+                data.months.forEach(mObj => {
+                    const currentMonth = mObj.month;
+                    
+                    if (mObj.northern?.clients) {
+                        mObj.northern.clients.forEach(c => {
+                            let mappedClient = { ...c, creationMonth: currentMonth, explicitBranch: 'ICT North' };
+                            summaryCategoryRegistry.total.push(mappedClient);
+                            const normalizedStatus = (dynamicLookup(c, ['status', 'state', 'stage'], 'G') || '').toLowerCase().trim();
+                            if (normalizedStatus === 'new') summaryCategoryRegistry.pending.push(mappedClient);
+                            else if (normalizedStatus === 'active') summaryCategoryRegistry.active.push(mappedClient);
+                            else if (['inactive', 'suspended'].includes(normalizedStatus)) summaryCategoryRegistry.inactive.push(mappedClient);
+                        });
+                    }
+
+                    if (mObj.southern?.clients) {
+                        mObj.southern.clients.forEach(c => {
+                            let mappedClient = { ...c, creationMonth: currentMonth, explicitBranch: 'ICT South' };
+                            summaryCategoryRegistry.total.push(mappedClient);
+                            const normalizedStatus = (dynamicLookup(c, ['status', 'state', 'stage'], 'G') || '').toLowerCase().trim();
+                            if (normalizedStatus === 'new') summaryCategoryRegistry.pending.push(mappedClient);
+                            else if (normalizedStatus === 'active') summaryCategoryRegistry.active.push(mappedClient);
+                            else if (['inactive', 'suspended'].includes(normalizedStatus)) summaryCategoryRegistry.inactive.push(mappedClient);
+                        });
+                    }
+                });
+            }
+
+            document.getElementById('stat-total').innerText = summaryCategoryRegistry.total.length + " Accounts";
+            document.getElementById('stat-pending').innerText = summaryCategoryRegistry.pending.length + " Processing";
+            document.getElementById('stat-active').innerText = summaryCategoryRegistry.active.length + " Active";
+            document.getElementById('stat-inactive').innerText = summaryCategoryRegistry.inactive.length + " Inactive";
+
+            var contentArea = document.getElementById('dashboard-content');
+            contentArea.innerHTML = ''; 
+
+            if (!data.months || data.months.length === 0) {
+                contentArea.innerHTML = `<p class="intro3"><i class="fa-solid fa-triangle-exclamation" style="color:#ff6700;"></i> Running cleanly. No records matched current criteria.</p>`;
+                return;
+            }
+
+            data.months.forEach(function(mObj, index) {
+                var monthSectionId = 'month_sec_' + index;
+                masterClientRegistry[monthSectionId + '_north'] = mObj.northern.clients;
+                masterClientRegistry[monthSectionId + '_south'] = mObj.southern.clients;
+
+                const calculateInactiveSuspended = (clientsArray) => {
+                    return (clientsArray || []).filter(c => {
+                        const st = (dynamicLookup(c, ['status', 'state', 'stage'], 'G') || '').toLowerCase().trim();
+                        return st === 'inactive' || st === 'suspended';
+                    }).length;
+                };
+
+                var htmlSection = document.createElement('section');
+                htmlSection.className = 'month-section';
+                htmlSection.innerHTML = `
+                    <h2 class="month-header"><i class="fa-regular fa-calendar-days"></i> ${mObj.month}</h2>
+                    <div class="branches-grid">
+                        <article class="branch-card" onclick="openClientDrawer('ICTGlobe North', '${mObj.month}', '${monthSectionId}_north')">
+                            <h3 class="branch-name">ICTGlobe Northern <span class="badge">${mObj.northern.clients?.length || 0} Accounts</span></h3>
+                            <div class="data-row"><span class="data-label">New Accounts Pending:</span><span class="data-value" style="color:#005AFC;">${(mObj.northern.clients || []).filter(c => (dynamicLookup(c, ['status', 'state', 'stage'], 'G') || '').toLowerCase().trim() === 'new').length}</span></div>
+                            <div class="data-row"><span class="data-label">Active Deployments:</span><span class="data-value" style="color:#00D47E;">${(mObj.northern.clients || []).filter(c => (dynamicLookup(c, ['status', 'state', 'stage'], 'G') || '').toLowerCase().trim() === 'active').length}</span></div>
+                            <div class="data-row"><span class="data-label">Inactive / Suspended:</span><span class="data-value" style="color:#c70c12;">${calculateInactiveSuspended(mObj.northern.clients)}</span></div>
+                            <div class="card-footer-hint">Tap to view breakdown &rarr;</div>
+                        </article>
+                        <article class="branch-card" onclick="openClientDrawer('ICTGlobe South', '${mObj.month}', '${monthSectionId}_south')">
+                            <h3 class="branch-name">ICTGlobe Southern <span class="badge">${mObj.southern.clients?.length || 0} Accounts</span></h3>
+                            <div class="data-row"><span class="data-label">New Accounts Pending:</span><span class="data-value" style="color:#005AFC;">${(mObj.southern.clients || []).filter(c => (dynamicLookup(c, ['status', 'state', 'stage'], 'G') || '').toLowerCase().trim() === 'new').length}</span></div>
+                            <div class="data-row"><span class="data-label">Active Deployments:</span><span class="data-value" style="color:#00D47E;">${(mObj.southern.clients || []).filter(c => (dynamicLookup(c, ['status', 'state', 'stage'], 'G') || '').toLowerCase().trim() === 'active').length}</span></div>
+                            <div class="data-row"><span class="data-label">Inactive / Suspended:</span><span class="data-value" style="color:#c70c12;">${calculateInactiveSuspended(mObj.southern.clients)}</span></div>
+                            <div class="card-footer-hint">Tap to view breakdown &rarr;</div>
+                        </article>
+                    </div>
+                `;
+                contentArea.appendChild(htmlSection);
+            });
+        }
+
+        function openSummaryDrawer(categoryKey, clearTitle) {
+            document.getElementById('summaryDrawerTitle').innerText = clearTitle;
+            var body = document.getElementById('summaryDrawerBody');
+            body.innerHTML = '';
+
+            var records = summaryCategoryRegistry[categoryKey] || [];
+            if(records.length === 0) {
+                body.innerHTML = '<p style="color:#777; font-size:0.9rem; padding:10px;">No operational logs found for this state.</p>';
+            } else {
+                records.forEach(function(client) {
+                    var card = document.createElement('div');
+                    card.className = 'client-list-item';
+                    var branchValue = client.explicitBranch || 'ICT North';
+                    var targetMonth = client.creationMonth ? client.creationMonth : '[Unknown]';
+                    var clientName = dynamicLookup(client, ['customer', 'name', 'client', 'company', 'clientname', 'customername'], 'A') || 'Unnamed Client';
+
+                    card.innerHTML = `
+                        <div class="client-item-header" style="margin-bottom:6px; padding-bottom:4px;">
+                            <h4 class="client-name-text" style="font-size:1.05rem; color:#005AFC;">${clientName}</h4>
+                        </div>
+                        <div class="data-row" style="min-height:30px; padding:6px 0;"><span class="data-label">Branch:</span><span class="data-value" style="font-weight:700; color:#FF6700;">${branchValue}</span></div>
+                        <div class="data-row" style="min-height:30px; padding:6px 0; border-bottom:none;"><span class="data-label">Month Created:</span><span class="data-value" style="color:#555;">${targetMonth}</span></div>
+                    `;
+                    body.appendChild(card);
+                });
+            }
+            document.getElementById('clientDrawer').classList.remove('open');
+            document.getElementById('summaryDrawer').classList.add('open');
+            document.getElementById('drawerBackdrop').style.display = 'block';
+        }
+
+        function openClientDrawer(title, month, storageKey) {
+            document.getElementById('drawerTitle').innerText = title;
+            document.getElementById('drawerSubtitle').innerText = `${month} Onboarding Activity Roster`;
+            var body = document.getElementById('drawerBody');
+            body.innerHTML = '';
+
+            var clients = masterClientRegistry[storageKey] || [];
+            if(clients.length === 0) {
+                body.innerHTML = '<p style="color:#777; font-size:0.9rem;">No entries documented under this specific region.</p>';
+            } else {
+                clients.forEach(function(client) {
+                    var card = document.createElement('div');
+                    card.className = 'client-list-item';
+                    
+                    // Comprehensive Target Key Configuration Matrices
+                    var clientName     = dynamicLookup(client, ['customer', 'name', 'client', 'company', 'clientname', 'customername'], 'A') || 'Unnamed Client';
+                    var rawAccountId   = dynamicLookup(client, ['accountid', 'accountnumber', 'accountno', 'accno', 'accid', 'clientid', 'id'], 'B');
+                    var typeLabel      = dynamicLookup(client, ['relationship', 'type', 'rel', 'customertype', 'class'], 'C') || 'Reseller';
+                    var activeDateValue= dynamicLookup(client, ['activedate', 'effectiveactivedate', 'date', 'effectivedate', 'activationdate'], 'D') || `<span class="empty-placeholder">-</span>`;
+                    var salesRepValue  = dynamicLookup(client, ['salesrep', 'sales', 'rep', 'agent', 'salesrepresentative', 'salesperson'], 'F') || `<span class="empty-placeholder">-</span>`;
+                    var statusValue    = dynamicLookup(client, ['status', 'state', 'stage'], 'G') || 'New';
+                    
+                    var rawMra         = dynamicLookup(client, ['mra', 'signedmra', 'mrasigned', 'mradoc', 'agreement'], 'H');
+                    var rawNda         = dynamicLookup(client, ['nda', 'signednda', 'ndasigned', 'ndadoc'], 'I');
+                    var rawSla         = dynamicLookup(client, ['sla', 'servicelevel', 'slasign', 'slasigned', 'sladoc'], 'J');
+                    var rawNotes       = dynamicLookup(client, ['notes', 'note', 'comments', 'comment', 'description'], 'K');
+
+                    // Clean Output Evaluation (Blank sheet cells return empty placeholders safely)
+                    var accountIdValue = (rawAccountId && String(rawAccountId).trim() !== "") ? rawAccountId : `<span class="empty-placeholder">-</span>`;
+                    var mraValue       = (rawMra && String(rawMra).trim() !== "") ? rawMra : `<span class="empty-placeholder">Pending</span>`;
+                    var ndaValue       = (rawNda && String(rawNda).trim() !== "") ? rawNda : `<span class="empty-placeholder">Pending</span>`;
+                    var slaValue       = (rawSla && String(rawSla).trim() !== "") ? rawSla : `<span class="empty-placeholder">-</span>`;
+                    var noteBoxHtml    = (rawNotes && String(rawNotes).trim() !== "") ? `<div class="client-note-box"><strong>Notes:</strong> ${rawNotes}</div>` : '';
+
+                    card.innerHTML = `
+                        <div class="client-type-tag">${typeLabel}</div>
+                        <div class="client-item-header">
+                            <div>
+                                <h5 class="client-item-header">${clientName}</h5>
+                                <h5 class="client-name-text" style="color:#666;">Sales Rep: ${salesRepValue}</h5>
+                            </div>
+                            <span class="status-badge status-${statusValue.toLowerCase().replace(/[^a-z]/g, '')}">${statusValue}</span>
+                        </div>
+                        <div class="data-row"><span class="data-label">Account ID:</span><span class="data-value" style="color:#005AFC; font-weight:700;">${accountIdValue}</span></div>
+                        <div class="data-row"><span class="data-label">Signed MRA:</span><span class="data-value">${mraValue}</span></div>
+                        <div class="data-row"><span class="data-label">Signed NDA:</span><span class="data-value">${ndaValue}</span></div>
+                        <div class="data-row"><span class="data-label">SLA:</span><span class="data-value">${slaValue}</span></div>
+                        <div class="data-row"><span class="data-label">Effective Active Date:</span><span class="data-value">${activeDateValue}</span></div>
+                        ${noteBoxHtml}
+                    `;
+                    body.appendChild(card);
+                });
+            }
+            document.getElementById('summaryDrawer').classList.remove('open');
+            document.getElementById('clientDrawer').classList.add('open');
+            document.getElementById('drawerBackdrop').style.display = 'block';
+        }
+
+        function closeAllDrawers() {
+            document.getElementById('clientDrawer').classList.remove('open');
+            document.getElementById('summaryDrawer').classList.remove('open');
+            document.getElementById('drawerBackdrop').style.display = 'none';
+        }
+
+        function handleLoadingError(err) {
+            document.getElementById('dashboard-content').innerHTML = `
+                <div style="text-align:center; padding:50px; color:#c70c12;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size:2rem; margin-bottom:10px;"></i>
+                    <p>Execution Interrupted. Verify spreadsheet configurations match expectations.</p>
+                </div>`;
+        }
+    </script>
+    <script src='https://unpkg.com/imagesloaded@4/imagesloaded.pkgd.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/gsap@3.0.1/dist/gsap.min.js'></script>
+    <script src="../script.js"></script>
+</body>
+</html>

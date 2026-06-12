@@ -1,0 +1,108 @@
+/* ==========================================================================
+   ICTGlobe SLiM Project Suite - Base Dashboard Stylesheet (projects.css)
+   ========================================================================== */
+
+:root {
+    --color-primary: #005AFC;
+    --color-success: #2ed573;
+    --color-warning: #ffbe22;
+    --color-white: #ffffff;
+    --color-dark: #212529;
+    --color-light: #f8f9fa;
+    --card-border-radius: 12px;
+    --card-padding: 1.6rem;
+    --box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+/* Dashboard Container Grid Layout alignment */
+.dashboard-container {
+    display: grid;
+    width: 100%;
+    margin: 0 auto;
+    gap: 1.8rem;
+    grid-template-columns: 1fr;
+}
+
+@media screen and (min-width: 992px) {
+    .dashboard-container {
+        grid-template-columns: 14rem 1fr;
+    }
+    
+    /* If hiding sidebar block to give full screen space to table matrix */
+    body:not(.has-sidebar) .dashboard-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- KPI Insights Cards Framework --- */
+.insights-card {
+    background: var(--color-white);
+    padding: var(--card-padding);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--box-shadow);
+    transition: all 300ms ease;
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    height: 100%;
+}
+
+.insights-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 53, 251, 0.08);
+    transform: translateY(-2px);
+}
+
+.insights-card .card-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-white);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+/* --- Core Workstream Table Layout Matrix --- */
+.recent-orders {
+    margin-top: 2rem;
+    background: var(--color-white);
+    padding: var(--card-padding);
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--box-shadow);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.recent-orders table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.recent-orders table tbody tr td {
+    height: 3.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    color: var(--color-dark);
+}
+
+.recent-orders table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Custom pills layout context inside tracking blocks */
+.status-badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 30px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-white);
+    display: inline-block;
+    text-align: center;
+}
+
+/* --- Operational Timelines / Notifications layout --- */
+aside .insights-card {
+    margin-top: 0;
+}
+
+.border-bottom {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+}

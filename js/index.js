@@ -1,6 +1,6 @@
-import { preloadImages } from './utils';
-import { Panel } from './panel';
-import Cursor from './cursor';
+import { preloadImages } from './utils.js';
+import { Panel } from './panel.js';
+import Cursor from './cursor.js';
 
 const panels = [...document.querySelectorAll('.panel')];
 
