@@ -5,7 +5,7 @@
   <title>ICTGlobe Project Management Hub</title>
   
   <script src="../../credentials.js"></script>
-  <script>
+<script>
     if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
         sessionStorage.setItem('redirect_target', window.location.href);
         window.location.replace("../../index.html"); 
@@ -19,23 +19,53 @@
                 
                 window.currentUserRole = role;
                 window.currentUserName = currentUser;
-                window.currentUserAllowedProjects = allowedProjects; 
+                window.currentUserAllowedProjects = allowedProjects; // Store projects array for workspace click check
 
+                // =====================================================================
+                // ======= UPGRADED WORKSPACE ACCESS CHECK (DYNAMIC & CASE-INSENSITIVE) =======
+                // =====================================================================
                 window.checkWorkspaceAccess = function(projectToken) {
+                    // 1. Master Admin Override
                     if (role === 'admin' || allowedProjects.includes('all') || allowedProjects.includes('projects_dashboard')) {
                         return true;
                     }
-                    return allowedProjects.map(p => p.toLowerCase()).includes(projectToken.toLowerCase());
+                    
+                    // 2. Local Credentials File Check (Statically assigned groups/arrays)
+                    if (allowedProjects.map(p => p.toLowerCase()).includes(projectToken.toLowerCase())) {
+                        return true;
+                    }
+                    
+                    // 3. Dynamic Google Sheet Portfolio Verification
+                    if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
+                        // Find the matching data row by matching project ID string conversion
+                        const activeProject = projectDataset.find(proj => String(proj.id).toLowerCase() === projectToken.toLowerCase());
+                        
+                        if (activeProject && activeProject.team) {
+                            // Extract, trim, and lowercase all usernames assigned in column F
+                            const sheetTeamArray = activeProject.team.split(',').map(name => name.trim().toLowerCase());
+                            const lowerCurrentUser = String(currentUser).trim().toLowerCase();
+                            
+                            console.log("Evaluating dynamic portfolio permissions for:", lowerCurrentUser, "against team:", sheetTeamArray);
+                            
+                            if (sheetTeamArray.includes(lowerCurrentUser)) {
+                                return true; // 🔑 Match verified! Access granted via Sheet row assignment.
+                            }
+                        }
+                    }
+
+                    return false; // Access restricted
                 };
 
+                // Show admin-only elements safely
                 if (role === 'admin') {
                     document.querySelectorAll('.admin-only-action').forEach(b => b.style.setProperty('display', 'inline-block', 'important'));
                 }
             }
-        });
+        }); // 👈 Fixed structural closing brace constraint here
     }
 
-   window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', () => {
+        // --- EXISTING LOGOUT LOGIC ---
         const logBtn = document.getElementById('logoutBtn');
         if (logBtn) {
             logBtn.addEventListener('click', (e) => {
@@ -47,7 +77,6 @@
         }
 
         // --- NEW ADD TASK LOGIC (UPDATED) ---
-
         document.addEventListener('click', function(e) {
             // 1. Handle "Add Task" Button Click -> Populate Users & Show Modal
             if (e.target && e.target.id === 'btnAddTask') {
@@ -72,119 +101,358 @@
                 if (taskFormOverlay) taskFormOverlay.style.display = 'none';
             }
         });
-
-        const createTaskForm = document.getElementById('createTaskForm');
-        if (createTaskForm) {
-            createTaskForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const pId = (typeof activeWorkspaceProjectId !== 'undefined') ? activeWorkspaceProjectId : null;
-                if (!pId) { alert("Error: No project selected."); return; }
-
-                const payload = {
-                    action: "appendTask",
-                    projectId: pId,
-                    title: document.getElementById('tTitle').value,
-                    description: document.getElementById('tDesc').value,
-                    assignee: document.getElementById('tAssignee').value,
-                    status: document.getElementById('tStatus').value,
-                    note: document.getElementById('tNote').value,
-                    creator: window.currentUserName 
-                };
-
-                const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
-
-                fetch(url, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                })
-                .then(() => {
-                    alert("Task sent to server!");
-                    createTaskForm.reset();
-                    document.getElementById('taskFormOverlay').style.display = 'none';
-                    if (typeof activeWorkspaceProjectId !== 'undefined') fetchProjectTasks(activeWorkspaceProjectId); 
-                })
-                .catch(err => {
-                    console.error("Fetch Error:", err);
-                    alert("Error: Check console for details.");
-                });
-            });
-        }
     });
-  </script>
+
+    // 3. Handle Form Submission
+    // Updated Submission Logic to handle Multi-Assignees, Line-by-Line Checklist items, and the new Target Due Date
+    const createTaskForm = document.getElementById('createTaskForm');
+
+    if (createTaskForm) {
+        createTaskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const pId = (typeof activeWorkspaceProjectId !== 'undefined') ? activeWorkspaceProjectId : null;
+            if (!pId) { alert("Error: No active project context detected."); return; }
+
+            // 1. Get Assignees
+            const assigneeSelect = document.getElementById('tAssignee');
+            const selectedAssignees = Array.from(assigneeSelect.selectedOptions).map(opt => opt.value);
+            const assigneesString = selectedAssignees.join(', ');
+
+            // 2. Get Checklist
+            const rawChecklistText = document.getElementById('tChecklist').value;
+            const checklistItems = rawChecklistText.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            // 3. GET TARGET DUE DATE (Safer logic replacing old status dropdown)
+            const dueDateField = document.getElementById('tDueDate');
+            if (!dueDateField) {
+                console.error("CRITICAL ERROR: Could not find element with ID 'tDueDate'. Check your HTML.");
+                alert("System Error: Target Due Date metric not found in the form.");
+                return;
+            }
+            const selectedDueDate = dueDateField.value;
+            console.log("Target Due Date detected:", selectedDueDate);
+
+            const payload = {
+                action: "appendTask",
+                projectId: pId,
+                title: document.getElementById('tTitle').value,
+                description: document.getElementById('tDesc').value, 
+                checklist: checklistItems, 
+                assignee: assigneesString,
+                status: "New", // Safely hardcoded baseline route
+                dueDate: selectedDueDate, // Securely mapped date parameters
+                creator: window.currentUserName || "System Portal"
+            };
+
+            // Replace with your verified production macro Apps Script endpoint URL
+            const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+
+            console.log("Submitting structured payload:", payload);
+
+            fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                alert("Operational task successfully generated and logged!");
+                createTaskForm.reset();
+                document.getElementById('taskFormOverlay').style.display = 'none';
+                
+                // Refresh Kanban Board automatically
+                if (typeof fetchProjectTasks === 'function') {
+                    fetchProjectTasks(pId); 
+                }
+            })
+            .catch(err => {
+                console.error("Transmission Error:", err);
+                alert("Error trying to commit task updates. See console logs.");
+            });
+        });
+    }
+</script>
+  
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+
   <link rel="stylesheet" type="text/css" href="../index.css" />
   <link rel="stylesheet" type="text/css" href="../styles.css" /> 
   <link rel="stylesheet" href="../project.css">
 
   <style>
+    /* ==========================================================================
+       1. GLOBAL PLATFORM & CORE UTILITY OVERRIDES
+       ========================================================================== */
     .content__START, strong.HOW { color: #005AFC !important; }
     .table tbody tr td { color: #212529 !important; font-weight: normal !important; background: #ffffff !important; }
     .insights-card h2, .recent-orders h3 { color: #212529 !important; }
     
+    .dashboard-fixed-top-nav {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        background-color: #0c101b !important;
+        padding: 15px 30px !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .dashboard-fixed-top-nav .nav-brand-img { height: 35px !important; display: block !important; }
+    .dashboard-fixed-top-nav .nav-links-box { display: flex !important; gap: 20px !important; list-style: none !important; margin: 0 !important; padding: 0 !important; }
+    .dashboard-fixed-top-nav .nav-links-box a { color: #ffffff !important; text-decoration: none !important; font-family: 'Roboto', sans-serif !important; font-weight: 500 !important; font-size: 0.95rem !important; transition: color 0.2s ease !important; }
+    .dashboard-fixed-top-nav .nav-links-box a:hover { color: #005AFC !important; }
+
     .clickable-cat-card { cursor: pointer; transition: all 0.2s ease; }
     .clickable-cat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,90,252,0.15) !important; border-color: #005AFC !important; }
     .clickable-cat-card.active-filter { border: 2px solid #005AFC !important; background-color: rgba(0, 90, 252, 0.03) !important; }
 
+    /* ==========================================================================
+       2. CREATION TASKS MODAL (ORIGINAL 520px MAX-WIDTH PROFILE)
+       ========================================================================== */
     .custom-modal-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 99999 !important; display: none; align-items: center !important; justify-content: center !important; }
-    .custom-modal-window { background: #ffffff !important; width: 100% !important; max-width: 520px !important; min-height: auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important; padding: 28px !important; box-sizing: border-box !important; }
+    .custom-modal-window { background: #ffffff !important; width: 100% !important; max-width: 520px !important; min-height: auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important; padding: 28px !important; box-sizing: border-box !important; animation: modalFadeIn 0.2s ease-out; }
     .custom-modal-window input, .custom-modal-window select, .custom-modal-window textarea { width: 100% !important; display: block !important; margin-top: 4px !important; }
+    @keyframes modalFadeIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
+    /* Data Visualization Metrics Components */
     .chart-box { background: #ffffff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.03); height: 320px; }
-    
-    .bar-graph-container { 
-        display: flex; 
-        align-items: flex-end; 
-        justify-content: flex-start !important; 
-        gap: 6px !important;
-        height: 200px; 
-        padding-top: 20px; 
-        border-bottom: 2px solid #e2e8f0; 
-        width: 100%; 
-        position: relative; 
-    }
-    
-    .graph-pillar-group { 
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
-        width: 100%; 
-        max-width: 55px !important; 
-        height: 100%; 
-        justify-content: flex-end; 
-        flex-grow: 1 !important;
-    }
-    .graph-pillar { 
-        width: 100%; 
-        background: linear-gradient(180deg, #005AFC 0%, #3b82f6 100%); 
-        border-radius: 4px 4px 0 0 !important; 
-        position: relative; 
-        cursor: pointer; 
-    }
+    .bar-graph-container { display: flex; align-items: flex-end; justify-content: flex-start !important; gap: 6px !important; height: 200px; padding-top: 20px; border-bottom: 2px solid #e2e8f0; width: 100%; position: relative; overflow: hidden; }
+    .graph-pillar-group { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 55px !important; height: 100%; justify-content: flex-end; flex-grow: 1 !important; margin: 0 1px !important; }
+    .graph-pillar { width: 100%; background: linear-gradient(180deg, #005AFC 0%, #3b82f6 100%); border-radius: 4px 4px 0 0 !important; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 90, 252, 0.2); }
+    .graph-pillar:hover { background: linear-gradient(180deg, #0044c9 0%, #1d4ed8 100%); transform: scaleX(1.02); }
+    .graph-pillar::before { content: attr(data-value) "%"; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold; color: #005AFC; background: rgba(0, 90, 252, 0.08); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(0, 90, 252, 0.15); opacity: 0; transition: opacity 0.2s ease; pointer-events: none; z-index: 10; }
+    .graph-pillar:hover::before { opacity: 1; }
     .graph-label { text-align: center; font-size: 10px !important; font-weight: 500; color: #64748b; margin-top: 6px; width: 100%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
-    .donut-segment { transform: rotate(-90deg); transform-origin: center; }
+    .donut-segment { transform: rotate(-90deg); transform-origin: center; transition: stroke-dasharray 0.5s ease-in-out; }
 
-    /* KANBAN AND OVERLAY SURGICAL DRAWERS */
+    /* Kanban Frame Layout Blocks */
     .kanban-board { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 15px; }
     .kanban-column { flex: 1; min-width: 240px; background: #f8f9fa; border-radius: 8px; padding: 1rem; border: 1px solid #e9ecef; display: flex; flex-direction: column; }
     .kanban-column-header { font-weight: bold; padding-bottom: 0.75rem; margin-bottom: 1rem; border-bottom: 2px solid #dee2e6; color: #495057; display: flex; justify-content: space-between; align-items: center; }
     .task-list { min-height: 200px; display: flex; flex-direction: column; gap: 0.75rem; }
     .kanban-card { background: #ffffff; border-radius: 6px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-left: 4px solid #005AFC; position: relative; }
+    .kanban-card.restricted-view { border-left-color: #adb5bd; background-color: #f1f3f5; }
     .update-log-container { background: #ffffff; border-radius: 8px; padding: 1.5rem; border: 1px solid #dee2e6; height: 380px; overflow-y: auto; }
     .log-entry { padding-bottom: 0.75rem; margin-bottom: 0.75rem; border-bottom: 1px dashed #e9ecef; font-size: 0.85rem; }
-    
-    .sliding-panel-drawer { position: fixed; top: 0; height: 100vh; background: #ffffff; box-shadow: 0 0 30px rgba(0,0,0,0.15); z-index: 10050; transition: transform 0.3s ease-out; padding: 25px; overflow-y: auto; box-sizing: border-box; }
-    #leftViewPanel { left: 0; width: 560px; transform: translateX(-100%); border-right: 1px solid #dee2e6; }
-    #leftViewPanel.open-panel { transform: translateX(0); }
-    #rightUpdateSidebar { right: 0; width: 420px; transform: translateX(100%); border-left: 1px solid #dee2e6; }
-    #rightUpdateSidebar.open-panel { transform: translateX(0); }
-    .drawer-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); z-index: 10040; display: none; }
+    .fade-view { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .tall-select { height: auto !important; min-height: 120px; }
-  </style>
+
+    /* Overlay Control Drawers */
+    .drawer-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.45); display: none; z-index: 1040; backdrop-filter: blur(2px); }
+    .detail-drawer { position: fixed; top: 0; right: -420px; width: 100%; max-width: 420px; height: 100%; background: #ffffff; z-index: 1050; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15); overflow-y: auto; padding: 24px; }
+    .detail-drawer.open { right: 0; }
+    .custom-viewer-drawer { position: fixed; top: 0; right: -75vw; width: 100%; max-width: 75vw; height: 100%; background: #f8f9fa; z-index: 1050; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -5px 0 20px rgba(0, 0, 0, 0.18); overflow-y: auto; padding: 40px; }
+    #createTaskForm { max-height: 65vh; overflow-y: auto; overflow-x: hidden; padding-right: 6px; }
+    #createTaskForm::-webkit-scrollbar { width: 6px; }
+    #createTaskForm::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
+
+    /* ==========================================================================
+       3. THE PINNED UPDATE TASK DRAWERS RESETS (50% STABLE VIEWPORT)
+       ========================================================================== */
+    #updateTaskOverlay .custom-modal-window {
+        width: 50vw !important; 
+        max-width: 50vw !important;
+        min-width: 540px !important;
+        max-height: 92vh !important;
+        margin: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        border-radius: 12px !important;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.25) !important;
+        padding: 0px !important;
+        overflow: hidden !important;
+    }
+
+    #updateTaskForm, .modal-scroll-body {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
+    }
+
+    #utChecklistContainer {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+
+    /* Checklist row elements framework */
+    #utChecklistContainer .ut-matrix-item-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        background: #ffffff !important;
+        padding: 8px 12px !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 6px !important;
+        margin-top: 0px !important;
+    }
+
+    /* HARD FORCE VISIBILITY: Ensures checkboxes render correctly on the left side */
+    #utChecklistContainer .ut-matrix-item-row input[type="checkbox"].ut-checklist-item-check {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        min-height: 18px !important;
+        margin: 0px 6px 0px 0px !important;
+        padding: 0px !important;
+        cursor: pointer !important;
+        -webkit-appearance: checkbox !important;
+        appearance: checkbox !important;
+        position: static !important;
+    }
+
+    /* Text metric styling inside rows */
+    #utChecklistContainer .ut-matrix-item-row .ut-checklist-item-text {
+        width: auto !important;
+        display: inline !important;
+        margin: 0px !important;
+        padding: 0px !important;
+    }
+
+    /* Force rich-text layouts inside workspace view bounds to eliminate the white line */
+    #updateTaskOverlay .ql-toolbar, 
+    #updateTaskOverlay .ql-container, 
+    #updateTaskOverlay .ql-editor, 
+    #updateTaskOverlay #utQuillEditorContainer {
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+
+    #updateTaskOverlay .ql-toolbar {
+        background: #f8fafc !important;
+        margin-top: 4px !important;
+        pointer-events: auto !important;
+        z-index: 100060 !important;
+    }
+
+    /* Force interactivity and clear visibility on manual textareas ONLY */
+    #updateTaskOverlay textarea:not([class*="ql-"]), 
+    #updateTaskOverlay #utActivityNote,
+    #updateTaskOverlay .custom-activity-textarea {
+        min-height: 110px !important;
+        height: 110px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important; 
+        cursor: text !important;
+        position: relative !important;
+        z-index: 10005 !important; 
+        background-color: #ffffff !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 10px !important;
+    }
+
+    /* Clean up Quill styling alignment nicely with the form frames */
+    .ql-toolbar.ql-snow {
+        border: 1px solid #cbd5e1 !important;
+        border-top-left-radius: 6px;
+        border-top-right-radius: 6px;
+        background-color: #f8fafc;
+    }
+
+    .ql-container.ql-snow {
+        border: 1px solid #cbd5e1 !important;
+        border-top: none !important;
+        border-bottom-left-radius: 6px;
+        border-bottom-right-radius: 6px;
+        font-size: 0.88rem;
+    }
+
+    /* Fix text cursor focus and force input availability within the Quill canvas workspace */
+    #updateTaskOverlay .ql-container,
+    #updateTaskOverlay .ql-container .ql-editor,
+    #updateTaskOverlay .ql-editor {
+        pointer-events: auto !important;
+        cursor: text !important;
+        -webkit-user-select: text !important;
+        user-select: text !important;
+        display: block !important;
+        background-color: #ffffff !important;
+        min-height: 110px !important;
+        z-index: 100050 !important;
+    }
+
+    /* Format your list types to render crisp markers inside the Task Drawer view */
+    .ql-editor ul, #utQuillEditorContainer ul {
+        list-style-type: disc !important;
+        margin-left: 0px !important;
+        padding-left: 25px !important;
+    }
+    .ql-editor ol, #utQuillEditorContainer ol {
+        list-style-type: decimal !important;
+        margin-left: 0px !important;
+        padding-left: 25px !important;
+    }
+/* FORCE VISIBILITY AND INTERACTIVITY OVER THE QUILL EDITOR ENGINE */
+#updateTaskOverlay #utQuillEditorContainer {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 120px !important;
+    height: 120px !important;
+    background-color: #ffffff !important;
+    pointer-events: auto !important;
+}
+
+#updateTaskOverlay .ql-container,
+#updateTaskOverlay .ql-editor {
+    min-height: 120px !important;
+    height: auto !important;
+    cursor: text !important;
+    pointer-events: auto !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+}
+
+/* Ensure the editor container allows deep pointer capture */
+#updateTaskOverlay #utQuillEditorContainer {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    min-height: 120px !important;
+    height: auto !important;
+    background-color: #ffffff !important;
+    pointer-events: auto !important;
+}
+
+/* Force standard browser typing behavior on the actual editable canvas area */
+#updateTaskOverlay .ql-container .ql-editor {
+    pointer-events: auto !important;
+    cursor: text !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    display: block !important;
+    min-height: 110px !important;
+}
+
+/* Failsafe if using a Bootstrap modal wrapper: bypass enforced focus blocks */
+.modal-open .ql-container, 
+.modal-open .ql-editor {
+    pointer-events: auto !important;
+}
+
+</style>
+
+
 </head>
 <body>
 
@@ -209,7 +477,7 @@
 
   <div class="container-fluid px-4 mt-4 pb-5">
     
-    <div id="mainDashboardView" class="dashboard-container" style="display: block !important; width: 100% !important;">
+    <div id="mainDashboardView" class="dashboard-container fade-view" style="display: block !important; width: 100% !important;">
         <main>
             <div class="text-center mb-5 mt-3">
                 <h1 class="content__START font-weight-bold m-0" style="font-size: 2.6rem; letter-spacing: -0.5px;">SLiM Project Suite</h1>
@@ -233,7 +501,7 @@
                 <div class="insights-card">
                   <div class="card-icon" style="background: #3498db;"><i class="fas fa-spinner fa-spin"></i></div>
                   <h5 class="text-muted mb-1">In Progress</h5>
-                  <h2 class="font-weight-bold" id="kpiInProgressCount">0 Tracks</h2>
+                  <h2 class="font-weight-bold" id="kpiInProgressCount">0 Tasks</h2>
                   <div class="progress mt-2" style="height: 5px;">
                     <div class="progress-bar bg-info" id="pbInProgress" style="width: 0%;"></div>
                   </div>
@@ -243,7 +511,7 @@
                 <div class="insights-card">
                   <div class="card-icon" style="background: #ffbe22;"><i class="fas fa-hourglass-half"></i></div>
                   <h5 class="text-muted mb-1">Active Hypercare</h5>
-                  <h2 class="font-weight-bold" id="kpiReviewCount">0 Areas</h2>
+                  <h2 class="font-weight-bold" id="kpiReviewCount">0 Tracks</h2>
                   <div class="progress mt-2" style="height: 5px;">
                     <div class="progress-bar bg-warning" id="pbHypercare" style="width: 0%;"></div>
                   </div>
@@ -253,7 +521,7 @@
                 <div class="insights-card">
                   <div class="card-icon" style="background: #2ed573;"><i class="fas fa-check-double"></i></div>
                   <h5 class="text-muted mb-1">Signed-Off</h5>
-                  <h2 class="font-weight-bold" id="kpiCompleteCount">0 Closed</h2>
+                  <h2 class="font-weight-bold" id="kpiCompleteCount">0 Signed-Off</h2>
                   <div class="progress mt-2" style="height: 5px;">
                     <div class="progress-bar bg-success" id="pbSignedOff" style="width: 0%;"></div>
                   </div>
@@ -340,7 +608,7 @@
         </main>
     </div>
 
-    <div id="singleWorkspaceView" style="display: none; padding-top: 20px;">
+    <div id="singleWorkspaceView" class="fade-view" style="display: none; padding-top: 20px;">
         <button id="closeWorkspaceBtn" class="btn btn-sm btn-outline-secondary mb-3">
             <i class="fas fa-arrow-left"></i> Back to Dashboard Registry
         </button>
@@ -410,706 +678,1534 @@
 
   </div>
 
-  <div class="custom-modal-overlay" id="customFormOverlay">
-    <div class="custom-modal-window">
-        <form id="createProjectForm">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                <h5 class="font-weight-bold text-primary m-0">Deploy New Project</h5>
-                <button type="button" class="btn-close" id="closeFormXBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small fw-bold text-secondary mb-1">Project Name</label>
-              <input type="text" id="pName" class="form-control form-control-sm" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small fw-bold text-secondary mb-1">Unique Token ID</label>
-              <input type="text" id="pId" class="form-control form-control-sm" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary mb-1">Authorized Team Members</label>
-                <select id="pTeam" class="form-select form-select-sm tall-select" multiple required size="5"></select>
-            </div>
-            <div class="row g-2 mb-3">
-                <div class="col-6">
-                  <label class="form-label small fw-bold text-secondary mb-1">Functional Sponsor</label>
-                  <input type="text" id="pSponsor" class="form-control form-control-sm" required>
+ <div class="custom-modal-overlay" id="customFormOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1050;">
+    <div class="custom-modal-window" style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 500px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+        
+        <div class="d-flex justify-content-between align-items-center border-bottom p-3">
+            <h5 class="font-weight-bold text-primary m-0" style="font-size: 1.15rem;">Deploy New Project</h5>
+            <button type="button" class="btn-close" id="closeFormXBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
+        </div>
+        
+        <form id="createProjectForm" style="display: flex; flex-direction: column; height: 100%; overflow: hidden; margin: 0;">
+            
+            <div class="modal-body-scroll" style="overflow-y: auto; padding: 1.5rem; flex-grow: 1;">
+                <div class="mb-3">
+                  <label class="form-label small fw-bold text-secondary mb-1">Project Name</label>
+                  <input type="text" id="pName" class="form-control form-control-sm" required>
                 </div>
-                <div class="col-6">
-                  <label class="form-label small fw-bold text-secondary mb-1">Classification Group</label>
-                  <select id="pClass" class="form-select form-select-sm">
-                      <option value="Internal Project">Internal Project</option>
-                      <option value="Enterprise Project">Enterprise Project</option>
-                      <option value="Special Project">Special Project</option>
-                      <option value="Client Project">Client Project</option>
-                  </select>
+                
+                <div class="mb-3">
+                  <label class="form-label small fw-bold text-secondary mb-1">Unique Token ID</label>
+                  <input type="text" id="pId" class="form-control form-control-sm" required>
                 </div>
-            </div>
-            <div class="row g-2 mb-4">
-              <div class="col-6">
-                <label class="form-label small fw-bold text-secondary mb-1">Current Phase</label>
-                <select id="pStatus" class="form-select form-select-sm">
-                    <option value="New" selected>New</option> 
-                    <option value="Planning">Planning</option>
-                    <option value="Execution">Execution</option>
-                    <option value="High Risk">High Risk</option>
-                    <option value="Stabilization">Stabilization</option>
-                    <option value="Signed-Off">Signed-Off</option>
-                </select>
-              </div>
-              <div class="col-6">
-                <label class="form-label small fw-bold text-secondary mb-1">Starting Progress (%)</label>
-                <input type="number" id="pProgress" class="form-control form-control-sm" min="0" max="100" value="0">
-              </div>
-            </div>
-            <div class="d-flex justify-content-end gap-2">
+                
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">Authorized Team Members</label>
+                    <select id="pTeam" class="form-select form-select-sm tall-select" multiple required size="5"></select>
+                    <div class="text-muted extra-small mt-1" style="font-size: 0.75rem;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple resources.</div>
+                </div>
+                
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <label class="form-label small fw-bold text-secondary mb-1">Functional Sponsor</label>
+                      <input type="text" id="pSponsor" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label small fw-bold text-secondary mb-1">Classification Group</label>
+                      <select id="pClass" class="form-select form-select-sm">
+                          <option value="Internal">Internal Project</option>
+                          <option value="Enterprise">Enterprise Project</option>
+                          <option value="Special">Special Project</option>
+                          <option value="Client">Client Project</option>
+                      </select>
+                    </div>
+                </div>
+                
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <label class="form-label small fw-bold text-secondary mb-1">Current Phase</label>
+                    <select id="pStatus" class="form-select form-select-sm">
+                        <option value="New" selected>New</option> 
+                        <option value="Planning">Planning</option>
+                        <option value="Execution">Execution</option>
+                        <option value="High Risk">High Risk</option>
+                        <option value="Stabilization">Stabilization</option>
+                        <option value="Signed-Off">Signed-Off</option>
+                    </select>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small fw-bold text-secondary mb-1">Starting Progress (%)</label>
+                    <input type="number" id="pProgress" class="form-control form-control-sm" min="0" max="100" value="0">
+                  </div>
+                </div>
+            </div> <div class="d-flex justify-content-end gap-2 border-top p-3 bg-light" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
               <button type="button" class="btn btn-light btn-sm px-3 border" id="cancelFormBtn">Cancel</button>
               <button type="submit" class="btn btn-primary btn-sm px-3" style="background-color: #005AFC;">Commit to Master Sheet</button>
             </div>
-        </form>
-    </div>
-  </div>
+            
+        </form> </div>
+</div>
 
   <div class="custom-modal-overlay" id="taskFormOverlay">
-    <div class="custom-modal-window">
+    <div class="custom-modal-window" style="max-width: 550px;">
         <form id="createTaskForm">
             <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
                 <h5 class="font-weight-bold text-primary m-0">Generate Operational Task</h5>
                 <button type="button" class="btn-close" id="closeTaskFormBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
             </div>
+            
             <div class="mb-3">
                 <label class="form-label small fw-bold text-secondary mb-1">Task Title / Instruction</label>
-                <input type="text" id="tTitle" class="form-control form-control-sm" required>
+                <input type="text" id="tTitle" class="form-control form-control-sm" required placeholder="e.g., Run test billing profiles">
             </div>
+
             <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary mb-1">Description</label>
-                <textarea id="tDesc" class="form-control form-control-sm" rows="3"></textarea>
+                <label class="form-label small fw-bold text-secondary mb-1">General Context / Scope Summary</label>
+                <textarea id="tDesc" class="form-control form-control-sm" rows="2" placeholder="Provide general background details for the engineers..."></textarea>
             </div>
+
             <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary mb-1">Assign To</label>
-                <select id="tAssignee" class="form-control form-control-sm"></select>
+                <label class="form-label small fw-bold text-secondary mb-1">Actionable Checklist Items (One per line)</label>
+                <textarea id="tChecklist" class="form-control form-control-sm" rows="4" placeholder="Step 1: Check server logs&#10;Step 2: Sync billing accounts&#10;Step 3: Validate database response"></textarea>
+                <div class="form-text text-muted" style="font-size: 0.65rem;">Every line entered here will automatically render as an individual checklist item on the card.</div>
             </div>
+            
             <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary mb-1">Initial Status</label>
-                <select id="tStatus" class="form-control form-control-sm">
-                    <option value="New">New</option>
-                    <option value="InProgress">In Progress</option>
-                    <option value="UnderReview">Under Review</option>
+                <label class="form-label small fw-bold text-secondary mb-1">Assign Responsible Resource(s)</label>
+                <select id="tAssignee" class="form-select form-select-sm tall-select" multiple required size="4">
                 </select>
+                <div class="form-text text-muted" style="font-size: 0.65rem;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple resources for this assignment.</div>
             </div>
+
             <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary mb-1">Initial Note</label>
-                <textarea id="tNote" class="form-control form-control-sm" rows="2"></textarea>
+                <label class="form-label small fw-bold text-secondary mb-1">Target Milestone / Due By</label>
+                <input type="date" id="tDueDate" class="form-control form-control-sm" required>
             </div>
-            <div class="d-flex justify-content-end gap-2">
-                <button type="button" id="cancelTaskBtn" class="btn btn-light btn-sm px-3 border">Cancel</button>
-                <button type="submit" class="btn btn-primary btn-sm px-3" style="background-color: #005AFC;">Create Task</button>
+             
+            <div class="d-flex justify-content-end gap-2 mt-4">
+              <button type="button" class="btn btn-light btn-sm px-3 border" id="cancelTaskBtn">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm px-3" style="background-color: #005AFC;">Create and Assign</button>
             </div>
         </form>
     </div>
   </div>
 
-  <div class="drawer-backdrop" id="panelBackdrop"></div>
+<div class="custom-modal-overlay" id="updateTaskOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div class="custom-modal-window">
+        
+        <div class="d-flex justify-content-between align-items-center border-bottom p-3 bg-white">
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="text-dark m-0" style="font-weight:700; font-size:1.15rem;"><i class="fas fa-tasks text-primary me-2"></i>Task Workspace Details</h5>
+                <span id="utAccessBadge" class="badge bg-warning text-dark px-2 py-1" style="font-size:0.7rem; display:none;">View-Only Mode</span>
+            </div>
+            <button type="button" class="btn-close" id="closeUpdateTaskFormBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.4rem; line-height:1; color:#64748b;">&times;</button>
+        </div>
+        
+        <div style="overflow-y: auto; flex: 1; padding: 24px;" class="modal-scroll-body bg-light-subtle">
+            <form id="updateTaskForm">
+                <input type="hidden" id="utTaskId">
+                
+                <div class="mb-4 p-3 rounded" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                    <span class="small text-muted fw-bold text-uppercase d-block mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Targeted Task</span>
+                    <p class="m-0 fw-bold text-dark" id="utTaskTitleDisplay" style="font-size:1.1rem; line-height:1.3;"></p>
+                </div>
 
-  <div class="sliding-panel-drawer" id="leftViewPanel">
-    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-        <h5 class="fw-bold text-dark m-0"><i class="fas fa-eye me-2 text-primary"></i>Task Master Overview</h5>
-        <button type="button" id="closeLeftPanelBtn" class="btn-close border-0 bg-transparent fs-4">&times;</button>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">Description</label>
+                    <div id="utTaskDescriptionDisplay" class="p-2.5 border rounded text-secondary" style="font-size:0.88rem; max-height:90px; overflow-y:auto; white-space:pre-wrap; background-color:#ffffff; line-height:1.4;"></div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-secondary mb-1">Workflow Pipeline Position</label>
+                    <select id="utStatus" class="form-select form-select-sm" style="height:38px; border-radius:6px; border-color:#cbd5e1;">
+                        <option value="New">New</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="UnderReview">Under Review</option>
+                        <option value="Done">Done</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <div class="mb-3 text-start">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                        <i class="fas fa-clipboard-check me-1 text-success"></i> Task Action Items Matrix
+                    </label>
+                    <div id="utChecklistContainer" class="p-1">
+                        </div>
+                </div>
+
+                <div class="mb-4 text-start">
+                    <label class="form-label small fw-bold text-secondary mb-1">New Task Item</label>
+                    <div class="input-group">
+                        <input type="text" id="utNewChecklistItemInput" class="form-control" style="height:38px; border-radius:6px 0 0 6px;" placeholder="Type a new action step checkbox line...">
+                        <button class="btn btn-success fw-bold px-3" type="button" id="utAddChecklistItemBtn" style="border-radius:0 6px 6px 0;">
+                            <i class="fas fa-plus me-1"></i> Add
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-secondary mb-1">Append Activity Note</label>
+                    <div class="quill-wrapper-bounds" style="position: relative; width: 100%;">
+                        <div id="utQuillEditorContainer" style="height: 120px; background: #ffffff;" class="border"></div>
+                    </div>
+                    <input type="hidden" id="utNote">
+                </div>
+
+                <div class="mb-2 border-top pt-3">
+                    <label class="form-label small fw-bold text-secondary mb-1 d-block"><i class="fas fa-users me-1 text-muted"></i> Assigned Team Members</label>
+                    <div id="utTeamMembersDisplay" class="d-flex flex-wrap gap-2 align-items-center" style="min-height:28px;"></div>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <button type="button" class="btn btn-light btn-sm px-4 border" id="cancelUpdateTaskBtn" style="height:38px; border-radius:6px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4" id="submitUpdateTaskBtn" style="height:38px; font-weight:600; border-radius:6px; background-color:#2563eb; border-color:#2563eb;">Apply Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div id="leftPanelContent"></div>
-  </div>
+</div>
 
-  <div class="sliding-panel-drawer" id="rightUpdateSidebar">
-    <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-        <h5 class="fw-bold text-primary m-0"><i class="fas fa-edit me-2"></i>Action Modifier Panel</h5>
-        <button type="button" id="closeRightPanelBtn" class="btn-close border-0 bg-transparent fs-4">&times;</button>
-    </div>
-    <div id="rightPanelContent"></div>
-  </div>
-
-  <script>
-    const webAppUrl = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
-    let masterProjectsData = [];
+  <footer class="navbar navbar-default wh_footer">
+      <div class="footer-container mx-auto">
+          <div>
+             <a href="https://ictglobe.com/" target="_blank" style="text-decoration: none; color: inherit;"><img src="./Pimages/ictglobe.png" alt="ICTGlobe" width="100px"></a>
+             <strong>Projects made easy</strong>
+          </div>
+      </div>
+  </footer>
+<script>
+let projectDataset = [];
+    let activeClassificationFilter = "all";
+    let activePhaseFilter = "all";
     let activeWorkspaceProjectId = null;
-    let activeTasksCache = [];
+    let activeWorkspaceProjectToken = null; 
+    const googleWebAppUrl = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
 
-    document.addEventListener("DOMContentLoaded", () => {
-        loadDashboardData();
-        setupClassificationFilters();
-        setupStatusTabFilters();
-        setupModalHooks();
-        setupSurgicalDrawerEvents();
+    document.addEventListener('DOMContentLoaded', () => {
+        
+        // Populate deployment form dropdown from credentials mapping
+        const teamSelect = document.getElementById('pTeam');
+        if (typeof authorizedUsers !== 'undefined' && teamSelect) {
+            Object.keys(authorizedUsers).forEach(username => {
+                const opt = document.createElement('option');
+                opt.value = username;
+                opt.textContent = username;
+                teamSelect.appendChild(opt);
+            });
+        }
+
+        // Overlay Modals management hooks
+        const projectOverlay = document.getElementById('customFormOverlay');
+        if (projectOverlay) {
+            const openFormBtn = document.getElementById('openFormBtn');
+            if (openFormBtn) openFormBtn.addEventListener('click', () => projectOverlay.style.display = 'flex');
+            
+            const closeFormXBtn = document.getElementById('closeFormXBtn');
+            if (closeFormXBtn) closeFormXBtn.addEventListener('click', () => projectOverlay.style.display = 'none');
+            
+            const cancelFormBtn = document.getElementById('cancelFormBtn');
+            if (cancelFormBtn) cancelFormBtn.addEventListener('click', () => projectOverlay.style.display = 'none');
+        }
+
+        const taskOverlay = document.getElementById('taskFormOverlay');
+        if (taskOverlay) {
+            const closeTaskFormBtn = document.getElementById('closeTaskFormBtn');
+            if (closeTaskFormBtn) closeTaskFormBtn.addEventListener('click', () => taskOverlay.style.display = 'none');
+            
+            const cancelTaskBtn = document.getElementById('cancelTaskBtn');
+            if (cancelTaskBtn) cancelTaskBtn.addEventListener('click', () => taskOverlay.style.display = 'none');
+        }
+
+        // Back to Dashboard Workspace View Control Closer
+        const closeWorkspaceBtn = document.getElementById('closeWorkspaceBtn');
+        if (closeWorkspaceBtn) {
+            closeWorkspaceBtn.addEventListener('click', () => {
+                const mainLayoutWrapper = document.querySelector('.row.g-4.mb-4')?.closest('.container, body, div');
+                const workspaceView = document.getElementById('singleWorkspaceView');
+                
+                // Toggle view scopes seamlessly
+                if (workspaceView) workspaceView.style.display = "none";
+                
+                // Show the main containers back
+                document.querySelectorAll('main, .row, .recent-orders').forEach(el => {
+                    if (el.id !== 'singleWorkspaceView' && !el.closest('#singleWorkspaceView')) {
+                        el.style.display = "";
+                    }
+                });
+                
+                activeWorkspaceProjectId = null;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // Classification Card Click Listeners for Non-Refreshing Filtering and Redirect View Position
+        document.querySelectorAll('.clickable-cat-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                const selectedCat = card.getAttribute('data-category');
+                applyClassificationFilter(selectedCat);
+                
+                // REDIRECT HOOK: Automatically scrolls container viewport view focus smoothly down to the registry section
+                const targetRegistryElement = document.getElementById('registryAnchor');
+                if (targetRegistryElement) {
+                    targetRegistryElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Reset Classification Filter Button Link Wireframe Action
+        const clearClassFilterBtn = document.getElementById('clearClassificationFilter');
+        if (clearClassFilterBtn) {
+            clearClassFilterBtn.addEventListener('click', () => {
+                applyClassificationFilter('all');
+            });
+        }
+
+        // Registry Phase Filter Button Group Listeners
+        document.querySelectorAll('#filterBtnGroup .filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#filterBtnGroup .filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activePhaseFilter = btn.getAttribute('data-filter');
+                renderFilteredRegistryAndVisuals();
+            });
+        });
+
+        // ======= New Project Form Submission Data Transmission Engine ========
+        const createProjForm = document.getElementById('createProjectForm');
+        if (createProjForm) {
+            createProjForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log("Submit event captured. Initializing pipeline data assembly...");
+                
+                try {
+                    // 1. Safely extract selected team members from multi-select dropdown
+                    const teamSelect = document.getElementById('pTeam');
+                    let selectedTeam = [];
+                    if (teamSelect && teamSelect.selectedOptions && teamSelect.selectedOptions.length > 0) {
+                        selectedTeam = Array.from(teamSelect.selectedOptions).map(opt => opt.value);
+                    } else {
+                        selectedTeam = ["Unassigned"];
+                    }
+
+                    // Elements sanity checking variables
+                    const idEl = document.getElementById('pId');
+                    const nameEl = document.getElementById('pName');
+                    const sponsorEl = document.getElementById('pSponsor');
+                    const progressEl = document.getElementById('pProgress');
+                    const statusEl = document.getElementById('pStatus');
+                    const classEl = document.getElementById('pClass') || document.getElementById('pClassification');
+
+                    // 2. Build multi-compatible payload to satisfy both Apps Script variations
+                    const payload = {
+                        action: "appendProject", 
+                        id: idEl ? idEl.value.trim() : "PRJ-" + Math.floor(1000 + Math.random() * 9000),
+                        projectId: idEl ? idEl.value.trim() : "",
+                        name: nameEl ? nameEl.value.trim() : "Unnamed Project",
+                        projectName: nameEl ? nameEl.value.trim() : "",
+                        sponsor: sponsorEl ? sponsorEl.value.trim() : "N/A",
+                        progress: progressEl ? (parseInt(progressEl.value) || 0) : 0,
+                        status: statusEl ? statusEl.value : "New",
+                        
+                        // Keeps single words ("Special", "Enterprise") running to the sheet perfectly
+                        classification: classEl ? classEl.value.split(' ')[0] : "Internal",
+                        class: classEl ? classEl.value.split(' ')[0] : "Internal",
+                        
+                        team: selectedTeam.join(', ')
+                    };
+
+                    const submitBtn = createProjForm.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerText = "Deploying to Master Portfolio...";
+                    }
+
+                    console.log("Transmitting finalized payload package to endpoint:", payload);
+
+                    // 3. Dispatch payload to Apps Script Web App Endpoint
+                    fetch(googleWebAppUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(() => {
+                        console.log("Network operation resolved successfully.");
+                        alert("Project successfully initialized and deployed to portfolio tracking!");
+                        createProjForm.reset();
+                        
+                        const projectOverlay = document.getElementById('customFormOverlay');
+                        if (projectOverlay) projectOverlay.style.display = 'none';
+                        
+                        // Refresh dataset seamlessly
+                        if (typeof fetchMasterSuiteDataset === 'function') {
+                            fetchMasterSuiteDataset();
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Network communication link dropped:", err);
+                        alert("Error communicating with master system registry.");
+                    })
+                    .finally(() => {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = "Commit to Master Sheet";
+                        }
+                    });
+
+                } catch (runtimeError) {
+                    console.error("Critical error inside form parsing processor block:", runtimeError);
+                    alert("Form error: " + runtimeError.message);
+                }
+            });
+        }
+
+        // ======= Operational Task Creation Wireframe Form Binder ============
+        const taskForm = document.getElementById('createTaskForm');
+        if (taskForm) {
+            taskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                const pId = activeWorkspaceProjectId;
+                if (!pId) { 
+                    alert("Error: Active project identification token context is missing."); 
+                    return; 
+                }
+
+                const assigneeSelect = document.getElementById('tAssignee');
+                let assigneesString = "Unassigned";
+                if (assigneeSelect) {
+                    const selectedAssignees = Array.from(assigneeSelect.selectedOptions).map(opt => opt.value);
+                    if (selectedAssignees.length > 0) {
+                        assigneesString = selectedAssignees.join(', ');
+                    }
+                }
+
+                const checklistField = document.getElementById('tChecklist');
+                const rawChecklistText = checklistField ? checklistField.value : "";
+                const checklistItems = rawChecklistText.split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+
+                const payload = {
+                    action: "appendTask",
+                    projectId: pId,
+                    title: document.getElementById('tTitle').value,
+                    description: document.getElementById('tDesc') ? document.getElementById('tDesc').value : "",
+                    checklist: JSON.stringify(checklistItems),
+                    assignees: assigneesString,
+                    status: "New",
+                    creator: window.currentUserName || "System Portal",
+                    dueDate: document.getElementById('tDueDate') ? document.getElementById('tDueDate').value : ""
+                };
+
+                const submitBtn = taskForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerText = "Appending to Track...";
+                }
+
+                fetch(googleWebAppUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(() => {
+                    alert("Operational task successfully generated and logged!");
+                    taskForm.reset();
+                    
+                    const taskOverlay = document.getElementById('taskFormOverlay');
+                    if (taskOverlay) taskOverlay.style.display = 'none';
+                    
+                    fetchProjectTasks(pId); 
+                })
+                .catch(err => {
+                    console.error("Transmission Error Details:", err);
+                    alert("Error: Script communication dropped. Inspect development log.");
+                })
+                .finally(() => {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = "Create and Assign";
+                    }
+                });
+            });
+        }
+
+        // Add Task Button Overlay Modal Trigger & Dropdown Population
+        const addTaskBtn = document.getElementById('btnAddTask') || document.getElementById('addTaskBtn');
+        if (addTaskBtn) {
+            addTaskBtn.addEventListener('click', () => {
+                const assigneeSelect = document.getElementById('tAssignee');
+                if (typeof authorizedUsers !== 'undefined' && assigneeSelect) {
+                    assigneeSelect.innerHTML = '';
+                    Object.keys(authorizedUsers).forEach(username => {
+                        const opt = document.createElement('option');
+                        opt.value = username;
+                        opt.textContent = username;
+                        assigneeSelect.appendChild(opt);
+                    });
+                }
+                if (taskOverlay) taskOverlay.style.display = 'flex';
+            });
+        }
+
+        // Initial Data Sync Engine Run
+        fetchMasterSuiteDataset();
     });
 
-    function loadDashboardData() {
-        fetch(`${webAppUrl}?action=readDashboard`)
-        .then(res => res.json())
-        .then(data => {
-            masterProjectsData = data;
-            calculateKPIs(data);
-            renderProjectsTable(data);
-            renderProgressMatrix(data);
-            renderPhaseBreakoutDonut(data);
-        })
-        .catch(err => console.error("KPI Sync Error:", err));
+    // Master API Feed Data Pull
+    function fetchMasterSuiteDataset() {
+        fetch(googleWebAppUrl)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    projectDataset = data;
+
+                    console.log("--- RAW BACKEND DATA RECEIVED ---");
+                    console.log(data);
+                    if(data.length > 0) {
+                        console.log("Sample project properties:", Object.keys(data[0]));
+                        console.log("Sample project classification value:", data[0].classification || data[0].class);
+                    }
+                    console.log("---------------------------------");
+                    
+                    calculateDashboardMetrics(data);
+                    renderFilteredRegistryAndVisuals();
+                    if (activeWorkspaceProjectId) {
+                        refreshWorkspaceUI();
+                    }
+                } else {
+                    console.error("Invalid data payload type received.");
+                }
+            })
+            .catch(err => console.error("Error connecting to sheet service:", err));
     }
 
-    function calculateKPIs(projects) {
-        document.getElementById("kpiTotalCount").textContent = `${projects.length} Projects`;
-        const inProgress = projects.filter(p => p.status === 'Execution').length;
-        const hypercare = projects.filter(p => p.status === 'Stabilization' || p.status === 'High Risk').length;
-        const signoff = projects.filter(p => p.status === 'Signed-Off').length;
-
-        document.getElementById("kpiInProgressCount").textContent = `${inProgress} Tracks`;
-        document.getElementById("kpiReviewCount").textContent = `${hypercare} Areas`;
-        document.getElementById("kpiCompleteCount").textContent = `${signoff} Closed`;
-
-        const total = projects.length || 1;
-        document.getElementById("pbInProgress").style.width = `${(inProgress/total)*100}%`;
-        document.getElementById("pbHypercare").style.width = `${(hypercare/total)*100}%`;
-        document.getElementById("pbSignedOff").style.width = `${(signoff/total)*100}%`;
-
-        // Classification Card Totals Configuration
-        document.getElementById("catInternal").textContent = projects.filter(p => p.classification === 'Internal Project').length;
-        document.getElementById("catEnterprise").textContent = projects.filter(p => p.classification === 'Enterprise Project').length;
-        document.getElementById("catSpecial").textContent = projects.filter(p => p.classification === 'Special Project').length;
-        document.getElementById("catClient").textContent = projects.filter(p => p.classification === 'Client Project').length;
-    }
-
-    function renderProjectsTable(projects) {
-        const tbody = document.getElementById("liveTableBody");
-        tbody.innerHTML = "";
+    // Dynamic Metrics and Classification Card Counters Engine
+    function calculateDashboardMetrics(data) {
+        const kpiTotal = document.getElementById('kpiTotalCount');
+        if (kpiTotal) kpiTotal.innerText = `${data.length} Projects`;
         
-        projects.forEach(p => {
-            const tr = document.createElement("tr");
-            let badgeClass = "bg-secondary";
-            if(p.status === 'Execution') badgeClass="bg-info";
-            if(p.status === 'High Risk') badgeClass="bg-danger";
-            if(p.status === 'Stabilization') badgeClass="bg-warning text-dark";
-            if(p.status === 'Signed-Off') badgeClass="bg-success";
+        let inProgress = data.filter(p => p.status === 'Execution' || p.status === 'Planning').length;
+        let hypercare = data.filter(p => p.status === 'Stabilization' || p.status === 'High Risk').length;
+        let complete = data.filter(p => p.status === 'Signed-Off').length;
+
+        const kpiProg = document.getElementById('kpiInProgressCount');
+        if (kpiProg) kpiProg.innerText = `${inProgress} Tracks`;
+        
+        const kpiRev = document.getElementById('kpiReviewCount');
+        if (kpiRev) kpiRev.innerText = `${hypercare} Tracks`;
+        
+        const kpiComp = document.getElementById('kpiCompleteCount');
+        if (kpiComp) kpiComp.innerText = `${complete} Signed-Off`;
+
+        if (data.length > 0) {
+            const pbInProg = document.getElementById('pbInProgress');
+            if (pbInProg) pbInProg.style.width = `${(inProgress / data.length) * 100}%`;
+            
+            const pbHyper = document.getElementById('pbHypercare');
+            if (pbHyper) pbHyper.style.width = `${(hypercare / data.length) * 100}%`;
+            
+            const pbSigned = document.getElementById('pbSignedOff');
+            if (pbSigned) pbSigned.style.width = `${(complete / data.length) * 100}%`;
+        }
+
+        // 🌟 UPDATED MAP COUNTERS: Reliably targets the clean short words
+        let internalCount = data.filter(p => {
+            const cls = String(p.classification || p.class || "Internal").toLowerCase();
+            return cls.startsWith('int');
+        }).length;
+
+        let enterpriseCount = data.filter(p => {
+            const cls = String(p.classification || p.class || "").toLowerCase();
+            return cls.startsWith('ent');
+        }).length;
+
+        let specialCount = data.filter(p => {
+            const cls = String(p.classification || p.class || "").toLowerCase();
+            return cls.startsWith('spe');
+        }).length;
+
+        let clientCount = data.filter(p => {
+            const cls = String(p.classification || p.class || "").toLowerCase();
+            return cls.startsWith('cli');
+        }).length;
+
+        const catInt = document.getElementById('catInternal');
+        if (catInt) catInt.innerText = internalCount;
+        
+        const catEnt = document.getElementById('catEnterprise');
+        if (catEnt) catEnt.innerText = enterpriseCount;
+        
+        const catSpec = document.getElementById('catSpecial');
+        if (catSpec) catSpec.innerText = specialCount;
+        
+        const catCli = document.getElementById('catClient');
+        if (catCli) catCli.innerText = clientCount;
+    }
+
+    function applyClassificationFilter(category) {
+        activeClassificationFilter = category;
+        document.querySelectorAll('.clickable-cat-card').forEach(card => {
+            card.classList.remove('active-filter');
+            if (card.getAttribute('data-category') === category) {
+                card.classList.add('active-filter');
+            }
+        });
+
+        const resetBtn = document.getElementById('clearClassificationFilter');
+        if (resetBtn) {
+            resetBtn.style.display = (category === 'all') ? 'none' : 'inline-block';
+        }
+        renderFilteredRegistryAndVisuals();
+    }
+
+    function renderFilteredRegistryAndVisuals() {
+        generateHighFidelityVisuals(projectDataset);
+        let subset = projectDataset;
+        if (activeClassificationFilter !== 'all') {
+            // 🌟 FIXED FILTER ENGINE: Extracts prefixes cleanly to maintain match stability
+            subset = subset.filter(p => {
+                const cls = String(p.classification || p.class || "").toLowerCase();
+                const filterTarget = activeClassificationFilter.toLowerCase().split(' ')[0];
+                return cls.startsWith(filterTarget);
+            });
+        }
+        if (activePhaseFilter !== 'all') {
+            subset = subset.filter(p => p.status === activePhaseFilter);
+        }
+        populatePortfolioTableBody(subset);
+    }
+
+    function populatePortfolioTableBody(list) {
+        const tbody = document.getElementById('liveTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = "";
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No matching items found inside active view scopes.</td></tr>`;
+            return;
+        }
+
+        list.forEach(p => {
+            const tr = document.createElement('tr');
+            let badgeClass = "bg-secondary text-white";
+            if (p.status === 'Execution') badgeClass = "bg-info text-dark";
+            else if (p.status === 'Planning') badgeClass = "bg-light text-dark border";
+            else if (p.status === 'High Risk') badgeClass = "bg-danger text-white";
+            else if (p.status === 'Stabilization') badgeClass = "bg-warning text-dark";
+            else if (p.status === 'Signed-Off') badgeClass = "bg-success text-white";
+
+            const projectIdToken = p.projectId || p.id;
+            const hasWorkspaceAccess = (typeof window.checkWorkspaceAccess === 'function') 
+                                        ? window.checkWorkspaceAccess(projectIdToken) 
+                                        : false;
+
+            const workspaceBtnHTML = hasWorkspaceAccess 
+                ? `<button class="btn btn-sm btn-outline-primary px-3 fw-bold" onclick="launchWorkspaceHub('${projectIdToken}')" style="border-radius:6px; font-size:0.75rem;">
+                       <i class="fas fa-folder-open me-1"></i> Workspace
+                   </button>`
+                : `<button class="btn btn-sm btn-outline-secondary px-3 fw-bold disabled" title="Access Restricted" style="border-radius:6px; font-size:0.75rem; opacity: 0.5;" disabled>
+                       <i class="fas fa-lock me-1"></i> Restricted
+                   </button>`;
+
+            // Appends standard text safely with a proper fallback string
+            const displayClassification = p.classification || p.class || 'Internal';
 
             tr.innerHTML = `
                 <td>
-                    <span class="fw-bold text-primary d-block">${p.name}</span>
-                    <small class="text-muted text-uppercase fw-bold" style="font-size:0.7rem;">${p.id}</small>
+                    <span class="fw-bold text-dark d-block">${p.projectName || p.name}</span>
+                    <small class="text-muted font-monospace">${projectIdToken}</small>
                 </td>
                 <td>
-                    <span class="d-block text-dark small fw-bold">${p.sponsor || '---'}</span>
-                    <span class="badge bg-light text-secondary border">${p.classification || 'Unclassified'}</span>
+                    <span class="text-dark d-block" style="font-weight:500;">${p.sponsor || 'N/A'}</span>
+                    <span class="badge bg-light text-secondary border px-2 py-1 mt-1" style="font-size:0.7rem;">${displayClassification}</span>
                 </td>
                 <td>
-                    <div class="d-flex align-items-center gap-2" style="max-width:180px;">
-                        <span class="small fw-bold text-dark">${p.progress}%</span>
-                        <div class="progress flex-grow-1" style="height:6px;">
-                            <div class="progress-bar bg-primary" style="width:${p.progress}%"></div>
+                    <div class="d-flex align-items-center gap-2" style="max-width: 180px;">
+                        <span class="small fw-bold text-secondary">${p.progress}%</span>
+                        <div class="progress flex-grow-1" style="height: 6px; border-radius: 4px;">
+                            <div class="progress-bar bg-primary" style="width: ${p.progress}%"></div>
                         </div>
                     </div>
                 </td>
-                <td><span class="badge ${badgeClass}">${p.status}</span></td>
+                <td><span class="badge ${badgeClass} px-2.5 py-1.5" style="font-size:0.78rem; border-radius:6px;">${p.status}</span></td>
                 <td>
-                    <button class="btn btn-sm btn-primary view-workspace-btn btn-enter-workspace" data-token="${p.id}">Workspace</button>
+                    ${workspaceBtnHTML}
                 </td>
             `;
             tbody.appendChild(tr);
         });
-
-        document.querySelectorAll(".btn-enter-workspace").forEach(btn => {
-            btn.addEventListener("click", function() {
-                const token = this.getAttribute("data-token");
-                const project = masterProjectsData.find(p => p.id === token);
-                if(project) {
-                    if (typeof window.checkWorkspaceAccess === 'function' && !window.checkWorkspaceAccess(project.id)) {
-                        alert("Access Restricted: You are not assigned to this project suite scope.");
-                        return;
-                    }
-                    openWorkspace(project);
-                }
-            });
-        });
     }
 
-    function openWorkspace(p) {
-        activeWorkspaceProjectId = p.id;
-        document.getElementById("mainDashboardView").style.setProperty("display", "none", "important");
-        document.getElementById("singleWorkspaceView").style.setProperty("display", "block", "important");
-
-        document.getElementById("wsProjectName").textContent = p.name;
-        document.getElementById("wsProjectToken").textContent = `ID: ${p.id.toUpperCase()}`;
-        document.getElementById("wsSponsor").textContent = p.sponsor || '---';
-        document.getElementById("wsClassification").textContent = p.classification || '---';
-        document.getElementById("wsProgressText").textContent = `${p.progress}%`;
-        document.getElementById("wsProgressBar").style.width = `${p.progress}%`;
-
-        let badge = document.getElementById("wsStatusBadge");
-        badge.textContent = p.status;
-        badge.className = "badge bg-primary";
-        if(p.status === 'High Risk') badge.className = "badge bg-danger";
-        if(p.status === 'Stabilization') badge.className = "badge bg-warning text-dark";
-        if(p.status === 'Signed-Off') badge.className = "badge bg-success";
-
-        fetchProjectTasks(p.id);
-    }
-
-    function fetchProjectTasks(projectId) {
-        ["New", "InProgress", "UnderReview", "Done", "Cancelled"].forEach(st => {
-            document.getElementById(`list-${st}`).innerHTML = `<p class="text-muted small text-center p-2">Loading...</p>`;
-        });
-
-        fetch(`${webAppUrl}?action=readTasks&projectId=${projectId}`)
-        .then(res => res.json())
-        .then(tasks => {
-            activeTasksCache = tasks;
-            populateAuditTrailLogStream(tasks);
-            ["New", "InProgress", "UnderReview", "Done", "Cancelled"].forEach(st => {
-                document.getElementById(`list-${st}`).innerHTML = "";
-                document.getElementById(`badge-${st}`).textContent = "0";
-            });
-
-            let counts = { New: 0, InProgress: 0, UnderReview: 0, Done: 0, Cancelled: 0 };
-
-            tasks.forEach(task => {
-                // Dynamic verification handler to support both uppercase and lowercase keys securely
-                const tStatus = task.Status || task.status || "New";
-                const tTitle = task.Title || task.title || "Untitled Task";
-                const tDesc = task.Description || task.description || "";
-                const tAssignee = task.Assignee || task.assignee || "";
-                const tId = task.Id || task.id;
-
-                const targetCol = document.getElementById(`list-${tStatus}`);
-                if (!targetCol) return;
-
-                counts[tStatus]++;
-                
-                const assignedUsers = tAssignee ? tAssignee.split(',').map(u => u.trim().toLowerCase()) : [];
-                const loggedInUser = (window.currentUserName || '').toLowerCase();
-                const isAssigned = assignedUsers.includes(loggedInUser);
-                const isAdmin = window.currentUserRole === 'admin';
-                const hasModifierRights = isAssigned || isAdmin;
-
-                const card = document.createElement("div");
-                card.className = "kanban-card mb-2";
-                card.style.borderLeftColor = tStatus === 'Done' ? '#2ed573' : (tStatus === 'UnderReview' ? '#ffbe22' : '#005AFC');
-                
-                card.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-start mb-1">
-                        <strong class="text-dark d-block" style="font-size:0.9rem;">${tTitle}</strong>
-                        <button class="btn btn-xs text-primary p-0 btn-view-task" data-task-id="${tId}"><i class="fas fa-expand-alt"></i></button>
-                    </div>
-                    <p class="text-muted small mb-2 text-truncate" style="max-width:220px;">${tDesc || 'No descriptive context.'}</p>
-                    <div class="mb-2 d-flex align-items-center gap-1">
-                        <i class="fas fa-user-circle text-secondary" style="font-size:0.8rem;"></i>
-                        <span class="text-secondary fw-bold" style="font-size:0.75rem;">${tAssignee || 'Unassigned'}</span>
-                    </div>
-                    <div class="border-top pt-2 mt-1 d-flex align-items-center justify-content-between gap-1">
-                        <select class="form-select form-select-sm inline-status-modifier" data-task-id="${tId}" style="font-size:0.7rem; padding:1px 3px; width:auto; height:24px;">
-                            <option value="New" ${tStatus === 'New' ? 'selected' : ''}>New</option>
-                            <option value="InProgress" ${tStatus === 'InProgress' ? 'selected' : ''}>In Progress</option>
-                            <option value="UnderReview" ${tStatus === 'UnderReview' ? 'selected' : ''}>Under Review</option>
-                            <option value="Done" ${tStatus === 'Done' ? 'selected' : ''}>Done</option>
-                            <option value="Cancelled" ${tStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                        </select>
-                        ${hasModifierRights ? `<button class="btn btn-xs btn-primary btn-modify-task" data-task-id="${tId}" style="font-size:0.65rem; padding:2px 6px;">Update</button>` : ''}
-                    </div>
-                `;
-                targetCol.appendChild(card);
-            });
-
-            Object.keys(counts).forEach(key => {
-                document.getElementById(`badge-${key}`).textContent = counts[key];
-            });
-        })
-        .catch(err => console.error("Error drawing tasks execution vector:", err));
-    }
-
-    function populateAuditTrailLogStream(tasks) {
-        const stream = document.getElementById("wsAuditStream");
-        stream.innerHTML = "";
-        let logsCount = 0;
-        
-        tasks.forEach(t => {
-            const note = t.Note || t.note;
-            const assignee = t.Assignee || t.assignee;
-            const title = t.Title || t.title;
-            const stamp = t.Timestamp || t.timestamp;
-
-            if(note) {
-                logsCount++;
-                const entry = document.createElement("div");
-                entry.className = "log-entry shadow-sm p-2 bg-light border-start border-primary rounded mb-2";
-                entry.innerHTML = `
-                    <div class="d-flex justify-content-between text-muted x-small mb-1 fw-bold">
-                        <span><i class="fas fa-user me-1"></i>${assignee || 'System'}</span>
-                        <span>${stamp || 'Recent'}</span>
-                    </div>
-                    <p class="m-0 text-dark fw-normal" style="font-size:0.8rem;"><strong>${title}:</strong> ${note}</p>
-                `;
-                stream.appendChild(entry);
-            }
-        });
-        if(logsCount === 0) {
-            stream.innerHTML = `<p class="text-muted text-center py-4">No logged workflow notes or modifications recorded.</p>`;
-        }
-    }
-
-    function setupSurgicalDrawerEvents() {
-        document.getElementById("closeLeftPanelBtn").addEventListener("click", closeDrawers);
-        document.getElementById("closeRightPanelBtn").addEventListener("click", closeDrawers);
-        document.getElementById("panelBackdrop").addEventListener("click", closeDrawers);
-
-        document.addEventListener("change", function(e) {
-            if(e.target && e.target.classList.contains("inline-status-modifier")) {
-                const taskId = e.target.getAttribute("data-task-id");
-                const newStatus = e.target.value;
-                commitTaskStateChange(taskId, newStatus, "Status selector configuration update.");
-            }
-        });
-
-        document.addEventListener("click", function(e) {
-            const viewBtn = e.target.closest(".btn-view-task");
-            if(viewBtn) {
-                openLeftViewDrawer(viewBtn.getAttribute("data-task-id"));
-            }
-
-            const updateBtn = e.target.closest(".btn-modify-task");
-            if(updateBtn) {
-                openRightUpdateDrawer(updateBtn.getAttribute("data-task-id"));
-            }
-        });
-    }
-
-    function openLeftViewDrawer(taskId) {
-        const task = activeTasksCache.find(t => String(t.Id || t.id) === String(taskId));
-        if(!task) return;
-
-        const tTitle = task.Title || task.title || "Untitled Task";
-        const tDesc = task.Description || task.description || "No details provided.";
-        const tAssignee = task.Assignee || task.assignee || "";
-        const tStatus = task.Status || task.status || "New";
-        const tNote = task.Note || task.note || "No notes attached.";
-
-        const content = document.getElementById("leftPanelContent");
-        content.innerHTML = `
-            <div class="card p-3 border-0 bg-light shadow-sm mb-3">
-                <h4 class="text-primary fw-bold mb-1">${tTitle}</h4>
-                <hr class="my-2">
-                <p class="text-dark mb-0" style="font-size:0.95rem;">${tDesc}</p>
-            </div>
-            <div class="mb-3">
-                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Assigned Operators Matrix</label>
-                <div class="p-2 border rounded bg-white d-flex flex-wrap gap-1 align-items-center">
-                    <i class="fas fa-users text-muted me-1"></i>
-                    ${tAssignee ? tAssignee.split(',').map(u => `<span class="badge bg-primary px-2 py-1">${u.trim()}</span>`).join('') : '<span class="text-muted small">No active resources assigned.</span>'}
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Status Track</label>
-                <span class="badge bg-dark px-3 py-2 fs-6 rounded">${tStatus}</span>
-            </div>
-            <hr>
-            <h6 class="fw-bold text-secondary mb-2"><i class="fas fa-history me-1"></i>Latest Modification Note</h6>
-            <div class="p-2 border rounded bg-light">
-                <p class="small text-dark p-1 mb-0 bg-white border rounded shadow-sm">${tNote}</p>
-            </div>
-        `;
-
-        document.getElementById("panelBackdrop").style.display = "block";
-        document.getElementById("leftViewPanel").classList.add("open-panel");
-    }
-
-    function openRightUpdateDrawer(taskId) {
-        const task = activeTasksCache.find(t => String(t.Id || t.id) === String(taskId));
-        if(!task) return;
-
-        const tTitle = task.Title || task.title || "Untitled Task";
-        const tAssignee = task.Assignee || task.assignee || "";
-        const tStatus = task.Status || task.status || "New";
-        const tId = task.Id || task.id;
-
-        const content = document.getElementById("rightPanelContent");
-        const isAdmin = window.currentUserRole === 'admin';
-
-        let adminMarkup = "";
-        if(isAdmin && typeof authorizedUsers !== 'undefined') {
-            let userOptions = Object.keys(authorizedUsers).map(u => `<option value="${u}">${u}</option>`).join('');
-            adminMarkup = `
-                <div class="card p-3 border-danger mb-3 bg-white shadow-sm">
-                    <label class="fw-bold text-danger small d-block mb-1 text-uppercase"><i class="fas fa-user-shield me-1"></i>Admin Resource Modifier</label>
-                    <div class="mb-2" id="adminAssigneesContainer">
-                        ${tAssignee ? tAssignee.split(',').map(u => `
-                            <span class="badge bg-light text-dark border p-2 mb-1 d-inline-flex align-items-center gap-2">
-                                ${u.trim()} 
-                                <i class="fas fa-times-circle text-danger remove-user-pill" data-user="${u.trim()}" style="cursor:pointer;"></i>
-                            </span>
-                        `).join('') : '<span class="text-muted small">No current members.</span>'}
-                    </div>
-                    <div class="input-group input-group-sm mt-2">
-                        <select id="adminAddUserSelect" class="form-select form-select-sm">
-                            <option value="">Choose User...</option>
-                            ${userOptions}
-                        </select>
-                        <button class="btn btn-danger btn-sm" id="btnAdminAddUserToTask">Add</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        content.innerHTML = `
-            <div class="mb-3">
-                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Task Topic</label>
-                <input type="text" class="form-control form-control-sm" value="${tTitle}" readonly>
-            </div>
-            <div class="mb-3">
-                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Active Assignees Overview</label>
-                <div class="p-2 border rounded bg-light small fw-bold text-secondary">
-                    <i class="fas fa-id-badge text-muted me-1"></i>${tAssignee || 'None'}
-                </div>
-            </div>
-            ${adminMarkup}
-            <div class="mb-3">
-                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Append Workflow Action Note</label>
-                <textarea class="form-control form-control-sm" id="upTaskNote" rows="3" placeholder="Describe progress update or blocker notes..."></textarea>
-            </div>
-            <div class="mb-4">
-                <label class="fw-bold text-muted small d-block mb-1 text-uppercase">Shift Board Phase State</label>
-                <select class="form-select form-select-sm" id="upTaskStatus">
-                    <option value="New" ${tStatus === 'New' ? 'selected' : ''}>New</option>
-                    <option value="InProgress" ${tStatus === 'InProgress' ? 'selected' : ''}>In Progress</option>
-                    <option value="UnderReview" ${tStatus === 'UnderReview' ? 'selected' : ''}>Under Review</option>
-                    <option value="Done" ${tStatus === 'Done' ? 'selected' : ''}>Done</option>
-                    <option value="Cancelled" ${tStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                </select>
-            </div>
-            <button class="btn btn-sm btn-primary w-100 fw-bold py-2 shadow-sm" id="btnSaveTaskUpdates" data-task-id="${tId}" style="background-color: #005AFC;">
-                Commit Modifications
-            </button>
-        `;
-
-        document.getElementById("panelBackdrop").style.display = "block";
-        document.getElementById("rightUpdateSidebar").classList.add("open-panel");
-
-        document.getElementById("btnSaveTaskUpdates").addEventListener("click", function() {
-            const noteText = document.getElementById("upTaskNote").value;
-            const statusVal = document.getElementById("upTaskStatus").value;
-            commitTaskStateChange(tId, statusVal, noteText);
-        });
-
-        if(isAdmin && document.getElementById("btnAdminAddUserToTask")) {
-            document.getElementById("btnAdminAddUserToTask").addEventListener("click", function() {
-                const selectedUser = document.getElementById("adminAddUserSelect").value;
-                if(!selectedUser) return;
-                let currentList = tAssignee ? tAssignee.split(',').map(s => s.trim()) : [];
-                if(!currentList.includes(selectedUser)) {
-                    currentList.push(selectedUser);
-                    updateTaskAssigneesRemote(tId, currentList.join(', '));
-                }
-            });
-
-            document.querySelectorAll(".remove-user-pill").forEach(pill => {
-                pill.addEventListener("click", function() {
-                    const uToRemove = this.getAttribute("data-user");
-                    let currentList = tAssignee ? tAssignee.split(',').map(s => s.trim()) : [];
-                    currentList = currentList.filter(u => u !== uToRemove);
-                    updateTaskAssigneesRemote(tId, currentList.join(', '));
+    function generateHighFidelityVisuals(list) {
+        const barWrapper = document.getElementById('chartBarWrapper');
+        if (barWrapper) {
+            barWrapper.innerHTML = "";
+            if (list.length === 0) {
+                barWrapper.innerHTML = `<div class="text-muted w-100 text-center pb-5">No progress records available for current views.</div>`;
+            } else {
+                list.slice(0, 12).forEach(p => {
+                    const group = document.createElement('div');
+                    group.className = "graph-pillar-group";
+                    group.innerHTML = `
+                        <div class="graph-pillar" data-value="${p.progress}" style="height: ${Math.max(p.progress, 5)}%;"></div>
+                        <div class="graph-label" title="${p.projectName || p.name}">${p.projectName || p.name}</div>
+                    `;
+                    barWrapper.appendChild(group);
                 });
-            });
+            }
+        }
+
+        let execCount = list.filter(p => p.status === 'Execution' || p.status === 'Planning').length;
+        let riskCount = list.filter(p => p.status === 'Stabilization' || p.status === 'High Risk').length;
+        let signCount = list.filter(p => p.status === 'Signed-Off').length;
+        let totalCount = execCount + riskCount + signCount;
+
+        const seg1 = document.getElementById('donutSeg1');
+        const seg2 = document.getElementById('donutSeg2');
+        const seg3 = document.getElementById('donutSeg3');
+
+        if (seg1 && seg2 && seg3) {
+            if (totalCount === 0) {
+                seg1.setAttribute('stroke-dasharray', '0 100');
+                seg2.setAttribute('stroke-dasharray', '0 100');
+                seg3.setAttribute('stroke-dasharray', '0 100');
+                return;
+            }
+            let p1 = (execCount / totalCount) * 100;
+            let p2 = (riskCount / totalCount) * 100;
+            let p3 = (signCount / totalCount) * 100;
+
+            seg1.setAttribute('stroke-dasharray', `${p1} ${100 - p1}`);
+            seg1.setAttribute('stroke-dashoffset', '0');
+            seg2.setAttribute('stroke-dasharray', `${p2} ${100 - p2}`);
+            seg2.setAttribute('stroke-dashoffset', `-${p1}`);
+            seg3.setAttribute('stroke-dasharray', `${p3} ${100 - p3}`);
+            seg3.setAttribute('stroke-dashoffset', `-${p1 + p2}`);
         }
     }
 
-    function updateTaskAssigneesRemote(taskId, newAssigneeList) {
+    function commitNewProject() {
         const payload = {
-            action: "updateTaskAssignees",
-            taskId: taskId,
-            projectId: activeWorkspaceProjectId,
-            assignee: newAssigneeList,
-            modifier: window.currentUserName
+            action: "appendProject",
+            id: document.getElementById('pId').value,
+            name: document.getElementById('pName').value,
+            sponsor: document.getElementById('pSponsor').value,
+            classification: document.getElementById('pClass').value,
+            status: document.getElementById('pStatus').value,
+            progress: parseInt(document.getElementById('pProgress').value) || 0,
+            user: window.currentUserName || "System UI"
         };
 
-        fetch(webAppUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        }).then(() => {
-            alert("Resource assignees updated successfully!");
-            closeDrawers();
-            fetchProjectTasks(activeWorkspaceProjectId);
-        });
-    }
+        const submitBtn = document.querySelector('#createProjectForm button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Synchronizing Row...";
+        }
 
-    function commitTaskStateChange(taskId, status, note) {
-        const payload = {
-            action: "updateTaskStatus",
-            taskId: taskId,
-            projectId: activeWorkspaceProjectId,
-            status: status,
-            note: note || "State updated via task modifier drawer.",
-            modifier: window.currentUserName || "System User"
-        };
-
-        fetch(webAppUrl, {
+        fetch(googleWebAppUrl, {
             method: 'POST',
             mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         })
         .then(() => {
-            closeDrawers();
-            fetchProjectTasks(activeWorkspaceProjectId);
+            alert("New Project deployment successfully recorded to portfolio.");
+            const createForm = document.getElementById('createProjectForm');
+            if (createForm) createForm.reset();
+            
+            const customOverlay = document.getElementById('customFormOverlay');
+            if (customOverlay) customOverlay.style.display = 'none';
+            
+            fetchMasterSuiteDataset();
         })
-        .catch(err => console.error("Update Transaction Refused Error:", err));
+        .catch(err => console.error("Submission script execution failure:", err))
+        .finally(() => {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Commit to Master Sheet";
+            }
+        });
     }
 
-    function closeDrawers() {
-        document.getElementById("leftViewPanel").classList.remove("open-panel");
-        document.getElementById("rightUpdateSidebar").classList.remove("open-panel");
-        document.getElementById("panelBackdrop").style.display = "none";
+    function launchWorkspaceHub(projectId) {
+        const project = projectDataset.find(p => (p.projectId || p.id) === projectId);
+        if (!project) return;
+
+        activeWorkspaceProjectId = projectId;
+        
+        document.querySelectorAll('main, .row, .recent-orders').forEach(el => {
+            if (el.id !== 'singleWorkspaceView' && !el.closest('#singleWorkspaceView')) {
+                el.style.display = "none";
+            }
+        });
+
+        const workspaceWrapper = document.getElementById('singleWorkspaceView');
+        if (workspaceWrapper) {
+            workspaceWrapper.style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('wsProjectName').innerText = project.projectName || project.name || "Unnamed Project";
+        document.getElementById('wsProjectToken').innerText = `Unique Token ID: ${projectId}`;
+        document.getElementById('wsSponsor').innerText = project.sponsor || '---';
+        document.getElementById('wsClassification').innerText = project.classification || '---';
+        document.getElementById('wsProgressText').innerText = `${project.progress || 0}%`;
+        document.getElementById('wsProgressBar').style.width = `${project.progress || 0}%`;
+
+        const statusBadge = document.getElementById('wsStatusBadge');
+        if (statusBadge) {
+            const currentStatus = project.status || 'New';
+            statusBadge.innerText = currentStatus;
+            statusBadge.className = "badge"; 
+            if (currentStatus === 'Execution') statusBadge.classList.add('bg-info', 'text-dark');
+            else if (currentStatus === 'Planning') statusBadge.classList.add('bg-light', 'text-dark', 'border');
+            else if (currentStatus === 'High Risk') statusBadge.classList.add('bg-danger', 'text-white');
+            else if (currentStatus === 'Stabilization') statusBadge.classList.add('bg-warning', 'text-dark');
+            else if (currentStatus === 'Signed-Off') statusBadge.classList.add('bg-success', 'text-white');
+            else statusBadge.classList.add('bg-secondary', 'text-white');
+        }
+
+        fetchProjectTasks(projectId);
     }
 
-    function setupClassificationFilters() {
-        document.querySelectorAll(".clickable-cat-card").forEach(card => {
-            card.addEventListener("click", function() {
-                const cat = this.getAttribute("data-category");
-                document.querySelectorAll(".clickable-cat-card").forEach(c => c.classList.remove("active-filter"));
-                this.classList.add("active-filter");
-                document.getElementById("clearClassificationFilter").style.display = "inline-block";
-                
-                const filtered = masterProjectsData.filter(p => p.classification === cat);
-                renderProjectsTable(filtered);
+    function refreshWorkspaceUI() {
+        if (!activeWorkspaceProjectId) return;
+        const project = projectDataset.find(p => (p.projectId || p.id) === activeWorkspaceProjectId);
+        if (project) {
+            document.getElementById('wsProjectName').innerText = project.projectName || project.name;
+            document.getElementById('wsSponsor').innerText = project.sponsor || '---';
+            document.getElementById('wsClassification').innerText = project.classification || '---';
+            document.getElementById('wsProgressText').innerText = `${project.progress || 0}%`;
+            document.getElementById('wsProgressBar').style.width = `${project.progress || 0}%`;
+        }
+    }
+
+    function fetchProjectTasks(projectId) {
+        const columns = ['New', 'InProgress', 'UnderReview', 'Done', 'Cancelled'];
+        columns.forEach(col => {
+            const listContainer = document.getElementById(`list-${col}`);
+            if (listContainer) {
+                listContainer.innerHTML = `<div class="text-center py-3 text-muted"><div class="spinner-border spinner-border-sm text-secondary opacity-50" role="status"></div></div>`;
+            }
+            const pillBadge = document.getElementById(`badge-${col}`);
+            if (pillBadge) pillBadge.innerText = '0';
+        });
+
+        fetch(`${googleWebAppUrl}?action=readTasks&projectId=${encodeURIComponent(projectId)}&ts=${new Date().getTime()}`)
+        .then(res => res.json())
+        .then(data => {
+            // Save global reference cache of active tasks for future View/Update modifications
+            window.activeTasksCache = data.tasks || [];
+            renderWorkspaceTasks(window.activeTasksCache);
+        })
+        .catch(err => {
+            console.error("Failed to fetch project task tracks:", err);
+            columns.forEach(col => {
+                const listContainer = document.getElementById(`list-${col}`);
+                if (listContainer) listContainer.innerHTML = `<div class="text-center text-danger small py-2">Sync Error</div>`;
             });
         });
+    }
 
-        document.getElementById("clearClassificationFilter").addEventListener("click", function() {
-            this.style.display = "none";
-            document.querySelectorAll(".clickable-cat-card").forEach(c => c.classList.remove("active-filter"));
-            renderProjectsTable(masterProjectsData);
+
+// ==========================================================================
+// ========== KANBAN WORKSPACE TASKS & BUTTON ACCESS SECTION ==========
+// ==========================================================================
+function renderWorkspaceTasks(tasks) {
+    const columns = ['New', 'InProgress', 'UnderReview', 'Done', 'Cancelled'];
+    
+    // Clear lists
+    columns.forEach(col => {
+        const listContainer = document.getElementById(`list-${col}`);
+        if (listContainer) listContainer.innerHTML = "";
+    });
+
+    if (!Array.isArray(tasks) || tasks.length === 0) {
+        columns.forEach(col => {
+            const targetList = document.getElementById(`list-${col}`);
+            if (targetList) {
+                targetList.innerHTML = `<div class="text-center text-muted py-3 px-2 border rounded bg-light opacity-75" style="font-size:0.72rem; border-style:dashed !important;">No Tasks</div>`;
+            }
+            const pillBadge = document.getElementById(`badge-${col}`);
+            if (pillBadge) pillBadge.innerText = "0";
+        });
+        return;
+    }
+
+    let counters = { New: 0, InProgress: 0, UnderReview: 0, Done: 0, Cancelled: 0 };
+
+    tasks.forEach(task => {
+        if (!task) return; 
+
+        let rawStatus = (task.status || 'New').toString().trim();
+        let normalizedStatus = rawStatus.replace(/\s+/g, '');
+
+        if (rawStatus === "In Progress" || normalizedStatus.toLowerCase() === "inprogress") {
+            normalizedStatus = "InProgress";
+        } else if (rawStatus === "Under Review" || normalizedStatus.toLowerCase() === "underreview") {
+            normalizedStatus = "UnderReview";
+        } else if (rawStatus === "Done" || rawStatus === "Completed" || normalizedStatus.toLowerCase() === "done") {
+            normalizedStatus = "Done";
+        } else if (rawStatus === "Cancelled" || normalizedStatus.toLowerCase() === "cancelled") {
+            normalizedStatus = "Cancelled";
+        } else {
+            normalizedStatus = "New";
+        }
+        
+        if (!columns.includes(normalizedStatus)) {
+            normalizedStatus = 'New'; 
+        }
+
+        const targetList = document.getElementById(`list-${normalizedStatus}`);
+        if (targetList) {
+            counters[normalizedStatus]++;
+
+            const card = document.createElement('div');
+            card.className = "card shadow-sm p-3 mb-2 border-start border-4 bg-white task-clickable-card";
+            card.style.borderRadius = "6px";
+            card.style.cursor = "pointer";
+            card.style.textAlign = "left";
+            card.style.display = "flex";
+            card.style.flexDirection = "column";
+            card.style.alignItems = "flex-start";
+            card.style.width = "100%";
+            card.setAttribute('data-task-id', task.taskId || task.id || 'TSK---');
+            
+            const taskPriority = task.priority || 'Normal';
+            if (taskPriority === 'High' || taskPriority === 'Critical') {
+                card.style.borderLeftColor = "#dc3545";
+            } else if (taskPriority === 'Medium') {
+                card.style.borderLeftColor = "#ffc107";
+            } else {
+                card.style.borderLeftColor = "#2ed573";
+            }
+
+            const displayTitle = task.title || task.taskName || "Untitled Task";
+            const displayDesc = task.description || 'No execution descriptions documented.';
+            const displayId   = task.taskId || 'TSK---';
+
+            // 🔑 HIDE INLINE CHECKLIST FROM KANBAN OVERVIEW CARDS
+            // The item loop is omitted to keep the task board clean.
+            let inlineChecklistHTML = "";
+
+            const isAdmin = window.currentUserRole === 'admin';
+            const currentUserNameStr = (window.currentUserName || "").toLowerCase().trim();
+            const taskAssigneesStr = (task.assignees || "").toLowerCase();
+            const canUpdateTask = isAdmin || (currentUserNameStr && taskAssigneesStr.includes(currentUserNameStr));
+
+            const updateBtnHTML = canUpdateTask 
+                ? `<button class="btn btn-xs btn-light text-primary border" style="font-size: 0.68rem; padding: 2px 6px; background: #f0f7ff; border-radius:4px;" onclick="event.stopPropagation(); openUpdateDrawer('${displayId}')">
+                       <i class="fas fa-pencil-alt me-1"></i> Update
+                   </button>`
+                : ``;
+
+            let dueByHTML = "";
+            var cleanDueData = task.dueDate ? task.dueDate.toString().trim() : "";
+            if (cleanDueData !== "" && cleanDueData !== "N/A" && cleanDueData !== "undefined") {
+                dueByHTML = `<div class="text-danger fw-bold" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
+                                 <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>${cleanDueData}</span>
+                             </div>`;
+            } else {
+                dueByHTML = `<div class="text-muted fw-normal" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important; opacity: 0.5; font-style: italic;">
+                                 <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>None Set</span>
+                             </div>`;
+            }
+
+            card.innerHTML = `
+                <div style="text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; width: 100% !important;">
+                    <div style="margin-bottom: 4px; text-align: left !important;">
+                        <span class="badge px-2 py-1 font-monospace bg-light text-secondary border" style="font-size:0.65rem; border-radius: 4px; text-align: left !important;">
+                            <i class="fas fa-tag me-1"></i>${displayId}
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 6px; text-align: left !important; width: 100% !important;">
+                        <h5 class="fw-bold text-dark m-0" style="font-size:0.95rem; line-height:1.3; letter-spacing:-0.2px; text-align: left !important; width: 100% !important; display: block !important;">
+                            ${displayTitle}
+                        </h5>
+                    </div>
+                    <p class="text-muted" style="font-size:0.75rem; line-height:1.4; max-height:60px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; padding-left: 1px; text-align: left !important; width: 100% !important; margin-bottom: 8px !important;">
+                        ${displayDesc}
+                    </p>
+                    ${inlineChecklistHTML}
+                </div>
+
+                <div class="mt-2 border-top pt-2" style="width: 100% !important; text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important;">
+                    <div style="text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 4px; width: 100% !important; line-height: 1.3; margin-bottom: 10px !important;">
+                        <div class="text-muted" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
+                            <i class="far fa-calendar-alt text-secondary me-1.5" style="width:12px; text-align: left;"></i>Created: <span class="fw-medium">${task.createdAt || 'N/A'}</span>
+                        </div>
+                        ${dueByHTML}
+                    </div>
+                    <div class="d-flex justify-content-end gap-2" style="width: 100% !important; pt-1 !important;">
+                        <button class="btn btn-xs btn-outline-secondary border-0 opacity-75" style="font-size: 0.68rem; padding: 3px 6px;" onclick="event.stopPropagation(); openViewDrawer('${displayId}')">
+                            <i class="fas fa-expand-alt me-1"></i> Details
+                        </button>
+                        ${updateBtnHTML}
+                    </div>
+                </div>
+            `;
+            targetList.appendChild(card);
+        }
+    });
+
+    columns.forEach(col => {
+        const pillBadge = document.getElementById(`badge-${col}`);
+        if (pillBadge) pillBadge.innerText = counters[col];
+        
+        const targetList = document.getElementById(`list-${col}`);
+        if (targetList && targetList.innerHTML === "") {
+            targetList.innerHTML = `<div class="text-center text-muted py-3 px-2 border rounded bg-light opacity-75" style="font-size:0.72rem; border-style:dashed !important;">No Tasks</div>`;
+        }
+    });
+
+    populateAuditTrailLogStream(tasks);
+}
+
+    function populateAuditTrailLogStream(tasks) {
+        const auditStream = document.getElementById('wsAuditStream');
+        if (!auditStream) return;
+        auditStream.innerHTML = "";
+        
+        const historicalTimelineSamples = tasks.slice(0, 4);
+        if (historicalTimelineSamples.length === 0) {
+            auditStream.innerHTML = `<p class="text-muted text-center py-4 small">No operational actions captured inside active project scopes.</p>`;
+            return;
+        }
+
+        historicalTimelineSamples.forEach(t => {
+            if (!t) return;
+            const displayTitle = t.title || t.taskName || "Untitled Task";
+            const displayUser = t.assignees || t.assignedTo || 'Unassigned';
+            const displayStatus = t.status || 'New';
+
+            const logEntry = document.createElement('div');
+            logEntry.className = "pb-3 mb-3 border-bottom text-start";
+            logEntry.style.fontSize = "0.8rem";
+            logEntry.innerHTML = `
+                <div class="d-flex justify-content-between text-muted mb-1 x-small" style="font-size:0.7rem;">
+                    <span><i class="fas fa-history me-1"></i>System Registry Sync</span>
+                    <span>Active</span>
+                </div>
+                <p class="mb-0 text-dark">Task <strong>"${displayTitle}"</strong> targeted to tracking column <em>(${displayStatus})</em>.</p>
+            `;
+            auditStream.appendChild(logEntry);
         });
     }
 
-    function setupStatusTabFilters() {
-        document.querySelectorAll(".filter-btn").forEach(btn => {
-            btn.addEventListener("click", function() {
-                document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-                this.classList.add("active");
-                const filter = this.getAttribute("data-filter");
+
+
+
+// ==========================================================================
+// ========== WORKSPACE DRAWERS MANAGEMENT ENGINE ==========
+// ==========================================================================
+let utQuillEditorInstance = null;
+
+window.closeDrawer = function() { 
+    document.getElementById('updateTaskOverlay').style.display = 'none';
+    const bdrop = document.getElementById('drawerBackdrop');
+    if (bdrop) bdrop.style.display = 'none'; 
+};
+
+window.globalCloseAllDrawers = function() { 
+    closeDrawer(); 
+    const vDrw = document.getElementById('viewFullDrawer');
+    if (vDrw) vDrw.style.right = "-75vw";
+    const bdrop = document.getElementById('drawerBackdrop');
+    if (bdrop) bdrop.style.display = 'none'; 
+};
+
+window.openUpdateDrawer = function(taskId) {
+    if (!window.activeTasksCache) return;
+    const task = window.activeTasksCache.find(t => t.taskId === taskId);
+    if (!task) return;
+
+    const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
+    const isAdmin = currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+    
+    let assignedResources = [];
+    if (task.assignees) {
+        assignedResources = task.assignees.toString().split(',').map(name => name.trim().toLowerCase());
+    } else if (task.assignee) {
+        assignedResources = [task.assignee.toString().trim().toLowerCase()];
+    }
+
+    let hasEditPrivileges = isAdmin || assignedResources.includes(currentSessionRaw);
+
+    document.getElementById('utTaskId').value = task.taskId;
+    document.getElementById('utTaskTitleDisplay').innerText = task.title;
+    document.getElementById('utTaskDescriptionDisplay').innerText = task.description || "No description logged at creation.";
+    
+    // Explicit sync to hidden tracking note field
+    const hiddenNoteInput = document.getElementById('utNote');
+    if (hiddenNoteInput) {
+        hiddenNoteInput.value = task.description || "";
+    }
+
+    const accessBadge = document.getElementById('utAccessBadge');
+    const submitBtn = document.getElementById('submitUpdateTaskBtn');
+    const statusSelect = document.getElementById('utStatus');
+    const addCheckItemBtn = document.getElementById('utAddChecklistItemBtn');
+    const checkInput = document.getElementById('utNewChecklistItemInput');
+
+    // Handle permissions layout adjustments
+    if (hasEditPrivileges) {
+        if(accessBadge) accessBadge.style.display = "none";
+        if(submitBtn) submitBtn.style.display = "block";
+        if(statusSelect) statusSelect.disabled = false;
+        if(addCheckItemBtn) addCheckItemBtn.disabled = false;
+        if(checkInput) checkInput.disabled = false;
+    } else {
+        if(accessBadge) accessBadge.style.display = "inline-block";
+        if(submitBtn) submitBtn.style.display = "none"; 
+        if(statusSelect) statusSelect.disabled = true;
+        if(addCheckItemBtn) addCheckItemBtn.disabled = true;
+        if(checkInput) checkInput.disabled = true;
+    }
+
+    if (statusSelect) {
+        let normalizedValue = (task.status || "New").toString().replace(/\s+/g, '');
+        if (normalizedValue.toLowerCase() === 'completed') normalizedValue = 'Done';
+        statusSelect.value = normalizedValue;
+    }
+
+    // Render Assignees
+    const membersDisplay = document.getElementById('utTeamMembersDisplay');
+    if (membersDisplay) {
+        membersDisplay.innerHTML = "";
+        let originalNames = task.assignees || task.assignee || "Unassigned";
+        let namesArr = originalNames.toString().split(',');
+        namesArr.forEach(name => {
+            if(!name.trim()) return;
+            const span = document.createElement('span');
+            span.className = "badge bg-secondary-subtle text-dark border px-2 py-1 m-0";
+            span.innerText = name.trim();
+            membersDisplay.appendChild(span);
+        });
+    }
+
+    // Load Matrix Checklist Entries
+    const chkContainer = document.getElementById('utChecklistContainer');
+    if (chkContainer) {
+        chkContainer.innerHTML = "";
+        let checklistArr = [];
+        
+        try {
+            if (task.checklist) {
+                checklistArr = typeof task.checklist === 'string' ? JSON.parse(task.checklist) : task.checklist;
+            }
+        } catch(e) { 
+            checklistArr = []; 
+        }
+
+        if ((!Array.isArray(checklistArr) || checklistArr.length === 0) && task.checklistRaw) {
+            checklistArr = task.checklistRaw.toString().split('\n').filter(l => l.trim().length > 0);
+        }
+
+        if (Array.isArray(checklistArr) && checklistArr.length > 0) {
+            checklistArr.forEach((item, index) => {
+                const isDone = typeof item === 'object' ? !!item.completed : false;
+                const textContent = typeof item === 'object' ? item.text : item.toString().trim();
+
+                if(!textContent) return;
+
+                const row = document.createElement('div');
+                row.className = "ut-matrix-item-row d-flex align-items-center justify-content-between mb-2 p-1 border rounded bg-light";
                 
-                if(filter === 'all') {
-                    renderProjectsTable(masterProjectsData);
-                } else {
-                    const filtered = masterProjectsData.filter(p => p.status === filter);
-                    renderProjectsTable(filtered);
+                const lockString = hasEditPrivileges ? "" : "disabled style='opacity:0.65;'";
+                const deleteButtonStr = isAdmin ? 
+                    `<button type="button" class="btn btn-link btn-sm text-danger p-0 border-0 ms-2" onclick="this.closest('.ut-matrix-item-row').remove();" style="line-height:1;"><i class="fas fa-trash-alt"></i></button>` : '';
+
+                row.innerHTML = `
+                    <div class="d-flex align-items-center gap-2" style="flex: 1; min-width: 0;">
+                        <input type="checkbox" class="form-check-input ut-checklist-item-check m-0 flex-shrink-0" data-index="${index}" ${isDone ? 'checked' : ''} ${lockString} style="cursor:pointer; width:18px; height:18px;">
+                        <span class="ut-checklist-item-text ms-1 ${isDone ? 'text-decoration-line-through text-muted' : 'text-dark'}" style="font-size:0.9rem; font-weight:500;">${textContent}</span>
+                    </div>
+                    ${deleteButtonStr}
+                `;
+                chkContainer.appendChild(row);
+            });
+        } else {
+            chkContainer.innerHTML = `<span class="text-muted small mx-auto py-2 italic no-items-flag">No active checklist matrix items configured.</span>`;
+        }
+    }
+
+    // --- FIX: BIND INTERACTIVE "+ ADD" MATRIX CHECKLIST ITEMS ENGINE ---
+    if (addCheckItemBtn && checkInput) {
+        addCheckItemBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const textValue = checkInput.value.trim();
+            if (!textValue) return;
+
+            if (chkContainer) {
+                const flag = chkContainer.querySelector('.no-items-flag');
+                if (flag) chkContainer.innerHTML = "";
+
+                const nextIdx = chkContainer.querySelectorAll('.ut-matrix-item-row').length;
+                const row = document.createElement('div');
+                row.className = "ut-matrix-item-row d-flex align-items-center justify-content-between mb-2 p-1 border rounded bg-light";
+                row.innerHTML = `
+                    <div class="d-flex align-items-center gap-2" style="flex: 1; min-width: 0;">
+                        <input type="checkbox" class="form-check-input ut-checklist-item-check m-0 flex-shrink-0" data-index="${nextIdx}" style="cursor:pointer; width:18px; height:18px;">
+                        <span class="ut-checklist-item-text ms-1 text-dark" style="font-size:0.9rem; font-weight:500;">${textValue}</span>
+                    </div>
+                    <button type="button" class="btn btn-link btn-sm text-danger p-0 border-0 ms-2" onclick="this.closest('.ut-matrix-item-row').remove();" style="line-height:1;"><i class="fas fa-trash-alt"></i></button>
+                `;
+                chkContainer.appendChild(row);
+                checkInput.value = ""; // Flush input field clear
+            }
+        };
+    }
+
+    // 1. Unveil visual layout overlays FIRST so the elements are present in the DOM tree
+    document.getElementById('updateTaskOverlay').style.display = 'flex';
+    const bdrop = document.getElementById('drawerBackdrop');
+    if (bdrop) bdrop.style.display = "block";
+
+    // 2. 🛠️ ROBUST RESET & RE-INITIALIZATION PATTERN
+    setTimeout(() => {
+        const quillContainer = document.getElementById('utQuillEditorContainer');
+        if (quillContainer && typeof Quill !== 'undefined') {
+            
+            const parentElement = quillContainer.parentElement;
+            const oldToolbars = parentElement.querySelectorAll('.ql-toolbar');
+            oldToolbars.forEach(tb => tb.remove());
+            
+            quillContainer.className = "border"; 
+            quillContainer.innerHTML = ""; 
+
+            // Initialize a completely clean instance bound directly to the active visible viewport
+            utQuillEditorInstance = new Quill('#utQuillEditorContainer', {
+                theme: 'snow',
+                placeholder: 'Specify any updates or underlying blocks here...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }]
+                    ]
                 }
             });
-        });
-    }
+            window.utQuillEditorInstance = utQuillEditorInstance;
+            
+            // --- FIX: LOAD PREVIOUS NOTES INTO WORKSPACE VIEWPORT ---
+            if (task.description) {
+                utQuillEditorInstance.root.innerHTML = task.description;
+            }
 
-    function setupModalHooks() {
-        const openBtn = document.getElementById("openFormBtn");
-        const cancelBtn = document.getElementById("cancelFormBtn");
-        const overlay = document.getElementById("customFormOverlay");
-        const closeX = document.getElementById("closeFormXBtn");
-        const teamSelect = document.getElementById("pTeam");
+            // Sync structural edits back to hidden textarea input field for backend transmission
+            utQuillEditorInstance.on('text-change', function() {
+                const hiddenNode = document.getElementById('utNote');
+                if (hiddenNode) {
+                    hiddenNode.value = utQuillEditorInstance.root.innerHTML;
+                }
+            });
+            
+            const toolbar = parentElement.querySelector('.ql-toolbar');
+            if (hasEditPrivileges) {
+                utQuillEditorInstance.enable(true);
+                if (toolbar) toolbar.style.display = 'block';
+                utQuillEditorInstance.root.setAttribute('data-placeholder', 'Specify any updates or underlying blocks here...');
+                utQuillEditorInstance.focus();
+            } else {
+                utQuillEditorInstance.enable(false);
+                if (toolbar) toolbar.style.display = 'none';
+                utQuillEditorInstance.root.setAttribute('data-placeholder', 'Access Locked: Only assigned task owners can append notes.');
+            }
+        }
+    }, 150); 
+};
+// ==========================================================================
+// ====== TASK UPDATE & SYSTEM SUBMISSION BINDINGS (WITH QUILL RICH-TEXT) ==
+// ==========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    const updateTaskForm = document.getElementById('updateTaskForm');
 
-        if(openBtn) {
-            openBtn.addEventListener("click", () => {
-                if(typeof authorizedUsers !== 'undefined' && teamSelect) {
-                    teamSelect.innerHTML = "";
-                    Object.keys(authorizedUsers).forEach(u => {
-                        let opt = document.createElement("option");
-                        opt.value = u;
-                        opt.textContent = u;
-                        teamSelect.appendChild(opt);
+    if (updateTaskForm) {
+        updateTaskForm.addEventListener('submit', (e) => {
+            // 1. CRITICAL: Stop the browser from executing a native page reload back to the dashboard!
+            e.preventDefault();
+
+            // Extract the active context token
+            const pId = (typeof activeWorkspaceProjectId !== 'undefined') ? activeWorkspaceProjectId : null;
+            if (!pId) { 
+                alert("Error: No active project context detected."); 
+                return; 
+            }
+
+            // 2. EXTRACT RICH-TEXT FROM QUILL: Get content from the editor instance
+            let noteContent = "";
+            if (window.utQuillEditorInstance) {
+                // Captures HTML structure (bold, lists, links, paragraphs) cleanly
+                noteContent = window.utQuillEditorInstance.root.innerHTML;
+            } else {
+                // Fallback if Quill failed to initialize
+                const nativeInput = document.getElementById('utNote');
+                if (nativeInput) noteContent = nativeInput.value;
+            }
+
+            // 3. CAPTURE CHECKLIST ROW ITEMS DYNAMICALLY 
+            const checklistRows = document.querySelectorAll('#utChecklistContainer .ut-matrix-item-row');
+            const updatedChecklist = [];
+
+            checklistRows.forEach(row => {
+                const checkbox = row.querySelector('.ut-checklist-item-check');
+                const textSpan = row.querySelector('.ut-checklist-item-text');
+                if (checkbox && textSpan) {
+                    updatedChecklist.push({
+                        text: textSpan.textContent.trim(),
+                        completed: checkbox.checked
                     });
                 }
-                overlay.style.display = "flex";
             });
-        }
-        if(cancelBtn) cancelBtn.addEventListener("click", () => overlay.style.display = "none");
-        if(closeX) closeX.addEventListener("click", () => overlay.style.display = "none");
 
-        document.getElementById("closeWorkspaceBtn").addEventListener("click", () => {
-            document.getElementById("singleWorkspaceView").style.setProperty("display", "none", "important");
-            document.getElementById("mainDashboardView").style.setProperty("display", "block", "important");
-            loadDashboardData();
-        });
-
-        document.getElementById("createProjectForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            const selectedOptions = Array.from(teamSelect.selectedOptions).map(o => o.value);
-            
+            // 4. COMPILE PAYLOAD FOR GOOGLE APPS SCRIPT
             const payload = {
-                action: "appendProject",
-                name: document.getElementById("pName").value,
-                id: document.getElementById("pId").value,
-                team: selectedOptions,
-                sponsor: document.getElementById("pSponsor").value,
-                classification: document.getElementById("pClass").value,
-                status: document.getElementById("pStatus").value,
-                progress: document.getElementById("pProgress").value
+                action: "updateTask", 
+                projectId: pId,
+                taskId: document.getElementById('utTaskId').value,
+                title: document.getElementById('utTitle').value,
+                status: document.getElementById('utStatus').value,
+                assignee: document.getElementById('utAssignee').value,
+                dueDate: document.getElementById('utDueDate').value,
+                checklist: updatedChecklist, // Array of updated objects
+                note: noteContent,           // Rich-text markup string
+                modifier: window.currentUserName || "System Portal"
             };
 
-            fetch(webAppUrl, {
+            const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+
+            console.log("Submitting task edits & Quill rich-text payload:", payload);
+
+            // 5. ASYNC TRANSMISSION
+            fetch(url, {
                 method: 'POST',
-                mode: 'no-cors',
+                mode: 'no-cors', // Keeps silent CORS context
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
-            }).then(() => {
-                alert("New project suite deployed successfully!");
-                overlay.style.display = "none";
-                document.getElementById("createProjectForm").reset();
-                loadDashboardData();
+            })
+            .then(() => {
+                alert("Changes saved successfully!");
+
+                // 6. SAFE RE-RENDERING (No redirects!)
+                // Hide the update task overlay manually
+                const updateOverlay = document.getElementById('updateTaskOverlay');
+                if (updateOverlay) updateOverlay.style.display = 'none';
+
+                // Delay re-fetch slightly to accommodate asynchronous Sheets execution lag
+                setTimeout(() => {
+                    if (typeof fetchProjectTasks === 'function') {
+                        fetchProjectTasks(pId); // Reload Kanban view items directly on your workspace
+                    }
+                }, 800);
+            })
+            .catch(err => {
+                console.error("Transmission Error:", err);
+                alert("Error trying to commit task updates.");
             });
         });
     }
+});
+// ==========================================================================
+// ====== GLOBAL CLICK OVERLAY INTERCEPTION BINDINGS ======
+// ==========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Force explicit hook configuration to buttons so they close cleanly on clicks
+    const closeFormBtn = document.getElementById('closeUpdateTaskFormBtn');
+    const cancelFormBtn = document.getElementById('cancelUpdateTaskBtn');
+    const bdropElement = document.getElementById('drawerBackdrop');
 
-    function renderProgressMatrix(projects) {
-        const wrapper = document.getElementById("chartBarWrapper");
-        wrapper.innerHTML = "";
-        
-        let slice = projects.slice(0, 12);
-        slice.forEach(p => {
-            const group = document.createElement("div");
-            group.className = "graph-pillar-group";
-            
-            const pillar = document.createElement("div");
-            pillar.className = "graph-pillar";
-            pillar.style.height = `${p.progress}%`;
-            pillar.setAttribute("data-value", p.progress);
-            
-            const label = document.createElement("div");
-            label.className = "graph-label";
-            label.textContent = p.name;
-            label.setAttribute("title", p.name);
+    if (closeFormBtn) closeFormBtn.addEventListener('click', (e) => { e.preventDefault(); window.closeDrawer(); });
+    if (cancelFormBtn) cancelFormBtn.addEventListener('click', (e) => { e.preventDefault(); window.closeDrawer(); });
+    if (bdropElement) bdropElement.addEventListener('click', () => { window.globalCloseAllDrawers(); });
+});
 
-            group.appendChild(pillar);
-            group.appendChild(label);
-            wrapper.appendChild(group);
+</script>
+
+<div id="taskFormOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
+    <div class="card" style="width: 500px; max-width: 90%; margin: 20px;">
+        <div class="card-header bg-primary text-white">Create New Task</div>
+        <div class="card-body">
+            <form id="createTaskForm">
+                <div class="mb-3">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="tTitle" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea id="tDesc" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Assign To</label>
+                    <select id="tAssignee" class="form-control"></select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Initial Status</label>
+                    <select id="tStatus" class="form-control">
+                        <option value="New">New</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="UnderReview">Under Review</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Initial Note</label>
+                    <textarea id="tNote" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" id="cancelTaskBtn" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="drawer-backdrop" id="drawerBackdrop" onclick="globalCloseAllDrawers()"></div>
+
+<div class="detail-drawer" id="updateDrawer">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="m-0 fw-bold text-dark"><i class="fas fa-edit text-primary me-2"></i>Update Task</h4>
+        <button class="btn-close" onclick="closeDrawer()" aria-label="Close"></button>
+    </div>
+    <div class="mb-3 p-3 bg-light rounded border border-secondary">
+        <span class="small text-muted fw-bold text-uppercase">Target Task</span>
+        <p class="m-0 fw-bold text-primary" id="editTaskTitleDisplay"></p>
+    </div>
+    <form id="updateTaskDrawerForm">
+        <input type="hidden" id="editTaskId">
+        <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Pipeline Status</label>
+            <select id="editStatus" class="form-select form-select-sm border-primary shadow-sm" style="height: 40px;">
+                <option value="New">New</option>
+                <option value="InProgress">In Progress</option>
+                <option value="UnderReview">Under Review</option>
+                <option value="Done">Done</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label small fw-bold text-muted">Append Activity Note (Optional)</label>
+            <textarea id="editNote" class="form-control form-control-sm" rows="4" placeholder="Log progress, blocks, or handover notes..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm w-100 mt-2 py-2 fw-bold shadow-sm">
+            <i class="fas fa-save me-1"></i> Commit Status Update
+        </button>
+    </form>
+</div>
+
+<div class="custom-viewer-drawer" id="viewFullDrawer">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+            <span class="badge bg-light text-secondary border mb-1 fs-6" id="viewDrawerBadgeId"></span>
+            <h2 class="m-0 fw-bold text-dark" id="viewDrawerTitle"></h2>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary px-3 py-2 fw-bold" onclick="closeReadPanel()">
+            <i class="fas fa-times me-1"></i> Close
+        </button>
+    </div>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fas fa-align-left me-2"></i>Scope Description</h5>
+                <p id="viewDrawerBody" class="text-dark lh-base" style="white-space: pre-wrap; font-size: 0.95rem;"></p>
+            </div>
+            <div class="card border-0 shadow-sm p-4 bg-white">
+                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fas fa-check-square me-2"></i>Action Checklist</h5>
+                <div id="viewDrawerChecklist" class="ps-2"></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-4 mb-3 bg-white">
+                <div class="mb-3">
+                    <span class="small text-muted d-block text-uppercase fw-bold mb-1">Current Status</span>
+                    <div id="viewDrawerStatusPill"></div>
+                </div>
+                <hr class="my-3 opacity-25">
+                <div class="mb-3">
+                    <span class="small text-muted d-block text-uppercase fw-bold mb-1"><i class="fas fa-users me-1"></i> Assigned Resources</span>
+                    <p id="viewDrawerAssignees" class="fw-bold text-primary m-0 text-capitalize"></p>
+                </div>
+                <hr class="my-3 opacity-25">
+                <div>
+                    <span class="small text-muted d-block text-uppercase fw-bold mb-1"><i class="fas fa-clock me-1"></i> Logged Timestamp</span>
+                    <p id="viewDrawerCreatedAt" class="text-dark small fw-bold m-0"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================== -->
+<!-- ====== QUILL INTERACTIVE STAGE & WORKSPACE CLOSURE MANAGEMENT SYSTEM ===== -->
+<!-- ========================================================================== -->
+
+
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
+
+<script>
+(function() {
+    const targetOverlay = document.getElementById('updateTaskOverlay');
+    if (!targetOverlay) return;
+
+    // MutationObserver monitors when the workspace drawer opens
+    const layoutObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'style') {
+                const currentDisplay = targetOverlay.style.display;
+                
+                if (currentDisplay === 'flex' || currentDisplay === 'block') {
+                    setTimeout(() => {
+                        const container = document.getElementById('utQuillEditorContainer');
+                        if (!container) return;
+
+                        if (typeof Quill === 'undefined') return;
+
+                        // Clean initialization 
+                        if (!window.utQuillEditorInstance) {
+                            window.utQuillEditorInstance = new Quill('#utQuillEditorContainer', {
+                                theme: 'snow',
+                                placeholder: 'Specify any updates or underlying billing/invoicing blocks here...',
+                                modules: {
+                                    toolbar: [
+                                        ['bold', 'italic'],
+                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }]
+                                    ]
+                                }
+                            });
+
+                            // CRITICAL RE-ALIGNMENT: When typing in Quill, directly update your native form field 
+                            // This ensures your existing '+ Add' and submit event logic doesn't break!
+                            window.utQuillEditorInstance.on('text-change', function() {
+                                const nativeInput = document.getElementById('utNote');
+                                if (nativeInput) {
+                                    nativeInput.value = window.utQuillEditorInstance.root.innerHTML;
+                                }
+                            });
+                        }
+
+                        // Load existing/historical notes from your data layer if present when modal opens
+                        const nativeInput = document.getElementById('utNote');
+                        if (nativeInput && nativeInput.value) {
+                            window.utQuillEditorInstance.root.innerHTML = nativeInput.value;
+                        } else {
+                            window.utQuillEditorInstance.root.innerHTML = ''; // Fresh state
+                        }
+
+                        window.utQuillEditorInstance.update();
+                    }, 100);
+                }
+            }
         });
-    }
+    });
 
-    function renderPhaseBreakoutDonut(projects) {
-        const total = projects.length || 1;
-        const group1 = projects.filter(p => p.status === 'New' || p.status === 'Planning' || p.status === 'Execution').length;
-        const group2 = projects.filter(p => p.status === 'High Risk' || p.status === 'Stabilization').length;
-        const group3 = projects.filter(p => p.status === 'Signed-Off').length;
+    layoutObserver.observe(targetOverlay, { attributes: true, attributeFilter: ['style'] });
+})();
+</script>
 
-        const pct1 = (group1 / total) * 100;
-        const pct2 = (group2 / total) * 100;
-        const pct3 = (group3 / total) * 100;
-
-        const seg1 = document.getElementById("donutSeg1");
-        const seg2 = document.getElementById("donutSeg2");
-        const seg3 = document.getElementById("donutSeg3");
-
-        if(seg1 && seg2 && seg3) {
-            seg1.setAttribute("stroke-dasharray", `${pct1} 100`);
-            seg1.setAttribute("stroke-dashoffset", "0");
-
-            seg2.setAttribute("stroke-dasharray", `${pct2} 100`);
-            seg2.setAttribute("stroke-dashoffset", `-${pct1}`);
-
-            seg3.setAttribute("stroke-dasharray", `${pct3} 100`);
-            seg3.setAttribute("stroke-dashoffset", `-${pct1 + pct2}`);
-        }
-    }
-  </script>
 </body>
 </html>

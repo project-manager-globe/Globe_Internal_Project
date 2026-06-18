@@ -5,7 +5,7 @@
   <title>ICTGlobe Project Management Hub</title>
   
   <script src="../../credentials.js"></script>
-  <script>
+<script>
     if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
         sessionStorage.setItem('redirect_target', window.location.href);
         window.location.replace("../../index.html"); 
@@ -21,13 +21,39 @@
                 window.currentUserName = currentUser;
                 window.currentUserAllowedProjects = allowedProjects; // Store projects array for workspace click check
 
-                // Set up global hook for checking workspace access based on your credentials structure
+                // =====================================================================
+                // ======= UPGRADED WORKSPACE ACCESS CHECK (DYNAMIC & CASE-INSENSITIVE) =======
+                // =====================================================================
                 window.checkWorkspaceAccess = function(projectToken) {
+                    // 1. Master Admin Override
                     if (role === 'admin' || allowedProjects.includes('all') || allowedProjects.includes('projects_dashboard')) {
                         return true;
                     }
-                    // Safely match lowercase names (e.g., "exco", "strategy", "procurement")
-                    return allowedProjects.map(p => p.toLowerCase()).includes(projectToken.toLowerCase());
+                    
+                    // 2. Local Credentials File Check (Statically assigned groups/arrays)
+                    if (allowedProjects.map(p => p.toLowerCase()).includes(projectToken.toLowerCase())) {
+                        return true;
+                    }
+                    
+                    // 3. Dynamic Google Sheet Portfolio Verification
+                    if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
+                        // Find the matching data row by matching project ID string conversion
+                        const activeProject = projectDataset.find(proj => String(proj.id).toLowerCase() === projectToken.toLowerCase());
+                        
+                        if (activeProject && activeProject.team) {
+                            // Extract, trim, and lowercase all usernames assigned in column F
+                            const sheetTeamArray = activeProject.team.split(',').map(name => name.trim().toLowerCase());
+                            const lowerCurrentUser = String(currentUser).trim().toLowerCase();
+                            
+                            console.log("Evaluating dynamic portfolio permissions for:", lowerCurrentUser, "against team:", sheetTeamArray);
+                            
+                            if (sheetTeamArray.includes(lowerCurrentUser)) {
+                                return true; // 🔑 Match verified! Access granted via Sheet row assignment.
+                            }
+                        }
+                    }
+
+                    return false; // Access restricted
                 };
 
                 // Show admin-only elements safely
@@ -35,10 +61,10 @@
                     document.querySelectorAll('.admin-only-action').forEach(b => b.style.setProperty('display', 'inline-block', 'important'));
                 }
             }
-        });
+        }); // 👈 Fixed structural closing brace constraint here
     }
 
-   window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', () => {
         // --- EXISTING LOGOUT LOGIC ---
         const logBtn = document.getElementById('logoutBtn');
         if (logBtn) {
@@ -49,8 +75,8 @@
                 window.location.replace("../../index.html"); 
             });
         }
-        // --- NEW ADD TASK LOGIC (UPDATED) ---
 
+        // --- NEW ADD TASK LOGIC (UPDATED) ---
         document.addEventListener('click', function(e) {
             // 1. Handle "Add Task" Button Click -> Populate Users & Show Modal
             if (e.target && e.target.id === 'btnAddTask') {
@@ -75,81 +101,81 @@
                 if (taskFormOverlay) taskFormOverlay.style.display = 'none';
             }
         });
-   });
-
-// 3. Handle Form Submission
-// Updated Submission Logic to handle Multi-Assignees, Line-by-Line Checklist items, and the new Target Due Date
-const createTaskForm = document.getElementById('createTaskForm');
-
-if (createTaskForm) {
-    createTaskForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        const pId = (typeof activeWorkspaceProjectId !== 'undefined') ? activeWorkspaceProjectId : null;
-        if (!pId) { alert("Error: No active project context detected."); return; }
-
-        // 1. Get Assignees
-        const assigneeSelect = document.getElementById('tAssignee');
-        const selectedAssignees = Array.from(assigneeSelect.selectedOptions).map(opt => opt.value);
-        const assigneesString = selectedAssignees.join(', ');
-
-        // 2. Get Checklist
-        const rawChecklistText = document.getElementById('tChecklist').value;
-        const checklistItems = rawChecklistText.split('\n')
-            .map(line => line.trim())
-            .filter(line => line.length > 0);
-
-        // 3. GET TARGET DUE DATE (Safer logic replacing old status dropdown)
-        const dueDateField = document.getElementById('tDueDate');
-        if (!dueDateField) {
-            console.error("CRITICAL ERROR: Could not find element with ID 'tDueDate'. Check your HTML.");
-            alert("System Error: Target Due Date metric not found in the form.");
-            return;
-        }
-        const selectedDueDate = dueDateField.value;
-        console.log("Target Due Date detected:", selectedDueDate);
-
-        const payload = {
-            action: "appendTask",
-            projectId: pId,
-            title: document.getElementById('tTitle').value,
-            description: document.getElementById('tDesc').value, 
-            checklist: checklistItems, 
-            assignee: assigneesString,
-            status: "New", // Safely hardcoded baseline route
-            dueDate: selectedDueDate, // Securely mapped date parameters
-            creator: window.currentUserName || "System Portal"
-        };
-
-        // Replace with your verified production macro Apps Script endpoint URL
-        const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
-
-        console.log("Submitting structured payload:", payload);
-
-        fetch(url, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            alert("Operational task successfully generated and logged!");
-            createTaskForm.reset();
-            document.getElementById('taskFormOverlay').style.display = 'none';
-            
-            // Refresh Kanban Board automatically
-            if (typeof fetchProjectTasks === 'function') {
-                fetchProjectTasks(pId); 
-            }
-        })
-        .catch(err => {
-            console.error("Transmission Error:", err);
-            alert("Error trying to commit task updates. See console logs.");
-        });
     });
-}
+
+    // 3. Handle Form Submission
+    // Updated Submission Logic to handle Multi-Assignees, Line-by-Line Checklist items, and the new Target Due Date
+    const createTaskForm = document.getElementById('createTaskForm');
+
+    if (createTaskForm) {
+        createTaskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const pId = (typeof activeWorkspaceProjectId !== 'undefined') ? activeWorkspaceProjectId : null;
+            if (!pId) { alert("Error: No active project context detected."); return; }
+
+            // 1. Get Assignees
+            const assigneeSelect = document.getElementById('tAssignee');
+            const selectedAssignees = Array.from(assigneeSelect.selectedOptions).map(opt => opt.value);
+            const assigneesString = selectedAssignees.join(', ');
+
+            // 2. Get Checklist
+            const rawChecklistText = document.getElementById('tChecklist').value;
+            const checklistItems = rawChecklistText.split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            // 3. GET TARGET DUE DATE (Safer logic replacing old status dropdown)
+            const dueDateField = document.getElementById('tDueDate');
+            if (!dueDateField) {
+                console.error("CRITICAL ERROR: Could not find element with ID 'tDueDate'. Check your HTML.");
+                alert("System Error: Target Due Date metric not found in the form.");
+                return;
+            }
+            const selectedDueDate = dueDateField.value;
+            console.log("Target Due Date detected:", selectedDueDate);
+
+            const payload = {
+                action: "appendTask",
+                projectId: pId,
+                title: document.getElementById('tTitle').value,
+                description: document.getElementById('tDesc').value, 
+                checklist: checklistItems, 
+                assignee: assigneesString,
+                status: "New", // Safely hardcoded baseline route
+                dueDate: selectedDueDate, // Securely mapped date parameters
+                creator: window.currentUserName || "System Portal"
+            };
+
+            // Replace with your verified production macro Apps Script endpoint URL
+            const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+
+            console.log("Submitting structured payload:", payload);
+
+            fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                alert("Operational task successfully generated and logged!");
+                createTaskForm.reset();
+                document.getElementById('taskFormOverlay').style.display = 'none';
+                
+                // Refresh Kanban Board automatically
+                if (typeof fetchProjectTasks === 'function') {
+                    fetchProjectTasks(pId); 
+                }
+            })
+            .catch(err => {
+                console.error("Transmission Error:", err);
+                alert("Error trying to commit task updates. See console logs.");
+            });
+        });
+    }
+</script>
   
-  </script>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -159,8 +185,14 @@ if (createTaskForm) {
   <link rel="stylesheet" type="text/css" href="../index.css" />
   <link rel="stylesheet" type="text/css" href="../styles.css" /> 
   <link rel="stylesheet" href="../project.css">
+   
 
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
   <style>
+    /* ==========================================================================
+       1. GLOBAL PLATFORM & CORE UTILITY OVERRIDES
+       ========================================================================== */
     .content__START, strong.HOW { color: #005AFC !important; }
     .table tbody tr td { color: #212529 !important; font-weight: normal !important; background: #ffffff !important; }
     .insights-card h2, .recent-orders h3 { color: #212529 !important; }
@@ -183,55 +215,26 @@ if (createTaskForm) {
     .clickable-cat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,90,252,0.15) !important; border-color: #005AFC !important; }
     .clickable-cat-card.active-filter { border: 2px solid #005AFC !important; background-color: rgba(0, 90, 252, 0.03) !important; }
 
+    /* ==========================================================================
+       2. CREATION TASKS MODAL (ORIGINAL 520px MAX-WIDTH PROFILE)
+       ========================================================================== */
     .custom-modal-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 99999 !important; display: none; align-items: center !important; justify-content: center !important; }
     .custom-modal-window { background: #ffffff !important; width: 100% !important; max-width: 520px !important; min-height: auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important; padding: 28px !important; box-sizing: border-box !important; animation: modalFadeIn 0.2s ease-out; }
     .custom-modal-window input, .custom-modal-window select, .custom-modal-window textarea { width: 100% !important; display: block !important; margin-top: 4px !important; }
     @keyframes modalFadeIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
+    /* Data Visualization Metrics Components */
     .chart-box { background: #ffffff; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid rgba(0, 0, 0, 0.03); height: 320px; }
-    
-    /* Optimized Graph Layout Engine Container Rules */
-    .bar-graph-container { 
-        display: flex; 
-        align-items: flex-end; 
-        justify-content: flex-start !important; 
-        gap: 6px !important;
-        height: 200px; 
-        padding-top: 20px; 
-        border-bottom: 2px solid #e2e8f0; 
-        width: 100%; 
-        position: relative; 
-        overflow: hidden;
-    }
-    
-    .graph-pillar-group { 
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
-        width: 100%; 
-        max-width: 55px !important; 
-        height: 100%; 
-        justify-content: flex-end; 
-        flex-grow: 1 !important;
-        margin: 0 1px !important;
-    }
-    .graph-pillar { 
-        width: 100%; 
-        background: linear-gradient(180deg, #005AFC 0%, #3b82f6 100%); 
-        border-radius: 4px 4px 0 0 !important; 
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
-        position: relative; 
-        cursor: pointer; 
-        box-shadow: 0 4px 10px rgba(0, 90, 252, 0.2); 
-    }
+    .bar-graph-container { display: flex; align-items: flex-end; justify-content: flex-start !important; gap: 6px !important; height: 200px; padding-top: 20px; border-bottom: 2px solid #e2e8f0; width: 100%; position: relative; overflow: hidden; }
+    .graph-pillar-group { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 55px !important; height: 100%; justify-content: flex-end; flex-grow: 1 !important; margin: 0 1px !important; }
+    .graph-pillar { width: 100%; background: linear-gradient(180deg, #005AFC 0%, #3b82f6 100%); border-radius: 4px 4px 0 0 !important; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 90, 252, 0.2); }
     .graph-pillar:hover { background: linear-gradient(180deg, #0044c9 0%, #1d4ed8 100%); transform: scaleX(1.02); }
     .graph-pillar::before { content: attr(data-value) "%"; position: absolute; top: -25px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: bold; color: #005AFC; background: rgba(0, 90, 252, 0.08); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(0, 90, 252, 0.15); opacity: 0; transition: opacity 0.2s ease; pointer-events: none; z-index: 10; }
     .graph-pillar:hover::before { opacity: 1; }
     .graph-label { text-align: center; font-size: 10px !important; font-weight: 500; color: #64748b; margin-top: 6px; width: 100%; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
-    
     .donut-segment { transform: rotate(-90deg); transform-origin: center; transition: stroke-dasharray 0.5s ease-in-out; }
 
-    /* WORKSPACE KANBAN STYLES */
+    /* Kanban Frame Layout Blocks */
     .kanban-board { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 15px; }
     .kanban-column { flex: 1; min-width: 240px; background: #f8f9fa; border-radius: 8px; padding: 1rem; border: 1px solid #e9ecef; display: flex; flex-direction: column; }
     .kanban-column-header { font-weight: bold; padding-bottom: 0.75rem; margin-bottom: 1rem; border-bottom: 2px solid #dee2e6; color: #495057; display: flex; justify-content: space-between; align-items: center; }
@@ -240,47 +243,161 @@ if (createTaskForm) {
     .kanban-card.restricted-view { border-left-color: #adb5bd; background-color: #f1f3f5; }
     .update-log-container { background: #ffffff; border-radius: 8px; padding: 1.5rem; border: 1px solid #dee2e6; height: 380px; overflow-y: auto; }
     .log-entry { padding-bottom: 0.75rem; margin-bottom: 0.75rem; border-bottom: 1px dashed #e9ecef; font-size: 0.85rem; }
-    
     .fade-view { animation: fadeIn 0.3s ease-in; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .tall-select { height: auto !important; min-height: 120px; }
 
-    /* ==========================================================================
-       ========== TASK OVERLAY DRAWERS SECTION (CSS) ==========
-       ========================================================================== */
-    .drawer-backdrop {
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-        background: rgba(0, 0, 0, 0.45); display: none; z-index: 1040; backdrop-filter: blur(2px);
-    }
-    .detail-drawer {
-        position: fixed; top: 0; right: -420px; width: 100%; max-width: 420px; height: 100%;
-        background: #ffffff; z-index: 1050; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15); overflow-y: auto; padding: 24px;
-    }
+    /* Overlay Control Drawers */
+    .drawer-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.45); display: none; z-index: 1040; backdrop-filter: blur(2px); }
+    .detail-drawer { position: fixed; top: 0; right: -420px; width: 100%; max-width: 420px; height: 100%; background: #ffffff; z-index: 1050; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15); overflow-y: auto; padding: 24px; }
     .detail-drawer.open { right: 0; }
-    .custom-viewer-drawer {
-        position: fixed; top: 0; right: -75vw; width: 100%; max-width: 75vw; height: 100%;
-        background: #f8f9fa; z-index: 1050; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        box-shadow: -5px 0 20px rgba(0, 0, 0, 0.18); overflow-y: auto; padding: 40px;
+    .custom-viewer-drawer { position: fixed; top: 0; right: -75vw; width: 100%; max-width: 75vw; height: 100%; background: #f8f9fa; z-index: 1050; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -5px 0 20px rgba(0, 0, 0, 0.18); overflow-y: auto; padding: 40px; }
+    #createTaskForm { max-height: 65vh; overflow-y: auto; overflow-x: hidden; padding-right: 6px; }
+    #createTaskForm::-webkit-scrollbar { width: 6px; }
+    #createTaskForm::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
+
+    /* ==========================================================================
+       3. THE PINNED UPDATE TASK DRAWERS RESETS (50% STABLE VIEWPORT)
+       ========================================================================== */
+    /* Target via the wrapper parent ID to bypass global important tags */
+    #updateTaskOverlay .custom-modal-window {
+        width: 50vw !important; 
+        max-width: 50vw !important;
+        min-width: 540px !important;
+        max-height: 92vh !important;
+        margin: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        border-radius: 12px !important;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.25) !important;
+        padding: 0px !important; /* Managed cleanly via interior layouts */
+        overflow: hidden !important;
     }
 
-    /* Option 2: Scroll wrapper configuration block for smaller laptop layouts */
-    #createTaskForm {
-        max-height: 65vh;
-        overflow-y: auto;
-        overflow-x: hidden;
-        padding-right: 6px; 
+    #updateTaskForm, .modal-scroll-body {
+        max-width: 100% !important;
+        overflow-x: hidden !important;
+        box-sizing: border-box !important;
     }
 
-    /* Slim custom profile scrollbar mechanics */
-    #createTaskForm::-webkit-scrollbar {
-        width: 6px;
+    #utChecklistContainer {
+        width: 100% !important;
+        box-sizing: border-box !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
     }
-    #createTaskForm::-webkit-scrollbar-thumb {
-        background-color: #ccc;
-        border-radius: 4px;
+
+    /* Checklist row elements framework */
+    #utChecklistContainer .ut-matrix-item-row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        background: #ffffff !important;
+        padding: 8px 12px !important;
+        border: 1px solid #dee2e6 !important;
+        border-radius: 6px !important;
+        margin-top: 0px !important;
     }
+
+    /* HARD FORCE VISIBILITY: Ensures checkboxes render correctly on the left side */
+    #utChecklistContainer .ut-matrix-item-row input[type="checkbox"].ut-checklist-item-check {
+        display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 18px !important;
+        height: 18px !important;
+        min-width: 18px !important;
+        min-height: 18px !important;
+        margin: 0px 6px 0px 0px !important;
+        padding: 0px !important;
+        cursor: pointer !important;
+        -webkit-appearance: checkbox !important;
+        appearance: checkbox !important;
+        position: static !important;
+    }
+
+    /* Text metric styling inside rows */
+    #utChecklistContainer .ut-matrix-item-row .ut-checklist-item-text {
+        width: auto !important;
+        display: inline !important;
+        margin: 0px !important;
+        padding: 0px !important;
+    }
+
+    /* Force rich-text layouts inside workspace view bounds to eliminate the white line */
+    #updateTaskOverlay .ql-toolbar, 
+    #updateTaskOverlay .ql-container, 
+    #updateTaskOverlay .ql-editor, 
+    #updateTaskOverlay #utQuillEditorContainer {
+        max-width: 100% !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+    }
+
+    #updateTaskOverlay .ql-toolbar {
+        background: #f8fafc !important;
+        margin-top: 4px !important;
+    }
+
+  /* Force interactivity and clear visibility on your manual textareas ONLY */
+#updateTaskOverlay textarea:not([class*="ql-"]), 
+#updateTaskOverlay #utActivityNote,
+#updateTaskOverlay .custom-activity-textarea {
+    min-height: 110px !important;
+    height: 110px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important; 
+    cursor: text !important;
+    position: relative !important;
+    z-index: 10005 !important; 
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 10px !important;
+}
+
+/* Ensure the visible interactive Quill editor area acts correctly as a text input */
+.ql-editor {
+    min-height: 110px !important;
+    cursor: text !important;
+    background-color: #ffffff !important;
+}
+
+/* Format your list types to render crisp markers inside the Task Drawer view */
+.ql-editor ul, #utQuillEditorContainer ul {
+    list-style-type: disc !important;
+    margin-left: 0px !important;
+    padding-left: 25px !important;
+}
+.ql-editor ol, #utQuillEditorContainer ol {
+    list-style-type: decimal !important;
+    margin-left: 0px !important;
+    padding-left: 25px !important;
+}
+
+/* Clean up Quill styling alignment nicely with the form frames */
+.ql-toolbar.ql-snow {
+    border: 1px solid #cbd5e1 !important;
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    background-color: #f8fafc;
+}
+
+.ql-container.ql-snow {
+    border: 1px solid #cbd5e1 !important;
+    border-top: none !important;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    font-size: 0.88rem;
+}
   </style>
+
+
 </head>
 <body>
 
@@ -506,28 +623,73 @@ if (createTaskForm) {
 
   </div>
 
-  <div class="custom-modal-overlay" id="customFormOverlay">
-    <div class="custom-modal-window">
-        <form id="createProjectForm">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                <h5 class="font-weight-bold text-primary m-0">Deploy New Project</h5>
-                <button type="button" class="btn-close" id="closeFormXBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
+ <div class="custom-modal-overlay" id="customFormOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1050;">
+    <div class="custom-modal-window" style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 500px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+        
+        <div class="d-flex justify-content-between align-items-center border-bottom p-3">
+            <h5 class="font-weight-bold text-primary m-0" style="font-size: 1.15rem;">Deploy New Project</h5>
+            <button type="button" class="btn-close" id="closeFormXBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
+        </div>
+        
+        <form id="createProjectForm" style="display: flex; flex-direction: column; height: 100%; overflow: hidden; margin: 0;">
+            
+            <div class="modal-body-scroll" style="overflow-y: auto; padding: 1.5rem; flex-grow: 1;">
+                <div class="mb-3">
+                  <label class="form-label small fw-bold text-secondary mb-1">Project Name</label>
+                  <input type="text" id="pName" class="form-control form-control-sm" required>
+                </div>
+                
+                <div class="mb-3">
+                  <label class="form-label small fw-bold text-secondary mb-1">Unique Token ID</label>
+                  <input type="text" id="pId" class="form-control form-control-sm" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">Authorized Team Members</label>
+                    <select id="pTeam" class="form-select form-select-sm tall-select" multiple required size="5"></select>
+                    <div class="text-muted extra-small mt-1" style="font-size: 0.75rem;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple resources.</div>
+                </div>
+                
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <label class="form-label small fw-bold text-secondary mb-1">Functional Sponsor</label>
+                      <input type="text" id="pSponsor" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label small fw-bold text-secondary mb-1">Classification Group</label>
+                      <select id="pClass" class="form-select form-select-sm">
+                          <option value="Internal">Internal Project</option>
+                          <option value="Enterprise">Enterprise Project</option>
+                          <option value="Special">Special Project</option>
+                          <option value="Client">Client Project</option>
+                      </select>
+                    </div>
+                </div>
+                
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <label class="form-label small fw-bold text-secondary mb-1">Current Phase</label>
+                    <select id="pStatus" class="form-select form-select-sm">
+                        <option value="New" selected>New</option> 
+                        <option value="Planning">Planning</option>
+                        <option value="Execution">Execution</option>
+                        <option value="High Risk">High Risk</option>
+                        <option value="Stabilization">Stabilization</option>
+                        <option value="Signed-Off">Signed-Off</option>
+                    </select>
+                  </div>
+                  <div class="col-6">
+                    <label class="form-label small fw-bold text-secondary mb-1">Starting Progress (%)</label>
+                    <input type="number" id="pProgress" class="form-control form-control-sm" min="0" max="100" value="0">
+                  </div>
+                </div>
+            </div> <div class="d-flex justify-content-end gap-2 border-top p-3 bg-light" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+              <button type="button" class="btn btn-light btn-sm px-3 border" id="cancelFormBtn">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm px-3" style="background-color: #005AFC;">Commit to Master Sheet</button>
             </div>
-            <div class="mb-3">
-              <label class="form-label small fw-bold text-secondary mb-1">Project Name</label>
-              <input type="text" id="pName" class="form-control form-control-sm" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label small fw-bold text-secondary mb-1">Unique Token ID</label>
-              <input type="text" id="pId" class="form-control form-control-sm" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary mb-1">Authorized Team Members</label>
-                <select id="pTeam" class="form-select form-select-sm tall-select" multiple required size="5"></select>
-            </div>
-        </form>
-    </div>
-  </div>
+            
+        </form> </div>
+</div>
 
   <div class="custom-modal-overlay" id="taskFormOverlay">
     <div class="custom-modal-window" style="max-width: 550px;">
@@ -573,37 +735,90 @@ if (createTaskForm) {
     </div>
   </div>
 
-  <div class="custom-modal-overlay" id="updateTaskOverlay">
+<div class="custom-modal-overlay" id="updateTaskOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:9999; align-items:center; justify-content:center;">
     <div class="custom-modal-window">
-        <form id="updateTaskForm">
-            <input type="hidden" id="utTaskId">
-            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                <h5 class="font-weight-bold text-dark m-0" id="utTaskTitleDisplay">Update Task</h5>
-                <button type="button" class="btn-close" id="closeUpdateTaskFormBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
+        
+        <!-- Header Panel -->
+        <div class="d-flex justify-content-between align-items-center border-bottom p-3 bg-white">
+            <div class="d-flex align-items-center gap-2">
+                <h5 class="text-dark m-0" style="font-weight:700; font-size:1.15rem;"><i class="fas fa-tasks text-primary me-2"></i>Task Workspace Details</h5>
+                <span id="utAccessBadge" class="badge bg-warning text-dark px-2 py-1" style="font-size:0.7rem; display:none;">View-Only Mode</span>
             </div>
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary mb-1">Workflow Pipeline Position</label>
-                <select id="utStatus" class="form-select form-select-sm">
-                    <option value="New">New</option>
-                    <option value="InProgress">In Progress</option>
-                    <option value="UnderReview">Under Review</option>
-                    <option value="Done">Done</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary mb-1">Append Activity Progress Note</label>
-                <textarea id="utNote" class="form-control form-control-sm" rows="3" placeholder="Specify any updates or underlying blocks..."></textarea>
-            </div>
-            <div id="utExistingNotesContainer" class="mb-3 p-2 bg-light rounded" style="max-height:120px; overflow-y:auto; font-size:0.75rem;">
-            </div>
-            <div class="d-flex justify-content-end gap-2 mt-4">
-              <button type="button" class="btn btn-light btn-sm px-3 border" id="cancelUpdateTaskBtn">Cancel</button>
-              <button type="submit" class="btn btn-success btn-sm px-3">Apply Changes</button>
-            </div>
-        </form>
+            <button type="button" class="btn-close" id="closeUpdateTaskFormBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.4rem; line-height:1; color:#64748b;">&times;</button>
+        </div>
+        
+        <!-- Main Form Container Area -->
+        <div style="overflow-y: auto; flex: 1; padding: 24px;" class="modal-scroll-body bg-light-subtle">
+            <form id="updateTaskForm">
+                <input type="hidden" id="utTaskId">
+                
+                <!-- Target Header Summary Panel -->
+                <div class="mb-4 p-3 rounded" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                    <span class="small text-muted fw-bold text-uppercase d-block mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Targeted Task</span>
+                    <p class="m-0 fw-bold text-dark" id="utTaskTitleDisplay" style="font-size:1.1rem; line-height:1.3;"></p>
+                </div>
+
+                <!-- Scope Task Description -->
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-secondary mb-1">Description</label>
+                    <div id="utTaskDescriptionDisplay" class="p-2.5 border rounded text-secondary" style="font-size:0.88rem; max-height:90px; overflow-y:auto; white-space:pre-wrap; background-color:#ffffff; line-height:1.4;"></div>
+                </div>
+                
+                <!-- Status Field Dropdown -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-secondary mb-1">Workflow Pipeline Position</label>
+                    <select id="utStatus" class="form-select form-select-sm" style="height:38px; border-radius:6px; border-color:#cbd5e1;">
+                        <option value="New">New</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="UnderReview">Under Review</option>
+                        <option value="Done">Done</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+
+                <!-- Action Items Checklist Matrix Output Box -->
+                <div class="mb-3 text-start">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                        <i class="fas fa-clipboard-check me-1 text-success"></i> Task Action Items Matrix
+                    </label>
+                    <div id="utChecklistContainer" class="p-1">
+                        <!-- Items force-injected here dynamically with checkboxes -->
+                    </div>
+                </div>
+
+                <!-- Appending Controls Input Row Field -->
+                <div class="mb-4 text-start">
+                    <label class="form-label small fw-bold text-secondary mb-1">New Task Item</label>
+                    <div class="input-group">
+                        <input type="text" id="utNewChecklistItemInput" class="form-control" style="height:38px; border-radius:6px 0 0 6px;" placeholder="Type a new action step checkbox line...">
+                        <button class="btn btn-success fw-bold px-3" type="button" id="utAddChecklistItemBtn" style="border-radius:0 6px 6px 0;">
+                            <i class="fas fa-plus me-1"></i> Add
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quill Note Container Box -->
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-secondary mb-1">Append Activity Note</label>
+                    <div id="utQuillEditorContainer" style="height: 120px; background: #ffffff; border-radius: 6px;" class="border"></div>
+                    <input type="hidden" id="utNote">
+                </div>
+
+                <!-- Resource Metrics Badges Frame -->
+                <div class="mb-2 border-top pt-3">
+                    <label class="form-label small fw-bold text-secondary mb-1 d-block"><i class="fas fa-users me-1 text-muted"></i> Assigned Team Members</label>
+                    <div id="utTeamMembersDisplay" class="d-flex flex-wrap gap-2 align-items-center" style="min-height:28px;"></div>
+                </div>
+                
+                <!-- Action Controls Frame Row -->
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <button type="button" class="btn btn-light btn-sm px-4 border" id="cancelUpdateTaskBtn" style="height:38px; border-radius:6px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4" id="submitUpdateTaskBtn" style="height:38px; font-weight:600; border-radius:6px; background-color:#2563eb; border-color:#2563eb;">Apply Changes</button>
+                </div>
+            </form>
+        </div>
     </div>
-  </div>
+</div>
 
   <footer class="navbar navbar-default wh_footer">
       <div class="footer-container mx-auto">
@@ -614,7 +829,7 @@ if (createTaskForm) {
       </div>
   </footer>
 <script>
-    let projectDataset = [];
+let projectDataset = [];
     let activeClassificationFilter = "all";
     let activePhaseFilter = "all";
     let activeWorkspaceProjectId = null;
@@ -710,19 +925,97 @@ if (createTaskForm) {
             });
         });
 
-        // New Project Form Submission Wireframe
+        // ======= New Project Form Submission Data Transmission Engine ========
         const createProjForm = document.getElementById('createProjectForm');
         if (createProjForm) {
             createProjForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                commitNewProject();
+                console.log("Submit event captured. Initializing pipeline data assembly...");
+                
+                try {
+                    // 1. Safely extract selected team members from multi-select dropdown
+                    const teamSelect = document.getElementById('pTeam');
+                    let selectedTeam = [];
+                    if (teamSelect && teamSelect.selectedOptions && teamSelect.selectedOptions.length > 0) {
+                        selectedTeam = Array.from(teamSelect.selectedOptions).map(opt => opt.value);
+                    } else {
+                        selectedTeam = ["Unassigned"];
+                    }
+
+                    // Elements sanity checking variables
+                    const idEl = document.getElementById('pId');
+                    const nameEl = document.getElementById('pName');
+                    const sponsorEl = document.getElementById('pSponsor');
+                    const progressEl = document.getElementById('pProgress');
+                    const statusEl = document.getElementById('pStatus');
+                    const classEl = document.getElementById('pClass') || document.getElementById('pClassification');
+
+                    // 2. Build multi-compatible payload to satisfy both Apps Script variations
+                    const payload = {
+                        action: "appendProject", 
+                        id: idEl ? idEl.value.trim() : "PRJ-" + Math.floor(1000 + Math.random() * 9000),
+                        projectId: idEl ? idEl.value.trim() : "",
+                        name: nameEl ? nameEl.value.trim() : "Unnamed Project",
+                        projectName: nameEl ? nameEl.value.trim() : "",
+                        sponsor: sponsorEl ? sponsorEl.value.trim() : "N/A",
+                        progress: progressEl ? (parseInt(progressEl.value) || 0) : 0,
+                        status: statusEl ? statusEl.value : "New",
+                        
+                        // Keeps single words ("Special", "Enterprise") running to the sheet perfectly
+                        classification: classEl ? classEl.value.split(' ')[0] : "Internal",
+                        class: classEl ? classEl.value.split(' ')[0] : "Internal",
+                        
+                        team: selectedTeam.join(', ')
+                    };
+
+                    const submitBtn = createProjForm.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerText = "Deploying to Master Portfolio...";
+                    }
+
+                    console.log("Transmitting finalized payload package to endpoint:", payload);
+
+                    // 3. Dispatch payload to Apps Script Web App Endpoint
+                    fetch(googleWebAppUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(() => {
+                        console.log("Network operation resolved successfully.");
+                        alert("Project successfully initialized and deployed to portfolio tracking!");
+                        createProjForm.reset();
+                        
+                        const projectOverlay = document.getElementById('customFormOverlay');
+                        if (projectOverlay) projectOverlay.style.display = 'none';
+                        
+                        // Refresh dataset seamlessly
+                        if (typeof fetchMasterSuiteDataset === 'function') {
+                            fetchMasterSuiteDataset();
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Network communication link dropped:", err);
+                        alert("Error communicating with master system registry.");
+                    })
+                    .finally(() => {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerText = "Commit to Master Sheet";
+                        }
+                    });
+
+                } catch (runtimeError) {
+                    console.error("Critical error inside form parsing processor block:", runtimeError);
+                    alert("Form error: " + runtimeError.message);
+                }
             });
         }
 
-        // =====================================================================
         // ======= Operational Task Creation Wireframe Form Binder ============
-        // =====================================================================
-        const taskForm = document.getElementById('createTaskForm'); // Aligned directly to HTML ID
+        const taskForm = document.getElementById('createTaskForm');
         if (taskForm) {
             taskForm.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -733,7 +1026,6 @@ if (createTaskForm) {
                     return; 
                 }
 
-                // Gather multiple resource selections cleanly into a comma-separated string
                 const assigneeSelect = document.getElementById('tAssignee');
                 let assigneesString = "Unassigned";
                 if (assigneeSelect) {
@@ -743,23 +1035,22 @@ if (createTaskForm) {
                     }
                 }
 
-                // Line-by-line checklist breakout parsing engine
                 const checklistField = document.getElementById('tChecklist');
                 const rawChecklistText = checklistField ? checklistField.value : "";
                 const checklistItems = rawChecklistText.split('\n')
                     .map(line => line.trim())
                     .filter(line => line.length > 0);
 
-                // Build transmission data package matching your Apps Script backend keys
                 const payload = {
                     action: "appendTask",
                     projectId: pId,
                     title: document.getElementById('tTitle').value,
                     description: document.getElementById('tDesc') ? document.getElementById('tDesc').value : "",
-                    checklist: JSON.stringify(checklistItems), // Safely serialized array
+                    checklist: JSON.stringify(checklistItems),
                     assignees: assigneesString,
                     status: "New",
-                    creator: window.currentUserName || "System Portal"
+                    creator: window.currentUserName || "System Portal",
+                    dueDate: document.getElementById('tDueDate') ? document.getElementById('tDueDate').value : ""
                 };
 
                 const submitBtn = taskForm.querySelector('button[type="submit"]');
@@ -767,8 +1058,6 @@ if (createTaskForm) {
                     submitBtn.disabled = true;
                     submitBtn.innerText = "Appending to Track...";
                 }
-
-                console.log("Transmitting payload package to Macro Runner:", payload);
 
                 fetch(googleWebAppUrl, {
                     method: 'POST',
@@ -783,7 +1072,6 @@ if (createTaskForm) {
                     const taskOverlay = document.getElementById('taskFormOverlay');
                     if (taskOverlay) taskOverlay.style.display = 'none';
                     
-                    // Refresh current workspace cards array from source
                     fetchProjectTasks(pId); 
                 })
                 .catch(err => {
@@ -805,7 +1093,7 @@ if (createTaskForm) {
             addTaskBtn.addEventListener('click', () => {
                 const assigneeSelect = document.getElementById('tAssignee');
                 if (typeof authorizedUsers !== 'undefined' && assigneeSelect) {
-                    assigneeSelect.innerHTML = ''; // Clear stale iterations safely
+                    assigneeSelect.innerHTML = '';
                     Object.keys(authorizedUsers).forEach(username => {
                         const opt = document.createElement('option');
                         opt.value = username;
@@ -828,6 +1116,15 @@ if (createTaskForm) {
             .then(data => {
                 if (Array.isArray(data)) {
                     projectDataset = data;
+
+                    console.log("--- RAW BACKEND DATA RECEIVED ---");
+                    console.log(data);
+                    if(data.length > 0) {
+                        console.log("Sample project properties:", Object.keys(data[0]));
+                        console.log("Sample project classification value:", data[0].classification || data[0].class);
+                    }
+                    console.log("---------------------------------");
+                    
                     calculateDashboardMetrics(data);
                     renderFilteredRegistryAndVisuals();
                     if (activeWorkspaceProjectId) {
@@ -869,10 +1166,26 @@ if (createTaskForm) {
             if (pbSigned) pbSigned.style.width = `${(complete / data.length) * 100}%`;
         }
 
-        let internalCount = data.filter(p => p.classification === 'Internal Project' || p.classification === 'Internal').length;
-        let enterpriseCount = data.filter(p => p.classification === 'Enterprise Project' || p.classification === 'Enterprise').length;
-        let specialCount = data.filter(p => p.classification === 'Special Project' || p.classification === 'Special').length;
-        let clientCount = data.filter(p => p.classification === 'Client Project' || p.classification === 'Client').length;
+        // 🌟 UPDATED MAP COUNTERS: Reliably targets the clean short words
+        let internalCount = data.filter(p => {
+            const cls = String(p.classification || p.class || "Internal").toLowerCase();
+            return cls.startsWith('int');
+        }).length;
+
+        let enterpriseCount = data.filter(p => {
+            const cls = String(p.classification || p.class || "").toLowerCase();
+            return cls.startsWith('ent');
+        }).length;
+
+        let specialCount = data.filter(p => {
+            const cls = String(p.classification || p.class || "").toLowerCase();
+            return cls.startsWith('spe');
+        }).length;
+
+        let clientCount = data.filter(p => {
+            const cls = String(p.classification || p.class || "").toLowerCase();
+            return cls.startsWith('cli');
+        }).length;
 
         const catInt = document.getElementById('catInternal');
         if (catInt) catInt.innerText = internalCount;
@@ -907,7 +1220,12 @@ if (createTaskForm) {
         generateHighFidelityVisuals(projectDataset);
         let subset = projectDataset;
         if (activeClassificationFilter !== 'all') {
-            subset = subset.filter(p => p.classification === activeClassificationFilter || p.classification === activeClassificationFilter.replace(" Project", ""));
+            // 🌟 FIXED FILTER ENGINE: Extracts prefixes cleanly to maintain match stability
+            subset = subset.filter(p => {
+                const cls = String(p.classification || p.class || "").toLowerCase();
+                const filterTarget = activeClassificationFilter.toLowerCase().split(' ')[0];
+                return cls.startsWith(filterTarget);
+            });
         }
         if (activePhaseFilter !== 'all') {
             subset = subset.filter(p => p.status === activePhaseFilter);
@@ -915,68 +1233,66 @@ if (createTaskForm) {
         populatePortfolioTableBody(subset);
     }
 
-    // ==========================================================================
-// ========== PORTFOLIO TABLE & WORKSPACE SECURITY SECTION ==========
-// ==========================================================================
-function populatePortfolioTableBody(list) {
-    const tbody = document.getElementById('liveTableBody');
-    if (!tbody) return;
-    tbody.innerHTML = "";
+    function populatePortfolioTableBody(list) {
+        const tbody = document.getElementById('liveTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = "";
 
-    if (list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No matching items found inside active view scopes.</td></tr>`;
-        return;
-    }
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No matching items found inside active view scopes.</td></tr>`;
+            return;
+        }
 
-    list.forEach(p => {
-        const tr = document.createElement('tr');
-        let badgeClass = "bg-secondary text-white";
-        if (p.status === 'Execution') badgeClass = "bg-info text-dark";
-        else if (p.status === 'Planning') badgeClass = "bg-light text-dark border";
-        else if (p.status === 'High Risk') badgeClass = "bg-danger text-white";
-        else if (p.status === 'Stabilization') badgeClass = "bg-warning text-dark";
-        else if (p.status === 'Signed-Off') badgeClass = "bg-success text-white";
+        list.forEach(p => {
+            const tr = document.createElement('tr');
+            let badgeClass = "bg-secondary text-white";
+            if (p.status === 'Execution') badgeClass = "bg-info text-dark";
+            else if (p.status === 'Planning') badgeClass = "bg-light text-dark border";
+            else if (p.status === 'High Risk') badgeClass = "bg-danger text-white";
+            else if (p.status === 'Stabilization') badgeClass = "bg-warning text-dark";
+            else if (p.status === 'Signed-Off') badgeClass = "bg-success text-white";
 
-        // --- Workspace Role/Assignment Access Check ---
-        const projectIdToken = p.projectId || p.id;
-        const hasWorkspaceAccess = (typeof window.checkWorkspaceAccess === 'function') 
-                                    ? window.checkWorkspaceAccess(projectIdToken) 
-                                    : false;
+            const projectIdToken = p.projectId || p.id;
+            const hasWorkspaceAccess = (typeof window.checkWorkspaceAccess === 'function') 
+                                        ? window.checkWorkspaceAccess(projectIdToken) 
+                                        : false;
 
-        const workspaceBtnHTML = hasWorkspaceAccess 
-            ? `<button class="btn btn-sm btn-outline-primary px-3 fw-bold" onclick="launchWorkspaceHub('${projectIdToken}')" style="border-radius:6px; font-size:0.75rem;">
-                   <i class="fas fa-folder-open me-1"></i> Workspace
-               </button>`
-            : `<button class="btn btn-sm btn-outline-secondary px-3 fw-bold disabled" title="Access Restricted" style="border-radius:6px; font-size:0.75rem; opacity: 0.5;" disabled>
-                   <i class="fas fa-lock me-1"></i> Restricted
-               </button>`;
+            const workspaceBtnHTML = hasWorkspaceAccess 
+                ? `<button class="btn btn-sm btn-outline-primary px-3 fw-bold" onclick="launchWorkspaceHub('${projectIdToken}')" style="border-radius:6px; font-size:0.75rem;">
+                       <i class="fas fa-folder-open me-1"></i> Workspace
+                   </button>`
+                : `<button class="btn btn-sm btn-outline-secondary px-3 fw-bold disabled" title="Access Restricted" style="border-radius:6px; font-size:0.75rem; opacity: 0.5;" disabled>
+                       <i class="fas fa-lock me-1"></i> Restricted
+                   </button>`;
 
-        tr.innerHTML = `
-            <td>
-                <span class="fw-bold text-dark d-block">${p.projectName || p.name}</span>
-                <small class="text-muted font-monospace">${projectIdToken}</small>
-            </td>
-            <td>
-                <span class="text-dark d-block" style="font-weight:500;">${p.sponsor || 'N/A'}</span>
-                <span class="badge bg-light text-secondary border px-2 py-1 mt-1" style="font-size:0.7rem;">${p.classification || 'General'}</span>
-            </td>
-            <td>
-                <div class="d-flex align-items-center gap-2" style="max-width: 180px;">
-                    <span class="small fw-bold text-secondary">${p.progress}%</span>
-                    <div class="progress flex-grow-1" style="height: 6px; border-radius: 4px;">
-                        <div class="progress-bar bg-primary" style="width: ${p.progress}%"></div>
+            // Appends standard text safely with a proper fallback string
+            const displayClassification = p.classification || p.class || 'Internal';
+
+            tr.innerHTML = `
+                <td>
+                    <span class="fw-bold text-dark d-block">${p.projectName || p.name}</span>
+                    <small class="text-muted font-monospace">${projectIdToken}</small>
+                </td>
+                <td>
+                    <span class="text-dark d-block" style="font-weight:500;">${p.sponsor || 'N/A'}</span>
+                    <span class="badge bg-light text-secondary border px-2 py-1 mt-1" style="font-size:0.7rem;">${displayClassification}</span>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center gap-2" style="max-width: 180px;">
+                        <span class="small fw-bold text-secondary">${p.progress}%</span>
+                        <div class="progress flex-grow-1" style="height: 6px; border-radius: 4px;">
+                            <div class="progress-bar bg-primary" style="width: ${p.progress}%"></div>
+                        </div>
                     </div>
-                </div>
-            </td>
-            <td><span class="badge ${badgeClass} px-2.5 py-1.5" style="font-size:0.78rem; border-radius:6px;">${p.status}</span></td>
-            <td>
-                ${workspaceBtnHTML}
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
+                </td>
+                <td><span class="badge ${badgeClass} px-2.5 py-1.5" style="font-size:0.78rem; border-radius:6px;">${p.status}</span></td>
+                <td>
+                    ${workspaceBtnHTML}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
 
     function generateHighFidelityVisuals(list) {
         const barWrapper = document.getElementById('chartBarWrapper');
@@ -1154,7 +1470,6 @@ function populatePortfolioTableBody(list) {
 // ========== KANBAN WORKSPACE TASKS & BUTTON ACCESS SECTION ==========
 // ==========================================================================
 function renderWorkspaceTasks(tasks) {
-    // Ensure these match your HTML ID suffixes exactly (list-New, list-InProgress, etc.)
     const columns = ['New', 'InProgress', 'UnderReview', 'Done', 'Cancelled'];
     
     // Clear lists
@@ -1164,7 +1479,6 @@ function renderWorkspaceTasks(tasks) {
     });
 
     if (!Array.isArray(tasks) || tasks.length === 0) {
-        // Clear all empty column states cleanly
         columns.forEach(col => {
             const targetList = document.getElementById(`list-${col}`);
             if (targetList) {
@@ -1176,20 +1490,14 @@ function renderWorkspaceTasks(tasks) {
         return;
     }
 
-    // Initialize counters safely
     let counters = { New: 0, InProgress: 0, UnderReview: 0, Done: 0, Cancelled: 0 };
 
     tasks.forEach(task => {
         if (!task) return; 
-        console.log("Task:", task.title, "| Raw Status from Sheet:", task.status);
 
-        // ==========================================================================
-        // ========== FIX: MAP SPREADSHEET STATUS TO KANBAN ID CODES ==========
-// ==========================================================================
         let rawStatus = (task.status || 'New').toString().trim();
-        let normalizedStatus = rawStatus.replace(/\s+/g, ''); // e.g. "In Progress" -> "InProgress"
+        let normalizedStatus = rawStatus.replace(/\s+/g, '');
 
-        // Explicit fallback mapping mapping common variations
         if (rawStatus === "In Progress" || normalizedStatus.toLowerCase() === "inprogress") {
             normalizedStatus = "InProgress";
         } else if (rawStatus === "Under Review" || normalizedStatus.toLowerCase() === "underreview") {
@@ -1202,7 +1510,6 @@ function renderWorkspaceTasks(tasks) {
             normalizedStatus = "New";
         }
         
-        // Ensure the status exists in our column list, otherwise default to 'New'
         if (!columns.includes(normalizedStatus)) {
             normalizedStatus = 'New'; 
         }
@@ -1212,9 +1519,14 @@ function renderWorkspaceTasks(tasks) {
             counters[normalizedStatus]++;
 
             const card = document.createElement('div');
-            card.className = "card shadow-sm p-3 mb-2 border-start border-4 bg-white text-start task-clickable-card";
+            card.className = "card shadow-sm p-3 mb-2 border-start border-4 bg-white task-clickable-card";
             card.style.borderRadius = "6px";
             card.style.cursor = "pointer";
+            card.style.textAlign = "left";
+            card.style.display = "flex";
+            card.style.flexDirection = "column";
+            card.style.alignItems = "flex-start";
+            card.style.width = "100%";
             card.setAttribute('data-task-id', task.taskId || task.id || 'TSK---');
             
             const taskPriority = task.priority || 'Normal';
@@ -1230,75 +1542,63 @@ function renderWorkspaceTasks(tasks) {
             const displayDesc = task.description || 'No execution descriptions documented.';
             const displayId   = task.taskId || 'TSK---';
 
-            let displayDate = 'N/A';
-            if (task.createdAt && task.createdAt !== 'N/A') {
-                displayDate = `Created: ${task.createdAt}`;
-            } else if (task.dueDate && task.dueDate !== 'N/A') {
-                displayDate = `Due: ${task.dueDate}`;
-            }
-
-            // Checklist text parsing fallback handling string/array shapes safely
+            // 🔑 HIDE INLINE CHECKLIST FROM KANBAN OVERVIEW CARDS
+            // The item loop is omitted to keep the task board clean.
             let inlineChecklistHTML = "";
-            let checklistArr = [];
-            try {
-                if (task.checklist) {
-                    checklistArr = typeof task.checklist === 'string' ? JSON.parse(task.checklist) : task.checklist;
-                }
-            } catch(e) { checklistArr = []; }
 
-            if (Array.isArray(checklistArr) && checklistArr.length > 0) {
-                inlineChecklistHTML = `<div class="task-card-checklist my-2" style="font-size: 0.72rem; color: #495057;">`;
-                checklistArr.forEach(item => {
-                    inlineChecklistHTML += `
-                        <div class="form-check p-0 d-flex align-items-center gap-2 mb-1">
-                            <input type="checkbox" disabled style="width: 12px !important; height: 12px !important; margin: 0; pointer-events: none;">
-                            <span class="text-truncate" style="max-width: 170px;">${item}</span>
-                        </div>`;
-                });
-                inlineChecklistHTML += `</div>`;
-            }
-
-            // --- Task Modification Access Check ---
             const isAdmin = window.currentUserRole === 'admin';
             const currentUserNameStr = (window.currentUserName || "").toLowerCase().trim();
             const taskAssigneesStr = (task.assignees || "").toLowerCase();
-            
-            // Only admins or users whose name appears in the assignee field can modify the status
             const canUpdateTask = isAdmin || (currentUserNameStr && taskAssigneesStr.includes(currentUserNameStr));
 
-            // Small button sizes updated here
             const updateBtnHTML = canUpdateTask 
                 ? `<button class="btn btn-xs btn-light text-primary border" style="font-size: 0.68rem; padding: 2px 6px; background: #f0f7ff; border-radius:4px;" onclick="event.stopPropagation(); openUpdateDrawer('${displayId}')">
                        <i class="fas fa-pencil-alt me-1"></i> Update
                    </button>`
                 : ``;
 
-            // ==========================================================================
-            // ========== CARD LAYOUT ADJUSTMENT: DATE & BUTTON SEPARATION ==========
-            // ==========================================================================
-            card.innerHTML = `
-                <div class="d-flex flex-column h-100 justify-content-between">
-                    <div>
-                        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-                            <span class="fw-bold text-dark d-inline-block" style="font-size:0.85rem; line-height:1.2;">${displayTitle}</span>
-                            <span class="badge px-1.5 py-0.5 font-monospace bg-light text-secondary border" style="font-size:0.6rem;">${displayId}</span>
-                        </div>
-                        <p class="text-muted mb-1 small" style="font-size:0.75rem; line-height:1.35; max-height:40px; overflow:hidden;">${displayDesc}</p>
-                        
-                        ${inlineChecklistHTML}
-                    </div>
+            let dueByHTML = "";
+            var cleanDueData = task.dueDate ? task.dueDate.toString().trim() : "";
+            if (cleanDueData !== "" && cleanDueData !== "N/A" && cleanDueData !== "undefined") {
+                dueByHTML = `<div class="text-danger fw-bold" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
+                                 <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>${cleanDueData}</span>
+                             </div>`;
+            } else {
+                dueByHTML = `<div class="text-muted fw-normal" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important; opacity: 0.5; font-style: italic;">
+                                 <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>None Set</span>
+                             </div>`;
+            }
 
-                    <div class="mt-2">
-                        <div class="text-muted border-top pt-2 mb-2" style="font-size:0.68rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%;">
-                            <i class="far fa-calendar-alt me-1"></i>${displayDate}
+            card.innerHTML = `
+                <div style="text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; width: 100% !important;">
+                    <div style="margin-bottom: 4px; text-align: left !important;">
+                        <span class="badge px-2 py-1 font-monospace bg-light text-secondary border" style="font-size:0.65rem; border-radius: 4px; text-align: left !important;">
+                            <i class="fas fa-tag me-1"></i>${displayId}
+                        </span>
+                    </div>
+                    <div style="margin-bottom: 6px; text-align: left !important; width: 100% !important;">
+                        <h5 class="fw-bold text-dark m-0" style="font-size:0.95rem; line-height:1.3; letter-spacing:-0.2px; text-align: left !important; width: 100% !important; display: block !important;">
+                            ${displayTitle}
+                        </h5>
+                    </div>
+                    <p class="text-muted" style="font-size:0.75rem; line-height:1.4; max-height:60px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; padding-left: 1px; text-align: left !important; width: 100% !important; margin-bottom: 8px !important;">
+                        ${displayDesc}
+                    </p>
+                    ${inlineChecklistHTML}
+                </div>
+
+                <div class="mt-2 border-top pt-2" style="width: 100% !important; text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important;">
+                    <div style="text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 4px; width: 100% !important; line-height: 1.3; margin-bottom: 10px !important;">
+                        <div class="text-muted" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
+                            <i class="far fa-calendar-alt text-secondary me-1.5" style="width:12px; text-align: left;"></i>Created: <span class="fw-medium">${task.createdAt || 'N/A'}</span>
                         </div>
-                        
-                        <div class="d-flex justify-content-end gap-1.5 pe-1">
-                            <button class="btn btn-xs btn-outline-secondary border-0 opacity-75" style="font-size: 0.68rem; padding: 2px 6px;" onclick="event.stopPropagation(); openViewDrawer('${displayId}')">
-                                <i class="fas fa-expand-alt me-1"></i> Details
-                            </button>
-                            ${updateBtnHTML}
-                        </div>
+                        ${dueByHTML}
+                    </div>
+                    <div class="d-flex justify-content-end gap-2" style="width: 100% !important; pt-1 !important;">
+                        <button class="btn btn-xs btn-outline-secondary border-0 opacity-75" style="font-size: 0.68rem; padding: 3px 6px;" onclick="event.stopPropagation(); openViewDrawer('${displayId}')">
+                            <i class="fas fa-expand-alt me-1"></i> Details
+                        </button>
+                        ${updateBtnHTML}
                     </div>
                 </div>
             `;
@@ -1306,7 +1606,6 @@ function renderWorkspaceTasks(tasks) {
         }
     });
 
-    // Update Kanban Column Counters & Badges
     columns.forEach(col => {
         const pillBadge = document.getElementById(`badge-${col}`);
         if (pillBadge) pillBadge.innerText = counters[col];
@@ -1355,70 +1654,53 @@ function renderWorkspaceTasks(tasks) {
 // ========== WORKSPACE DRAWERS MANAGEMENT ENGINE ==========
 // ==========================================================================
 
-window.closeDrawer = function() { 
-    const drw = document.getElementById('updateDrawer');
-    const bdrop = document.getElementById('drawerBackdrop');
-    if (drw) drw.classList.remove('open'); 
-    if (bdrop) bdrop.style.display = 'none'; 
-};
+// ==========================================================================
+// ========== WORKSPACE DRAWERS MANAGEMENT ENGINE ==========
+// ==========================================================================
+let utQuillEditorInstance = null;
 
-window.closeReadPanel = function() { 
-    const vDrw = document.getElementById('viewFullDrawer');
+function initUpdateTaskQuill(isReadOnly = false) {
+    const container = document.getElementById('utQuillEditorContainer');
+    if (!container) return; 
+    
+    // Configured to precisely match your clean Exco styling configuration tools
+    const toolbarOptions = isReadOnly ? false : [
+        ['bold', 'italic'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }]
+    ];
+
+    container.innerHTML = "";
+
+    if (typeof Quill !== 'undefined') {
+        utQuillEditorInstance = new Quill('#utQuillEditorContainer', {
+            theme: 'snow',
+            modules: { toolbar: toolbarOptions },
+            placeholder: isReadOnly ? 'Access Locked: Only assigned task owners can append notes.' : 'Specify any updates or underlying blocks here...'
+        });
+        
+        if (isReadOnly) {
+            utQuillEditorInstance.disable();
+            // Hide formatting toolbar panel completely when locked
+            const toolbar = container.parentElement.querySelector('.ql-toolbar');
+            if (toolbar) toolbar.style.display = 'none';
+        } else {
+            utQuillEditorInstance.enable();
+        }
+    }
+}
+
+window.closeDrawer = function() { 
+    document.getElementById('updateTaskOverlay').style.display = 'none';
     const bdrop = document.getElementById('drawerBackdrop');
-    if (vDrw) vDrw.style.right = "-75vw"; 
     if (bdrop) bdrop.style.display = 'none'; 
 };
 
 window.globalCloseAllDrawers = function() { 
     closeDrawer(); 
-    closeReadPanel(); 
-};
-
-window.openViewDrawer = function(taskId) {
-    if (!window.activeTasksCache) return;
-    const task = window.activeTasksCache.find(t => t.taskId === taskId);
-    if (!task) return;
-
-    document.getElementById('viewDrawerBadgeId').innerText = task.taskId;
-    document.getElementById('viewDrawerTitle').innerText = task.title;
-    document.getElementById('viewDrawerBody').innerText = task.description || "No description logged.";
-    document.getElementById('viewDrawerAssignees').innerText = task.assignees || "Unassigned";
-    document.getElementById('viewDrawerCreatedAt').innerText = task.createdAt || "N/A";
-    
-    // Normalize status for lookups
-    const cleanStatusKey = (task.status || "New").toString().replace(/\s+/g, '').toLowerCase();
-
-    const statusMap = {
-        'new': '<span class="badge bg-secondary px-3 py-2 fs-6">New Task</span>',
-        'inprogress': '<span class="badge bg-primary px-3 py-2 fs-6">In Progress</span>',
-        'underreview': '<span class="badge bg-warning text-dark px-3 py-2 fs-6">Under Review</span>',
-        'done': '<span class="badge bg-success px-3 py-2 fs-6">Completed</span>',
-        'cancelled': '<span class="badge bg-danger px-3 py-2 fs-6">Cancelled</span>'
-    };
-    document.getElementById('viewDrawerStatusPill').innerHTML = statusMap[cleanStatusKey] || statusMap['new'];
-
-    const checklistDiv = document.getElementById('viewDrawerChecklist');
-    checklistDiv.innerHTML = "";
-    
-    let checklistArr = [];
-    try {
-        if (task.checklist) checklistArr = typeof task.checklist === 'string' ? JSON.parse(task.checklist) : task.checklist;
-    } catch(e) {}
-
-    if (Array.isArray(checklistArr) && checklistArr.length > 0) {
-        checklistArr.forEach(item => {
-            checklistDiv.innerHTML += `
-                <div class="form-check my-2">
-                    <input class="form-check-input" type="checkbox" disabled>
-                    <label class="form-check-label text-dark small ms-2">${item}</label>
-                </div>`;
-        });
-    } else {
-        checklistDiv.innerHTML = '<span class="text-muted small italic">No action items assigned.</span>';
-    }
-
-    document.getElementById('viewFullDrawer').style.right = "0";
-    document.getElementById('drawerBackdrop').style.display = "block";
+    const vDrw = document.getElementById('viewFullDrawer');
+    if (vDrw) vDrw.style.right = "-75vw";
+    const bdrop = document.getElementById('drawerBackdrop');
+    if (bdrop) bdrop.style.display = 'none'; 
 };
 
 window.openUpdateDrawer = function(taskId) {
@@ -1426,79 +1708,271 @@ window.openUpdateDrawer = function(taskId) {
     const task = window.activeTasksCache.find(t => t.taskId === taskId);
     if (!task) return;
 
-    document.getElementById('editTaskId').value = task.taskId;
-    document.getElementById('editTaskTitleDisplay').innerText = task.title;
+    const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
+    const isAdmin = currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
     
-    // Normalize string variations when auto-selecting the current select dropdown menu item
-    let normalizedValue = (task.status || "New").toString().replace(/\s+/g, '');
-    if (normalizedValue.toLowerCase() === 'completed') normalizedValue = 'Done';
-    
-    const selectEl = document.getElementById('editStatus');
-    if (selectEl) {
-        selectEl.value = normalizedValue;
+    let assignedResources = [];
+    if (task.assignees) {
+        assignedResources = task.assignees.toString().split(',').map(name => name.trim().toLowerCase());
+    } else if (task.assignee) {
+        assignedResources = [task.assignee.toString().trim().toLowerCase()];
     }
 
-    document.getElementById('updateDrawer').classList.add('open');
-    document.getElementById('drawerBackdrop').style.display = "block";
+    let hasEditPrivileges = isAdmin || assignedResources.includes(currentSessionRaw);
+
+    document.getElementById('utTaskId').value = task.taskId;
+    document.getElementById('utTaskTitleDisplay').innerText = task.title;
+    document.getElementById('utTaskDescriptionDisplay').innerText = task.description || "No description logged at creation.";
+    document.getElementById('utNote').value = "";
+    const utNoteField = document.getElementById('utNote');
+if (utNoteField) {
+    // 1. Load the historical note into the hidden form field
+    utNoteField.value = task.note || ""; 
+
+    // 2. Hydrate the Quill editor instance if it is currently initialized
+    // This allows the Quill editor to display the previous notes immediately
+    if (typeof window.utQuillEditorInstance !== 'undefined' && window.utQuillEditorInstance) {
+        window.utQuillEditorInstance.root.innerHTML = task.note || "";
+    }
+}
+// --------------------------------------------------
+
+    const accessBadge = document.getElementById('utAccessBadge');
+    const submitBtn = document.getElementById('submitUpdateTaskBtn');
+    const statusSelect = document.getElementById('utStatus');
+    const addCheckItemBtn = document.getElementById('utAddChecklistItemBtn');
+    const checkInput = document.getElementById('utNewChecklistItemInput');
+
+    // Handle standard inputs/buttons permissions right away
+    if (hasEditPrivileges) {
+        if(accessBadge) accessBadge.style.display = "none";
+        if(submitBtn) submitBtn.style.display = "block";
+        if(statusSelect) statusSelect.disabled = false;
+        if(addCheckItemBtn) addCheckItemBtn.disabled = false;
+        if(checkInput) checkInput.disabled = false;
+    } else {
+        if(accessBadge) accessBadge.style.display = "inline-block";
+        if(submitBtn) submitBtn.style.display = "none"; 
+        if(statusSelect) statusSelect.disabled = true;
+        if(addCheckItemBtn) addCheckItemBtn.disabled = true;
+        if(checkInput) checkInput.disabled = true;
+    }
+
+    if (statusSelect) {
+        let normalizedValue = (task.status || "New").toString().replace(/\s+/g, '');
+        if (normalizedValue.toLowerCase() === 'completed') normalizedValue = 'Done';
+        statusSelect.value = normalizedValue;
+    }
+
+    // Render Assignees
+    const membersDisplay = document.getElementById('utTeamMembersDisplay');
+    if (membersDisplay) {
+        membersDisplay.innerHTML = "";
+        let originalNames = task.assignees || task.assignee || "Unassigned";
+        let namesArr = originalNames.toString().split(',');
+        namesArr.forEach(name => {
+            if(!name.trim()) return;
+            const span = document.createElement('span');
+            span.className = "badge bg-secondary-subtle text-dark border px-2 py-1 m-0";
+            span.innerText = name.trim();
+            membersDisplay.appendChild(span);
+        });
+    }
+
+    // Load Matrix Checklist Entries
+   const chkContainer = document.getElementById('utChecklistContainer');
+    if (chkContainer) {
+        chkContainer.innerHTML = "";
+        let checklistArr = [];
+        
+        try {
+            if (task.checklist) {
+                checklistArr = typeof task.checklist === 'string' ? JSON.parse(task.checklist) : task.checklist;
+            }
+        } catch(e) { 
+            checklistArr = []; 
+        }
+
+        if ((!Array.isArray(checklistArr) || checklistArr.length === 0) && task.checklistRaw) {
+            checklistArr = task.checklistRaw.toString().split('\n').filter(l => l.trim().length > 0);
+        }
+
+        if (Array.isArray(checklistArr) && checklistArr.length > 0) {
+            checklistArr.forEach((item, index) => {
+                const isDone = typeof item === 'object' ? !!item.completed : false;
+                const textContent = typeof item === 'object' ? item.text : item.toString().trim();
+
+                if(!textContent) return;
+
+                const row = document.createElement('div');
+                row.className = "ut-matrix-item-row";
+                
+                const lockString = hasEditPrivileges ? "" : "disabled style='opacity:0.65;'";
+                const deleteButtonStr = isAdmin ? 
+                    `<button type="button" class="btn btn-link btn-sm text-danger p-0 border-0 ms-2" onclick="removeChecklistItemElement(this)" style="line-height:1;"><i class="fas fa-trash-alt"></i></button>` : '';
+
+                row.innerHTML = `
+                    <div class="d-flex align-items-center gap-2" style="flex: 1; min-width: 0;">
+                        <input type="checkbox" class="form-check-input ut-checklist-item-check m-0 flex-shrink-0" data-index="${index}" ${isDone ? 'checked' : ''} ${lockString} style="cursor:pointer; width:18px; height:18px;">
+                        <span class="ut-checklist-item-text ms-1 ${isDone ? 'text-decoration-line-through text-muted' : 'text-dark'}" style="font-size:0.9rem; font-weight:500;">${textContent}</span>
+                    </div>
+                    ${deleteButtonStr}
+                `;
+                chkContainer.appendChild(row);
+            });
+        } else {
+            chkContainer.innerHTML = `<span class="text-muted small mx-auto py-2 italic no-items-flag">No active checklist matrix items configured.</span>`;
+        }
+    }
+
+    // 1. FIRST show the overlay to render the HTML containers on screen layout
+    document.getElementById('updateTaskOverlay').style.display = 'flex';
+    const bdrop = document.getElementById('drawerBackdrop');
+    if (bdrop) bdrop.style.display = "block";
+
+    // 2. CRITICAL: Wait 60ms for the DOM browser repaint to finish, THEN bind Quill to the visible container
+    setTimeout(() => {
+        initUpdateTaskQuill(!hasEditPrivileges);
+    }, 60);
 };
 
-// Submitting the Update
+// Event Listeners setup
 document.addEventListener('DOMContentLoaded', () => {
-    const updateTaskForm = document.getElementById('updateTaskDrawerForm');
+    const updateTaskForm = document.getElementById('updateTaskForm');
+    const addChecklistItemBtn = document.getElementById('utAddChecklistItemBtn');
+    const checklistInput = document.getElementById('utNewChecklistItemInput');
+    const chkContainer = document.getElementById('utChecklistContainer');
+
+    if (addChecklistItemBtn && checklistInput && chkContainer) {
+        addChecklistItemBtn.addEventListener('click', () => {
+            const val = checklistInput.value.trim();
+            if (!val) return;
+
+            const noItemsFlag = chkContainer.querySelector('.no-items-flag');
+            if (noItemsFlag) noItemsFlag.remove();
+
+            const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
+            const isAdmin = currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+
+            const currentIndex = chkContainer.querySelectorAll('.ut-matrix-item-row').length;
+            const row = document.createElement('div');
+            row.className = "ut-matrix-item-row";
+            
+            const deleteButtonStr = isAdmin ? 
+                `<button type="button" class="btn btn-link btn-sm text-danger p-0 border-0 ms-2" onclick="removeChecklistItemElement(this)" style="line-height:1;"><i class="fas fa-trash-alt"></i></button>` : '';
+
+            row.innerHTML = `
+                <div class="d-flex align-items-center gap-2" style="flex: 1; min-width: 0;">
+                    <input type="checkbox" class="form-check-input ut-checklist-item-check m-0 flex-shrink-0" data-index="${currentIndex}" style="cursor:pointer; width:18px; height:18px;">
+                    <span class="ut-checklist-item-text text-dark ms-1" style="font-size:0.9rem; font-weight:500;">${val}</span>
+                </div>
+                ${deleteButtonStr}
+            `;
+            chkContainer.appendChild(row);
+            checklistInput.value = "";
+        });
+    }
+
+    if (chkContainer) {
+        chkContainer.addEventListener('change', (e) => {
+            if (e.target.classList.contains('ut-checklist-item-check')) {
+                const labelText = e.target.closest('.ut-matrix-item-row').querySelector('.ut-checklist-item-text');
+                if (labelText) {
+                    if (e.target.checked) labelText.classList.add('text-decoration-line-through', 'text-muted');
+                    else labelText.classList.remove('text-decoration-line-through', 'text-muted');
+                }
+            }
+        });
+    }
+
+    ['closeUpdateTaskFormBtn', 'cancelUpdateTaskBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.addEventListener('click', closeDrawer);
+    });
+
     if (updateTaskForm) {
         updateTaskForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Get value from select dropdown form element
-            const rawDropdownVal = document.getElementById('editStatus').value;
-            
-            // Convert select values to clear, standard human-readable sheet labels
+            const rawDropdownVal = document.getElementById('utStatus').value;
             let sheetFormattedStatus = "New";
             if (rawDropdownVal === "InProgress") sheetFormattedStatus = "In Progress";
             else if (rawDropdownVal === "UnderReview") sheetFormattedStatus = "Under Review";
             else if (rawDropdownVal === "Done") sheetFormattedStatus = "Done";
             else if (rawDropdownVal === "Cancelled") sheetFormattedStatus = "Cancelled";
 
+            // Note Capture Fix: Pull live rich HTML contents directly out of the generated frame instance
+            let progressNoteHTML = "";
+            if (typeof utQuillEditorInstance !== 'undefined' && utQuillEditorInstance && utQuillEditorInstance.getLength() > 1) {
+                progressNoteHTML = utQuillEditorInstance.root.innerHTML.trim();
+            } else if (document.getElementById('utNote')) {
+                progressNoteHTML = document.getElementById('utNote').value.trim();
+            }
+
+            const dynamicChecklistPayload = [];
+            if (chkContainer) {
+                const rows = chkContainer.querySelectorAll('.ut-matrix-item-row');
+                rows.forEach(row => {
+                    const chkBox = row.querySelector('.ut-checklist-item-check');
+                    const labelSpan = row.querySelector('.ut-checklist-item-text');
+                    if (chkBox && labelSpan) {
+                        dynamicChecklistPayload.push({
+                            text: labelSpan.innerText.trim(),
+                            completed: chkBox.checked
+                        });
+                    }
+                });
+            }
+
             const payload = {
                 action: "updateTaskStatus", 
-                taskId: document.getElementById('editTaskId').value,
-                status: sheetFormattedStatus, // Sends clean standard string labels to Apps Script
-                note: document.getElementById('editNote').value,
+                taskId: document.getElementById('utTaskId').value,
+                status: sheetFormattedStatus, 
+                note: progressNoteHTML,
+                checklist: dynamicChecklistPayload,
                 user: window.currentUserName || "System"
             };
 
-            const btn = this.querySelector('button[type="submit"]');
-            const oldHtml = btn.innerHTML;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
+            const btn = document.getElementById('submitUpdateTaskBtn');
             btn.disabled = true;
 
             fetch(googleWebAppUrl, {
                 method: "POST",
-                mode: 'no-cors',
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
             })
             .then(() => {
-                // Since no-cors completes instantly, wait slightly before triggering a data re-fetch
                 setTimeout(() => {
                     globalCloseAllDrawers();
-                    document.getElementById('editNote').value = ""; // Clear note text area
+                    if (document.getElementById('utNote')) document.getElementById('utNote').value = ""; 
+                    if (typeof utQuillEditorInstance !== 'undefined' && utQuillEditorInstance) utQuillEditorInstance.setText('');
                     if (typeof activeWorkspaceProjectId !== 'undefined' && activeWorkspaceProjectId) {
                         fetchProjectTasks(activeWorkspaceProjectId);
                     }
                 }, 400);
             })
             .catch(err => {
-                console.error("Update Error:", err);
-                alert("Error communicating with server.");
+                console.error("Network Error Handshake Trace:", err);
+                alert("Sync error.");
             })
             .finally(() => {
-                btn.innerHTML = oldHtml;
                 btn.disabled = false;
             });
         });
     }
 });
+
+window.removeChecklistItemElement = function(buttonEl) {
+    const row = buttonEl.closest('.ut-matrix-item-row');
+    if (row) {
+        const parent = row.parentNode;
+        row.remove();
+        if (parent && parent.querySelectorAll('.ut-matrix-item-row').length === 0) {
+            parent.innerHTML = `<span class="text-muted small mx-auto py-2 italic no-items-flag">No active checklist matrix items configured.</span>`;
+        }
+    }
+};
+
 
 </script>
 <div id="taskFormOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
@@ -1562,10 +2036,83 @@ document.addEventListener('DOMContentLoaded', () => {
                 <option value="Cancelled">Cancelled</option>
             </select>
         </div>
-        <div class="mb-3">
-            <label class="form-label small fw-bold text-muted">Append Activity Note (Optional)</label>
-            <textarea id="editNote" class="form-control form-control-sm" rows="4" placeholder="Log progress, blocks, or handover notes..."></textarea>
-        </div>
+        
+    <div class="mb-4">
+    <label class="form-label small fw-bold text-secondary mb-1">Append Activity Note</label>
+    <div id="utQuillEditorContainer" style="height: 120px; background: #ffffff; border-radius: 6px;" class="border"></div>
+    <input type="hidden" id="utNote">
+</div>
+
+<script>
+(function() {
+    // Target your task update overlay wrapper
+    const targetOverlay = document.getElementById('updateTaskOverlay');
+    if (!targetOverlay) return;
+
+    let previousDisplayState = 'none';
+
+    const layoutObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'style') {
+                const currentDisplay = targetOverlay.style.display;
+                
+                // Triggers exactly once when the update view is opened
+                if (currentDisplay === 'flex' && previousDisplayState !== 'flex') {
+                    previousDisplayState = 'flex';
+                    
+                    setTimeout(() => {
+                        const quillElement = document.getElementById('utQuillEditorContainer');
+                        if (quillElement && typeof Quill !== 'undefined') {
+                            const parentElement = quillElement.parentElement;
+                            
+                            // ISSUE #3 FIXED: Wipe legacy toolbar artifacts before creating a new canvas
+                            const legacyToolbars = parentElement.querySelectorAll('.ql-toolbar');
+                            legacyToolbars.forEach(toolbar => toolbar.remove());
+                            
+                            // Clear container internals safely
+                            quillElement.className = "border rounded bg-white";
+                            quillElement.innerHTML = ""; 
+
+                            // Initialize clean single editor instance
+                            window.utQuillEditorInstance = new Quill('#utQuillEditorContainer', {
+                                theme: 'snow',
+                                placeholder: 'Specify integration status updates or operational blocks here...',
+                                modules: {
+                                    toolbar: [
+                                        ['bold', 'italic'],
+                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }]
+                                    ]
+                                }
+                            });
+
+                            // Pull historical description text from backend row safely without changing card look
+                            const nativeInput = document.getElementById('utNote');
+                            if (nativeInput && nativeInput.value) {
+                                window.utQuillEditorInstance.root.innerHTML = nativeInput.value;
+                            }
+
+                            // Keep text field in sync as you type
+                            window.utQuillEditorInstance.on('text-change', function() {
+                                if (nativeInput) {
+                                    nativeInput.value = window.utQuillEditorInstance.root.innerHTML;
+                                }
+                            });
+                        }
+                    }, 100);
+                } else if (currentDisplay === 'none') {
+                    previousDisplayState = 'none';
+                }
+            }
+        });
+    });
+
+    layoutObserver.observe(targetOverlay, { attributes: true, attributeFilter: ['style'] });
+})();
+</script>
+
+
+
+
         <button type="submit" class="btn btn-primary btn-sm w-100 mt-2 py-2 fw-bold shadow-sm">
             <i class="fas fa-save me-1"></i> Commit Status Update
         </button>
