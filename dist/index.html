@@ -441,7 +441,7 @@ if (loginBtn) loginBtn.addEventListener('click', checkPassword);
     passInput,
     nameInput
 ].forEach((el)=>{
-    if (el) el.addEventListener("keyup", (e)=>{
+    if (el) el.addEventListener("keyup", (event)=>{
         if (e.key === "Enter") checkPassword();
     });
 });
@@ -453,7 +453,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     sessionChannel.postMessage({
         type: 'REQUEST_SESSION_STATE'
     });
-    if (logoutBtn) logoutBtn.addEventListener('click', (e)=>{
+    if (logoutBtn) logoutBtn.addEventListener('click', (evt)=>{
         e.preventDefault();
         sessionStorage.removeItem('isLoggedIn_ICT');
         sessionStorage.removeItem('currentUser_ICT');

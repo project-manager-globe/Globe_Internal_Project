@@ -446,7 +446,7 @@
 
         [passInput, nameInput].forEach(el => { 
             if (el) {
-                el.addEventListener("keyup", (e) => { if (e.key === "Enter") checkPassword(); }); 
+                el.addEventListener("keyup", (event) => { if (e.key === "Enter") checkPassword(); }); 
             }
         });
 
@@ -461,7 +461,7 @@
             }
 
             if (logoutBtn) {
-                logoutBtn.addEventListener('click', (e) => {
+                logoutBtn.addEventListener('click', (evt) => {
                     e.preventDefault();
                     sessionStorage.removeItem('isLoggedIn_ICT');
                     sessionStorage.removeItem('currentUser_ICT');
