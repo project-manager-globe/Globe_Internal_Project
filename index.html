@@ -315,166 +315,168 @@
 
 <script type="module" src="./js/index.js"></script>
 <script>
-    // Wrap everything in an isolated scope to prevent variable collision with the canvas animation
-    (function() {
-        const eyeIcon = document.getElementById('eyeIcon');
-        const passInput = document.getElementById('passInput');
-        const nameInput = document.getElementById('userName');
-        const loginBtn = document.getElementById('submitLogin');
-        const logoutBtn = document.getElementById('logoutBtn');
+// Wrap everything inside an isolated function scope to block Parcel naming clashes
+(function() {
+    const eyeIcon = document.getElementById('eyeIcon');
+    const passInput = document.getElementById('passInput');
+    const nameInput = document.getElementById('userName');
+    const loginBtn = document.getElementById('submitLogin');
+    const logoutBtn = document.getElementById('logoutBtn');
 
-        const securityMetricsUrl = "https://formspree.io/f/mvzyvpqq";
+    const securityMetricsUrl = "https://formspree.io/f/mvzyvpqq";
 
-        const openEyePath = `<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />`;
-        const slashedEyePath = `<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.815 7.815 3 3m-3-3-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />`;
+    const openEyePath = `<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />`;
+    const slashedEyePath = `<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.815 7.815 3 3m-3-3-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />`;
 
-        if (eyeIcon) {
-            eyeIcon.style.cursor = 'pointer';
-            eyeIcon.addEventListener('mouseenter', () => { 
-                passInput.type = 'text'; 
-                eyeIcon.innerHTML = slashedEyePath;
-            });
-            eyeIcon.addEventListener('mouseleave', () => { 
-                passInput.type = 'password'; 
-                eyeIcon.innerHTML = openEyePath;
-            });
-        }
+    if (eyeIcon) {
+        eyeIcon.style.cursor = 'pointer';
+        eyeIcon.addEventListener('mouseenter', () => { 
+            passInput.type = 'text'; 
+            eyeIcon.innerHTML = slashedEyePath;
+        });
+        eyeIcon.addEventListener('mouseleave', () => { 
+            passInput.type = 'password'; 
+            eyeIcon.innerHTML = openEyePath;
+        });
+    }
 
-        const sessionChannel = new BroadcastChannel('ictglobe_session_sync');
+    const sessionChannel = new BroadcastChannel('ictglobe_session_sync');
 
-        sessionChannel.onmessage = (event) => {
-            if (event.data.type === 'REQUEST_SESSION_STATE') {
-                if (sessionStorage.getItem('isLoggedIn_ICT') === 'true') {
-                    sessionChannel.postMessage({
-                        type: 'RECEIVE_SESSION_STATE',
-                        isLoggedIn: sessionStorage.getItem('isLoggedIn_ICT'),
-                        currentUser: sessionStorage.getItem('currentUser_ICT'),
-                        redirectTarget: sessionStorage.getItem('redirect_target')
-                    });
-                }
-            } else if (event.data.type === 'RECEIVE_SESSION_STATE') {
-                if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
-                    sessionStorage.setItem('isLoggedIn_ICT', event.data.isLoggedIn);
-                    sessionStorage.setItem('currentUser_ICT', event.data.currentUser);
-                    if (event.data.redirectTarget) {
-                        sessionStorage.setItem('redirect_target', event.data.redirectTarget);
-                    }
-                    initializeSecureUI();
-                }
+    sessionChannel.onmessage = (event) => {
+        if (event.data.type === 'REQUEST_SESSION_STATE') {
+            if (sessionStorage.getItem('isLoggedIn_ICT') === 'true') {
+                sessionChannel.postMessage({
+                    type: 'RECEIVE_SESSION_STATE',
+                    isLoggedIn: sessionStorage.getItem('isLoggedIn_ICT'),
+                    currentUser: sessionStorage.getItem('currentUser_ICT'),
+                    redirectTarget: sessionStorage.getItem('redirect_target')
+                });
             }
-        };
-
-        function verifyLinkAccess(e) {
-            const targetLink = e.currentTarget;
-            const targetProject = targetLink.getAttribute('data-project');
-            const currentUser = sessionStorage.getItem('currentUser_ICT');
-            
-            // Look into the global window space for the users array
-            const users = window.authorizedUsers || (typeof authorizedUsers !== 'undefined' ? authorizedUsers : null);
-
-            if (!currentUser || !users || !users[currentUser]) {
-                e.preventDefault();
-                alert("Session error. Please log in again.");
-                return;
-            }
-
-            const userData = users[currentUser];
-            if (userData.role !== 'admin' && !userData.projects.includes(targetProject) && !userData.projects.includes('all')) {
-                e.preventDefault(); 
-                alert("You are not authorized to view this content, for access please contact project management 📧");
-            }
-        }
-
-        function checkPassword() {
-            const u = nameInput.value.trim().toLowerCase();
-            const p = passInput.value;
-            
-            // Fallback strategy: Check window context if Parcel isolated the modules
-            const users = window.authorizedUsers || (typeof authorizedUsers !== 'undefined' ? authorizedUsers : null);
-            
-            if (users && users[u] && users[u].password === p) {
-                sessionStorage.setItem('isLoggedIn_ICT', 'true');
-                sessionStorage.setItem('currentUser_ICT', u);
-
-                const savedRedirectTarget = sessionStorage.getItem('redirect_target');
-                if (savedRedirectTarget) {
-                    sessionStorage.removeItem('redirect_target');
-                    window.location.replace(savedRedirectTarget);
-                    return; 
+        } else if (event.data.type === 'RECEIVE_SESSION_STATE') {
+            if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+                sessionStorage.setItem('isLoggedIn_ICT', event.data.isLoggedIn);
+                sessionStorage.setItem('currentUser_ICT', event.data.currentUser);
+                if (event.data.redirectTarget) {
+                    sessionStorage.setItem('redirect_target', event.data.redirectTarget);
                 }
-
                 initializeSecureUI();
-
-                fetch(securityMetricsUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({
-                        Status: "⚠️ Access Logged",
-                        AuthorizedUser: u,
-                        Message: `User ${u} has successfully authorized the ICTGlobe Internal portal.`
-                    })
-                }).catch(err => console.error('Metrics push drop:', err));
-
-            } else {
-                document.getElementById('errMsg').style.display = 'block';
-                passInput.value = '';
             }
         }
+    };
 
-        function initializeSecureUI() {
+    function verifyLinkAccess(e) {
+        const targetLink = e.currentTarget;
+        const targetProject = targetLink.getAttribute('data-project');
+        const currentUser = sessionStorage.getItem('currentUser_ICT');
+        
+        // Universal global lookup strategy
+        const users = window.authorizedUsers || (typeof authorizedUsers !== 'undefined' ? authorizedUsers : null);
+
+        if (!currentUser || !users || !users[currentUser]) {
+            e.preventDefault();
+            alert("Session error. Please log in again.");
+            return;
+        }
+
+        const userData = users[currentUser];
+        if (userData.role !== 'admin' && !userData.projects.includes(targetProject) && !userData.projects.includes('all')) {
+            e.preventDefault(); 
+            alert("You are not authorized to view this content, for access please contact project management 📧");
+        }
+    }
+
+    function checkPassword() {
+        const u = nameInput.value.trim().toLowerCase();
+        const p = passInput.value;
+        
+        // Universal global lookup strategy
+        const users = window.authorizedUsers || (typeof authorizedUsers !== 'undefined' ? authorizedUsers : null);
+        
+        if (users && users[u] && users[u].password === p) {
+            sessionStorage.setItem('isLoggedIn_ICT', 'true');
+            sessionStorage.setItem('currentUser_ICT', u);
+
             const savedRedirectTarget = sessionStorage.getItem('redirect_target');
             if (savedRedirectTarget) {
                 sessionStorage.removeItem('redirect_target');
                 window.location.replace(savedRedirectTarget);
-                return;
+                return; 
             }
 
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('protectedContent').style.display = 'block';
-            
-            // Remove the loading screen state so content renders and text-animations trigger smoothly
-            document.body.classList.remove('loading');
-            
-            attachLinkGuards(); 
-            window.dispatchEvent(new Event('resize'));
+            initializeSecureUI();
+
+            fetch(securityMetricsUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    Status: "⚠️ Access Logged",
+                    AuthorizedUser: u,
+                    Message: `User ${u} has successfully authorized the ICTGlobe Internal portal.`
+                })
+            }).catch(err => console.error('Metrics push drop:', err));
+
+        } else {
+            document.getElementById('errMsg').style.display = 'block';
+            passInput.value = '';
+        }
+    }
+
+    function initializeSecureUI() {
+        const savedRedirectTarget = sessionStorage.getItem('redirect_target');
+        if (savedRedirectTarget) {
+            sessionStorage.removeItem('redirect_target');
+            window.location.replace(savedRedirectTarget);
+            return;
         }
 
-        function attachLinkGuards() {
-            const structuralLinks = document.querySelectorAll('.project-link');
-            structuralLinks.forEach(link => {
-                link.removeEventListener('click', verifyLinkAccess); 
-                link.addEventListener('click', verifyLinkAccess);
+        const overlay = document.getElementById('loginOverlay');
+        const content = document.getElementById('protectedContent');
+        
+        if (overlay) overlay.style.display = 'none';
+        if (content) content.style.display = 'block';
+
+        document.body.classList.remove('loading');
+
+        attachLinkGuards(); 
+        window.dispatchEvent(new Event('resize'));
+    }
+
+    function attachLinkGuards() {
+        const structuralLinks = document.querySelectorAll('.project-link');
+        structuralLinks.forEach(link => {
+            link.removeEventListener('click', verifyLinkAccess); 
+            link.addEventListener('click', verifyLinkAccess);
+        });
+    }
+
+    if (loginBtn) {
+        loginBtn.addEventListener('click', checkPassword);
+    }
+
+    [passInput, nameInput].forEach(el => { 
+        if (el) {
+            el.addEventListener("keyup", (e) => { if (e.key === "Enter") checkPassword(); }); 
+        }
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (sessionStorage.getItem('isLoggedIn_ICT') === 'true') {
+            initializeSecureUI();
+        } else {
+            sessionChannel.postMessage({ type: 'REQUEST_SESSION_STATE' });
+        }
+
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                sessionStorage.removeItem('isLoggedIn_ICT');
+                sessionStorage.removeItem('currentUser_ICT');
+                sessionStorage.removeItem('redirect_target'); 
+                window.location.reload();
             });
         }
-
-        if (loginBtn) {
-            loginBtn.addEventListener('click', checkPassword);
-        }
-
-        [passInput, nameInput].forEach(el => { 
-            if (el) {
-                el.addEventListener("keyup", (e) => { if (e.key === "Enter") checkPassword(); }); 
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', () => {
-            if (sessionStorage.getItem('isLoggedIn_ICT') === 'true') {
-                initializeSecureUI();
-            } else {
-                sessionChannel.postMessage({ type: 'REQUEST_SESSION_STATE' });
-            }
-
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    sessionStorage.removeItem('isLoggedIn_ICT');
-                    sessionStorage.removeItem('currentUser_ICT');
-                    sessionStorage.removeItem('redirect_target'); 
-                    window.location.reload();
-                });
-            }
-        });
-    })();
+    });
+})();
 </script>
   </body>
 </html>
