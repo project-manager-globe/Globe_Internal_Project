@@ -9,3 +9,5 @@ const authorizedUsers = {
   "craig": { password: "cgGlobe008",  role: "user",  projects: ["activityMeasures", "exco"] },
   "joe": { password: "jjGlobe009",  role: "user",  projects: ["activityMeasures", "exco"] }
 };
+
+window.authorizedUsers = authorizedUsers;
