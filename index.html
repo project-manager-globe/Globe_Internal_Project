@@ -107,8 +107,14 @@
     <div id="loginOverlay">
     <div class="login-box">
         <img src="images/ictglobe.png" height="60px" alt="ICTGlobe Logo"><br><br>
-        <h2 style="font-weight: bold; color: #0B2147;">Internal Project Portal</h2>
-        <p style="font-size: 16px; color: #494848;">Enter your credentials to access project insights.</p>
+        <h2 style="font-weight: bold; color: #0B2147;">SL<strong style="font-weight: bold; color: #1a30fc; font-size: 45px;">i</strong>M Office Portal</h2>
+        <h5 style="font-weight: bold; color: #0B2147; font-size: 16px;">
+            <strong style="font-weight: bold; color: #1a30fc; font-size: 20px;">S</strong>trategy - 
+            <strong style="font-weight: bold; color: #1a30fc; font-size: 20px;">L</strong>eadership - 
+            <strong style="font-weight: bold; color: #1a30fc; font-size: 20px;">I</strong>mprove - 
+            <strong style="font-weight: bold; color: #1a30fc; font-size: 20px;">M</strong>easure
+        </h5>
+        <p style="font-size: 14px; color: #494848;">Enter your credentials to access project insights.</p>
         
         <input type="text" id="userName" placeholder="Username" autofocus>
         
@@ -420,12 +426,22 @@
             return;
         }
 
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('protectedContent').style.display = 'block';
+        // 1. Reveal the protected content container elements
+        const overlay = document.getElementById('loginOverlay');
+        const content = document.getElementById('protectedContent');
+        
+        if (overlay) overlay.style.display = 'none';
+        if (content) content.style.display = 'block';
+
+        // 2. Unfreeze the animated page layout by dropping the loading class
+        document.body.classList.remove('loading');
+
+        // 3. Re-bind link guards and trigger a resize event to snap the layout into place
         attachLinkGuards(); 
         window.dispatchEvent(new Event('resize'));
     }
 
+    
     function attachLinkGuards() {
         const structuralLinks = document.querySelectorAll('.project-link');
         structuralLinks.forEach(link => {
