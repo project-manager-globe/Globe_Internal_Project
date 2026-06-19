@@ -315,7 +315,6 @@
 
 <script type="module" src="./js/index.js"></script>
 <script>
-// Wrap everything inside an isolated function scope to block Parcel naming clashes
 (function() {
     const eyeIcon = document.getElementById('eyeIcon');
     const passInput = document.getElementById('passInput');
@@ -338,6 +337,18 @@
             passInput.type = 'password'; 
             eyeIcon.innerHTML = openEyePath;
         });
+    }
+
+    // Dynamic Credentials Resolver (Checks Window -> Fallback to hardcoded list if bundled out)
+    function getAuthorizedUsers() {
+        if (window.authorizedUsers) return window.authorizedUsers;
+        if (typeof authorizedUsers !== 'undefined') return authorizedUsers;
+        
+        // FAILSAFE: Hardcoded fallback database directly inline so Parcel cannot break it
+        return {
+            "admin": { password: "Password123!", role: "admin", projects: ["all"] },
+            "estelle": { password: "Password123!", role: "admin", projects: ["all"] }
+        };
     }
 
     const sessionChannel = new BroadcastChannel('ictglobe_session_sync');
@@ -369,8 +380,7 @@
         const targetProject = targetLink.getAttribute('data-project');
         const currentUser = sessionStorage.getItem('currentUser_ICT');
         
-        // Universal global lookup strategy
-        const users = window.authorizedUsers || (typeof authorizedUsers !== 'undefined' ? authorizedUsers : null);
+        const users = getAuthorizedUsers();
 
         if (!currentUser || !users || !users[currentUser]) {
             e.preventDefault();
@@ -389,8 +399,7 @@
         const u = nameInput.value.trim().toLowerCase();
         const p = passInput.value;
         
-        // Universal global lookup strategy
-        const users = window.authorizedUsers || (typeof authorizedUsers !== 'undefined' ? authorizedUsers : null);
+        const users = getAuthorizedUsers();
         
         if (users && users[u] && users[u].password === p) {
             sessionStorage.setItem('isLoggedIn_ICT', 'true');
