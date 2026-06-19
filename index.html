@@ -380,7 +380,10 @@
         const u = nameInput.value.trim().toLowerCase();
         const p = passInput.value;
         
-        if (typeof authorizedUsers !== 'undefined' && authorizedUsers[u] && authorizedUsers[u].password === p) {
+        // Explicitly look at the global window object for the credentials
+        const users = window.authorizedUsers || authorizedUsers;
+        
+        if (typeof users !== 'undefined' && users[u] && users[u].password === p) {
             sessionStorage.setItem('isLoggedIn_ICT', 'true');
             sessionStorage.setItem('currentUser_ICT', u);
 
