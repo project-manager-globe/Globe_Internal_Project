@@ -315,6 +315,7 @@
 
 <script type="module" src="./js/index.js"></script>
 <script>
+// Wrap everything inside an isolated function scope to block Parcel naming clashes
 (function() {
     const eyeIcon = document.getElementById('eyeIcon');
     const passInput = document.getElementById('passInput');
@@ -339,15 +340,20 @@
         });
     }
 
-    // Dynamic Credentials Resolver (Checks Window -> Fallback to hardcoded list if bundled out)
+    // Dynamic Credentials Matrix
     function getAuthorizedUsers() {
+        // Look globally first
         if (window.authorizedUsers) return window.authorizedUsers;
         if (typeof authorizedUsers !== 'undefined') return authorizedUsers;
         
-        // FAILSAFE: Hardcoded fallback database directly inline so Parcel cannot break it
+        // =========================================================================
+        // PRODUCTION FAILSAFE DATABASE
+        // If Parcel isolates your credentials file, this hardcoded dictionary takes over.
+        // Feel free to append your team names and exact cleartext passwords here:
+        // =========================================================================
         return {
-            "admin": { password: "Password123!", role: "admin", projects: ["all"] },
-            "estelle": { password: "Password123!", role: "admin", projects: ["all"] }
+            "estelle": { password: "Estelle2026!", role: "admin", projects: ["all"] },
+            "carmin": { password: "coGlobe004", role: "admin", projects: ["all"] }
         };
     }
 
@@ -395,42 +401,40 @@
         }
     }
 
-function checkPassword() {
-            // .trim() removes hidden trailing spaces, .toLowerCase() handles auto-capitalization
-            const u = nameInput.value.trim().toLowerCase();
-            const p = passInput.value.trim(); // Sanitizes password fields as well
-            
-            // Safe fallback check for the credentials object
-            const users = window.authorizedUsers || (typeof authorizedUsers !== 'undefined' ? authorizedUsers : null);
-            
-            if (users && users[u] && users[u].password === p) {
-                sessionStorage.setItem('isLoggedIn_ICT', 'true');
-                sessionStorage.setItem('currentUser_ICT', u);
+    function checkPassword() {
+        const u = nameInput.value.trim().toLowerCase();
+        const p = passInput.value.trim();
+        
+        const users = getAuthorizedUsers();
+        
+        if (users && users[u] && users[u].password === p) {
+            sessionStorage.setItem('isLoggedIn_ICT', 'true');
+            sessionStorage.setItem('currentUser_ICT', u);
 
-                const savedRedirectTarget = sessionStorage.getItem('redirect_target');
-                if (savedRedirectTarget) {
-                    sessionStorage.removeItem('redirect_target');
-                    window.location.replace(savedRedirectTarget);
-                    return; 
-                }
-
-                initializeSecureUI();
-
-                fetch(securityMetricsUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                    body: JSON.stringify({
-                        Status: "⚠️ Access Logged",
-                        AuthorizedUser: u,
-                        Message: `User ${u} has successfully authorized the ICTGlobe Internal portal.`
-                    })
-                }).catch(err => console.error('Metrics push drop:', err));
-
-            } else {
-                document.getElementById('errMsg').style.display = 'block';
-                passInput.value = '';
+            const savedRedirectTarget = sessionStorage.getItem('redirect_target');
+            if (savedRedirectTarget) {
+                sessionStorage.removeItem('redirect_target');
+                window.location.replace(savedRedirectTarget);
+                return; 
             }
+
+            initializeSecureUI();
+
+            fetch(securityMetricsUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    Status: "⚠️ Access Logged",
+                    AuthorizedUser: u,
+                    Message: `User ${u} has successfully authorized the ICTGlobe Internal portal.`
+                })
+            }).catch(err => console.error('Metrics push drop:', err));
+
+        } else {
+            document.getElementById('errMsg').style.display = 'block';
+            passInput.value = '';
         }
+    }
 
     function initializeSecureUI() {
         const savedRedirectTarget = sessionStorage.getItem('redirect_target');
