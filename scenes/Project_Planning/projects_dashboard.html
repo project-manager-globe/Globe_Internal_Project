@@ -27,6 +27,8 @@
 
                 // ======= UPGRADED WORKSPACE ACCESS CHECK =======
                 window.checkWorkspaceAccess = function(projectToken) {
+                    console.log("Workspace Clicked! Token received:", projectToken, "Current User Role:", role);
+                    
                     if (role === 'admin' || allowedProjects.includes('all') || allowedProjects.includes('projects_dashboard')) {
                         return true;
                     }
