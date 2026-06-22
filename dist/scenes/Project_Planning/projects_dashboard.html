@@ -5,10 +5,12 @@
   <title>ICTGlobe Project Management Hub</title>
   
   <script src="/index.e9a59d41.js"></script>
-<script>if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+<script>// 1. Immediate Session Guard Redirect
+if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
     sessionStorage.setItem('redirect_target', window.location.href);
     window.location.replace("../../index.html");
-} else window.addEventListener('DOMContentLoaded', ()=>{
+} else // 2. All DOM-Dependent Logic Safely Bound After Load
+window.addEventListener('DOMContentLoaded', ()=>{
     const currentUser = sessionStorage.getItem('currentUser_ICT');
     if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
         const userData = authorizedUsers[currentUser];
@@ -16,34 +18,25 @@
         const role = userData.role;
         window.currentUserRole = role;
         window.currentUserName = currentUser;
-        window.currentUserAllowedProjects = allowedProjects; // Store projects array for workspace click check
-        // =====================================================================
-        // ======= UPGRADED WORKSPACE ACCESS CHECK (DYNAMIC & CASE-INSENSITIVE) =======
-        // =====================================================================
+        window.currentUserAllowedProjects = allowedProjects;
+        // ======= UPGRADED WORKSPACE ACCESS CHECK =======
         window.checkWorkspaceAccess = function(projectToken) {
-            // 1. Master Admin Override
             if (role === 'admin' || allowedProjects.includes('all') || allowedProjects.includes('projects_dashboard')) return true;
-            // 2. Local Credentials File Check (Statically assigned groups/arrays)
             if (allowedProjects.map((p)=>p.toLowerCase()).includes(projectToken.toLowerCase())) return true;
-            // 3. Dynamic Google Sheet Portfolio Verification
             if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
-                // Find the matching data row by matching project ID string conversion
                 const activeProject = projectDataset.find((proj)=>String(proj.id).toLowerCase() === projectToken.toLowerCase());
                 if (activeProject && activeProject.team) {
-                    // Extract, trim, and lowercase all usernames assigned in column F
                     const sheetTeamArray = activeProject.team.split(',').map((name)=>name.trim().toLowerCase());
                     const lowerCurrentUser = String(currentUser).trim().toLowerCase();
                     console.log("Evaluating dynamic portfolio permissions for:", lowerCurrentUser, "against team:", sheetTeamArray);
-                    if (sheetTeamArray.includes(lowerCurrentUser)) return true; // 🔑 Match verified! Access granted via Sheet row assignment.
+                    if (sheetTeamArray.includes(lowerCurrentUser)) return true;
                 }
             }
-            return false; // Access restricted
+            return false;
         };
         // Show admin-only elements safely
         if (role === 'admin') document.querySelectorAll('.admin-only-action').forEach((b)=>b.style.setProperty('display', 'inline-block', 'important'));
     }
-}); // 👈 Fixed structural closing brace constraint here
-window.addEventListener('DOMContentLoaded', ()=>{
     // --- EXISTING LOGOUT LOGIC ---
     const logBtn = document.getElementById('logoutBtn');
     if (logBtn) logBtn.addEventListener('click', (e)=>{
@@ -52,88 +45,84 @@ window.addEventListener('DOMContentLoaded', ()=>{
         sessionStorage.removeItem('currentUser_ICT');
         window.location.replace("../../index.html");
     });
-    // --- NEW ADD TASK LOGIC (UPDATED) ---
-    document.addEventListener('click', function(e) {
-        // 1. Handle "Add Task" Button Click -> Populate Users & Show Modal
-        if (e.target && e.target.id === 'btnAddTask') {
-            e.preventDefault();
-            const taskFormOverlay = document.getElementById('taskFormOverlay');
-            const assigneeSelect = document.getElementById('tAssignee');
-            if (typeof authorizedUsers !== 'undefined' && assigneeSelect) {
-                assigneeSelect.innerHTML = '<option value="">Select Assignee...</option>';
+    // --- ADD TASK OVERLAY INTERACTION DELEGATION ---
+    document.addEventListener("click", function(event) {
+        if (event.target && event.target.id === "btnAddTask") {
+            event.preventDefault();
+            let taskFormOverlay = document.getElementById("taskFormOverlay");
+            let tAssignee = document.getElementById("tAssignee");
+            if (typeof authorizedUsers !== 'undefined' && tAssignee) {
+                tAssignee.innerHTML = '<option value="">Select Assignee...</option>';
                 Object.keys(authorizedUsers).forEach((user)=>{
-                    const opt = document.createElement('option');
+                    let opt = document.createElement("option");
                     opt.value = user;
                     opt.textContent = user;
-                    assigneeSelect.appendChild(opt);
+                    tAssignee.appendChild(opt);
                 });
             }
-            if (taskFormOverlay) taskFormOverlay.style.display = 'flex';
+            if (taskFormOverlay) taskFormOverlay.style.display = "flex";
         }
-        if (e.target && (e.target.id === 'closeTaskFormBtn' || e.target.id === 'cancelTaskBtn')) {
-            const taskFormOverlay = document.getElementById('taskFormOverlay');
-            if (taskFormOverlay) taskFormOverlay.style.display = 'none';
+        if (event.target && (event.target.id === "closeTaskFormBtn" || event.target.id === "cancelTaskBtn")) {
+            let taskFormOverlay = document.getElementById("taskFormOverlay");
+            if (taskFormOverlay) taskFormOverlay.style.display = "none";
         }
     });
-});
-// 3. Handle Form Submission
-// Updated Submission Logic to handle Multi-Assignees, Line-by-Line Checklist items, and the new Target Due Date
-const createTaskForm = document.getElementById('createTaskForm');
-if (createTaskForm) createTaskForm.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const pId = typeof activeWorkspaceProjectId !== 'undefined' ? activeWorkspaceProjectId : null;
-    if (!pId) {
-        alert("Error: No active project context detected.");
-        return;
-    }
-    // 1. Get Assignees
-    const assigneeSelect = document.getElementById('tAssignee');
-    const selectedAssignees = Array.from(assigneeSelect.selectedOptions).map((opt)=>opt.value);
-    const assigneesString = selectedAssignees.join(', ');
-    // 2. Get Checklist
-    const rawChecklistText = document.getElementById('tChecklist').value;
-    const checklistItems = rawChecklistText.split('\n').map((line)=>line.trim()).filter((line)=>line.length > 0);
-    // 3. GET TARGET DUE DATE (Safer logic replacing old status dropdown)
-    const dueDateField = document.getElementById('tDueDate');
-    if (!dueDateField) {
-        console.error("CRITICAL ERROR: Could not find element with ID 'tDueDate'. Check your HTML.");
-        alert("System Error: Target Due Date metric not found in the form.");
-        return;
-    }
-    const selectedDueDate = dueDateField.value;
-    console.log("Target Due Date detected:", selectedDueDate);
-    const payload = {
-        action: "appendTask",
-        projectId: pId,
-        title: document.getElementById('tTitle').value,
-        description: document.getElementById('tDesc').value,
-        checklist: checklistItems,
-        assignee: assigneesString,
-        status: "New",
-        dueDate: selectedDueDate,
-        creator: window.currentUserName || "System Portal"
-    };
-    // Replace with your verified production macro Apps Script endpoint URL
-    const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
-    console.log("Submitting structured payload:", payload);
-    fetch(url, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-    }).then(()=>{
-        alert("Operational task successfully generated and logged!");
-        createTaskForm.reset();
-        document.getElementById('taskFormOverlay').style.display = 'none';
-        // Refresh Kanban Board automatically
-        if (typeof fetchProjectTasks === 'function') fetchProjectTasks(pId);
-    }).catch((err)=>{
-        console.error("Transmission Error:", err);
-        alert("Error trying to commit task updates. See console logs.");
+    // --- HANDLE FORM SUBMISSION ---
+    const createTaskForm = document.getElementById('createTaskForm');
+    if (createTaskForm) createTaskForm.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const pId = typeof activeWorkspaceProjectId !== 'undefined' ? activeWorkspaceProjectId : null;
+        if (!pId) {
+            alert("Error: No active project context detected.");
+            return;
+        }
+        // 1. Get Assignees
+        const assigneeSelect = document.getElementById('tAssignee');
+        const selectedAssignees = Array.from(assigneeSelect.selectedOptions).map((opt)=>opt.value);
+        const assigneesString = selectedAssignees.join(', ');
+        // 2. Get Checklist
+        const rawChecklistText = document.getElementById('tChecklist').value;
+        const checklistItems = rawChecklistText.split('\n').map((line)=>line.trim()).filter((line)=>line.length > 0);
+        // 3. Get Target Due Date
+        const dueDateField = document.getElementById('tDueDate');
+        if (!dueDateField) {
+            console.error("CRITICAL ERROR: Could not find element with ID 'tDueDate'. Check your HTML.");
+            alert("System Error: Target Due Date metric not found in the form.");
+            return;
+        }
+        const selectedDueDate = dueDateField.value;
+        const payload = {
+            action: "appendTask",
+            projectId: pId,
+            title: document.getElementById('tTitle').value,
+            description: document.getElementById('tDesc').value,
+            checklist: checklistItems,
+            assignee: assigneesString,
+            status: "New",
+            dueDate: selectedDueDate,
+            creator: window.currentUserName || "System Portal"
+        };
+        const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+        console.log("Submitting structured payload:", payload);
+        fetch(url, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).then(()=>{
+            alert("Operational task successfully generated and logged!");
+            createTaskForm.reset();
+            document.getElementById('taskFormOverlay').style.display = 'none';
+            if (typeof fetchProjectTasks === 'function') fetchProjectTasks(pId);
+        }).catch((err)=>{
+            console.error("Transmission Error:", err);
+            alert("Error trying to commit task updates. See console logs.");
+        });
     });
-});
+}); // Closes the unified DOMContentLoaded listener
+ // Closes the security auth guard else block
 
 </script>
   
