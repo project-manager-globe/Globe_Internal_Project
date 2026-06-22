@@ -1109,33 +1109,59 @@ let projectDataset = [];
         fetchMasterSuiteDataset();
     });
 
-    // Master API Feed Data Pull
-    function fetchMasterSuiteDataset() {
-        fetch(googleWebAppUrl)
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    projectDataset = data;
+    // Master API Feed Data Pull (Optimized for Stability & Clean Compilation)
+async function fetchMasterSuiteDataset() {
+    try {
+        // 1. Safety check for the endpoint configuration
+        if (typeof googleWebAppUrl === 'undefined') {
+            throw new Error("googleWebAppUrl is not defined in this scope.");
+        }
 
-                    console.log("--- RAW BACKEND DATA RECEIVED ---");
-                    console.log(data);
-                    if(data.length > 0) {
-                        console.log("Sample project properties:", Object.keys(data[0]));
-                        console.log("Sample project classification value:", data[0].classification || data[0].class);
-                    }
-                    console.log("---------------------------------");
-                    
-                    calculateDashboardMetrics(data);
-                    renderFilteredRegistryAndVisuals();
-                    if (activeWorkspaceProjectId) {
-                        refreshWorkspaceUI();
-                    }
-                } else {
-                    console.error("Invalid data payload type received.");
-                }
-            })
-            .catch(err => console.error("Error connecting to sheet service:", err));
+        // 2. Fetch the spreadsheet payload
+        const response = await fetch(googleWebAppUrl);
+        
+        if (!response.ok) {
+            throw new Error(`Network response failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // 3. Validate payload structural integrity
+        if (!Array.isArray(data)) {
+            throw new TypeError("Invalid data payload type received. Expected an Array.");
+        }
+
+        // 4. Secure data to the global registry variable safely
+        projectDataset = data;
+
+        // 5. Diagnostic Logging
+        console.log("--- RAW BACKEND DATA RECEIVED ---");
+        console.log(data);
+        if (data.length > 0) {
+            console.log("Sample project properties:", Object.keys(data[0]));
+            console.log("Sample project classification value:", data[0].classification || data[0].class);
+        }
+        console.log("---------------------------------");
+
+        // 6. Execute downstream UI and metrics processing sequentially
+        calculateDashboardMetrics(data);
+        renderFilteredRegistryAndVisuals();
+
+        // 7. Synchronize workspace context if active
+        if (typeof activeWorkspaceProjectId !== 'undefined' && activeWorkspaceProjectId) {
+            refreshWorkspaceUI();
+        }
+
+    } catch (err) {
+        console.error("Error connecting to sheet service:", err);
+        
+        // Gracefully handle UI interruption if your global handler is available
+        if (typeof handleLoadingError === 'function') {
+            handleLoadingError(err);
+        }
     }
+}
+
 
     // Dynamic Metrics and Classification Card Counters Engine
     function calculateDashboardMetrics(data) {
