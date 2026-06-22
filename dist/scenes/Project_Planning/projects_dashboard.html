@@ -41,13 +41,20 @@ window.addEventListener('DOMContentLoaded', ()=>{
         if (allowedProjects.map((p)=>p.toLowerCase()).includes(lowerToken)) return true;
         // Rule C: Dynamic Google Sheet Team Column Verification
         if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
-            const activeProject = projectDataset.find((proj)=>String(proj.id).toLowerCase() === lowerToken);
-            if (activeProject && activeProject.team) {
-                // Split names by commas, trim layout whitespace, and match lowercased strings
-                const sheetTeamArray = activeProject.team.split(',').map((name)=>name.trim().toLowerCase());
-                console.log("Evaluating dynamic portfolio permissions for:", lowerCurrentUser, "against team:", sheetTeamArray);
-                if (sheetTeamArray.includes(lowerCurrentUser)) return true; // Match found! Access granted dynamically.
-            }
+            // 🔑 UPDATED: Flexible ID matching loop covering both dataset row variations
+            const activeProject = projectDataset.find((proj)=>{
+                const actualId = proj.projectId || proj.id;
+                return actualId && String(actualId).toLowerCase().trim() === lowerToken;
+            });
+            if (activeProject) {
+                if (activeProject.team) {
+                    // Split names by commas, trim layout whitespace, and match lowercased strings
+                    const sheetTeamArray = activeProject.team.split(',').map((name)=>name.trim().toLowerCase());
+                    console.log(`\u{1F510} Gatekeeper evaluating '${lowerCurrentUser}' against team list:`, sheetTeamArray);
+                    if (sheetTeamArray.includes(lowerCurrentUser)) return true; // Match found! Access granted dynamically.
+                    else console.warn(`\u{1F6AB} Access Denied: User '${lowerCurrentUser}' is not listed in the team array for project '${lowerToken}'.`);
+                } else console.warn(`\u{26A0}\u{FE0F} Access Denied: The team column for project '${lowerToken}' is completely blank or missing in the Sheet dataset.`);
+            } else console.warn(`\u{274C} Access Denied: Token '${lowerToken}' could not be mapped to any existing project row.`);
         }
         return false; // Denied entry fallback
     };
