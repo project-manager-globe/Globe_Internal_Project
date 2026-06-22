@@ -41,14 +41,14 @@
             window.checkWorkspaceAccess = function(projectToken) {
                 if (!projectToken) return false;
 
-                // 🔄 LIVE LOOKUP: Pull freshly on every call to beat execution race conditions
+                // 🔄 LIVE LOOKUP: Read the plain username directly from session storage
                 const liveUser = (sessionStorage.getItem('currentUser_ICT') || "").trim().toLowerCase();
                 const lowerToken = String(projectToken).trim().toLowerCase();
 
                 let liveRole = "user";
                 let liveAllowedProjects = [];
 
-                // Extract permissions from your local credentials file dynamically if present
+                // Rule-set Verification from local credentials context
                 if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
                     const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === liveUser);
                     if (matchedKey) {
@@ -57,47 +57,47 @@
                     }
                 }
 
-                // Rule A: Master Overrides (Admins and global dashboard tokens pass immediately)
+                // Rule A: Master Overrides (Admin or explicit global access tokens)
                 if (liveRole === 'admin' || 
                     liveAllowedProjects.map(p => p.toLowerCase()).includes('all') || 
                     liveAllowedProjects.map(p => p.toLowerCase()).includes('projects_dashboard')) {
                     return true;
                 }
                 
-                // Rule B: Local Credentials Arrays Verification
+                // Rule B: Local Credentials Arrays Verification (e.g., 'procurement', 'exco')
                 if (liveAllowedProjects.map(p => p.toLowerCase()).includes(lowerToken)) {
                     return true;
                 }
                 
-                // Rule C: Dynamic Google Sheet Team Column Verification
+                // Rule C: Dynamic Google Sheet Team Column Verification (Matches plain short username)
                 if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
-                    
-                    // 🔑 CASE-INSENSITIVE ID RESOLUTION: Matches .projectId, .id, .ProjectID, or .Id
                     const activeProject = projectDataset.find(proj => {
                         const actualId = proj.projectId || proj.id || proj.projectID || proj.Id;
                         return actualId && String(actualId).toLowerCase().trim() === lowerToken;
                     });
                     
                     if (activeProject) {
-                        // 🔑 CASE-INSENSITIVE COLUMN RESOLUTION: Matches .team, .Team, or .projectTeam
                         const teamField = activeProject.team || activeProject.Team || activeProject.projectTeam || activeProject.TeamMembers;
-                        
                         if (teamField) {
+                            // Splitting spreadsheet cell (e.g. "carmin, wayne") into an array
                             const sheetTeamArray = String(teamField).split(',').map(name => name.trim().toLowerCase());
                             
+                            console.log(`🔐 Gatekeeper evaluating user '${liveUser}' against sheet team list:`, sheetTeamArray);
+                            
                             if (sheetTeamArray.includes(liveUser)) {
-                                return true; // Username verified inside the spreadsheet row!
+                                return true; 
                             }
                         }
                     }
                 }
 
-                return false; // Secure fallback lock
+                return false; // Access denied secure fallback
             };
 
             // Safeguard to reveal structural administrative modules
             const currentLiveUser = (sessionStorage.getItem('currentUser_ICT') || "").trim().toLowerCase();
             let resolvedRole = "user";
+            
             if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
                 const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === currentLiveUser);
                 if (matchedKey) resolvedRole = authorizedUsers[matchedKey].role || "user";
@@ -208,7 +208,7 @@
                     });
                 });
             }
-        }); // Matches your outer script loop closures
+        });
     }
 </script>
   

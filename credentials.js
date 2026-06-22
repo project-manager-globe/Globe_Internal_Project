@@ -5,9 +5,9 @@ const authorizedUsers = {
   "carmin":  { password: "coGlobe004",  role: "user",  projects: ["procurement", "resources", "exco", "strategy"] },
   "wayne": { password: "wbGlobe005",  role: "user",  projects: ["activityMeasures", "exco"] },
   "abri": { password: "amGlobe006",  role: "user",  projects: ["activityMeasures", "exco"] },
-  "melissa": { password: "mmGlobe007",  role: "user",  projects: ["activityMeasures", "exco"] },
-  "craig": { password: "cgGlobe008",  role: "user",  projects: ["activityMeasures", "exco"] },
-  "joe": { password: "jjGlobe009",  role: "user",  projects: ["activityMeasures", "exco"] }
+  "melissa": { password: "mmGlobe007",  role: "user",  projects: [ "exco"] },
+  "craig": { password: "cgGlobe008",  role: "user",  projects: [ "exco"] },
+  "joe": { password: "jjGlobe009",  role: "user",  projects: [ "exco"] }
 };
 
 window.authorizedUsers = authorizedUsers;

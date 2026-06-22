@@ -50,7 +50,6 @@ const authorizedUsers = {
         password: "mmGlobe007",
         role: "user",
         projects: [
-            "activityMeasures",
             "exco"
         ]
     },
@@ -58,7 +57,6 @@ const authorizedUsers = {
         password: "cgGlobe008",
         role: "user",
         projects: [
-            "activityMeasures",
             "exco"
         ]
     },
@@ -66,7 +64,6 @@ const authorizedUsers = {
         password: "jjGlobe009",
         role: "user",
         projects: [
-            "activityMeasures",
             "exco"
         ]
     }
