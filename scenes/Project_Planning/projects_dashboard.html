@@ -12,48 +12,70 @@
         window.location.replace("../../index.html"); 
     } else {
         
-        // 2. All DOM-Dependent Logic Safely Bound After Load
+        // 2. DOM-Dependent Logic & Authorization Core
         window.addEventListener('DOMContentLoaded', () => {
-            const currentUser = sessionStorage.getItem('currentUser_ICT');
+            const currentUser = sessionStorage.getItem('currentUser_ICT') || "";
             
-            if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
-                const userData = authorizedUsers[currentUser];
-                const allowedProjects = userData.projects || [];
-                const role = userData.role;
-                
-                window.currentUserRole = role;
-                window.currentUserName = currentUser;
-                window.currentUserAllowedProjects = allowedProjects;
+            // Establish fallback baselines for users managed dynamically via Google Sheets
+            let role = "user";
+            let allowedProjects = [];
+            
+            if (typeof authorizedUsers !== 'undefined') {
+                // Perform a case-insensitive check against the local credentials object keys
+                const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === currentUser.toLowerCase());
+                if (matchedKey) {
+                    const userData = authorizedUsers[matchedKey];
+                    role = userData.role || "user";
+                    allowedProjects = userData.projects || [];
+                }
+            }
+            
+            // Expose globally for UI rendering layers
+            window.currentUserRole = role;
+            window.currentUserName = currentUser;
+            window.currentUserAllowedProjects = allowedProjects;
 
-                // ======= UPGRADED WORKSPACE ACCESS CHECK =======
-                window.checkWorkspaceAccess = function(projectToken) {
-                    console.log("Workspace Clicked! Token received:", projectToken, "Current User Role:", role);
+            // =====================================================================
+            // ======= GLOBALLY EXPOSED WORKSPACE ACCESS CHECK (BUILT FOR ALL) =====
+            // =====================================================================
+            window.checkWorkspaceAccess = function(projectToken) {
+                if (!projectToken) return false;
+
+                const lowerCurrentUser = String(currentUser).trim().toLowerCase();
+                const lowerToken = String(projectToken).trim().toLowerCase();
+
+                // Rule A: Master Overrides
+                if (role === 'admin' || allowedProjects.map(p => p.toLowerCase()).includes('all') || allowedProjects.map(p => p.toLowerCase()).includes('projects_dashboard')) {
+                    return true;
+                }
+                
+                // Rule B: Local Credentials Arrays Verification
+                if (allowedProjects.map(p => p.toLowerCase()).includes(lowerToken)) {
+                    return true;
+                }
+                
+                // Rule C: Dynamic Google Sheet Team Column Verification
+                if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
+                    const activeProject = projectDataset.find(proj => String(proj.id).toLowerCase() === lowerToken);
                     
-                    if (role === 'admin' || allowedProjects.includes('all') || allowedProjects.includes('projects_dashboard')) {
-                        return true;
-                    }
-                    if (allowedProjects.map(p => p.toLowerCase()).includes(projectToken.toLowerCase())) {
-                        return true;
-                    }
-                    if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
-                        const activeProject = projectDataset.find(proj => String(proj.id).toLowerCase() === projectToken.toLowerCase());
-                        if (activeProject && activeProject.team) {
-                            const sheetTeamArray = activeProject.team.split(',').map(name => name.trim().toLowerCase());
-                            const lowerCurrentUser = String(currentUser).trim().toLowerCase();
-                            
-                            console.log("Evaluating dynamic portfolio permissions for:", lowerCurrentUser, "against team:", sheetTeamArray);
-                            if (sheetTeamArray.includes(lowerCurrentUser)) {
-                                return true;
-                            }
+                    if (activeProject && activeProject.team) {
+                        // Split names by commas, trim layout whitespace, and match lowercased strings
+                        const sheetTeamArray = activeProject.team.split(',').map(name => name.trim().toLowerCase());
+                        
+                        console.log("Evaluating dynamic portfolio permissions for:", lowerCurrentUser, "against team:", sheetTeamArray);
+                        
+                        if (sheetTeamArray.includes(lowerCurrentUser)) {
+                            return true; // Match found! Access granted dynamically.
                         }
                     }
-                    return false;
-                };
-
-                // Show admin-only elements safely
-                if (role === 'admin') {
-                    document.querySelectorAll('.admin-only-action').forEach(b => b.style.setProperty('display', 'inline-block', 'important'));
                 }
+
+                return false; // Denied entry fallback
+            };
+
+            // Safeguard to reveal structural administrative modules
+            if (role === 'admin') {
+                document.querySelectorAll('.admin-only-action').forEach(b => b.style.setProperty('display', 'inline-block', 'important'));
             }
 
             // --- EXISTING LOGOUT LOGIC ---
@@ -103,21 +125,18 @@
                     const pId = (typeof activeWorkspaceProjectId !== 'undefined') ? activeWorkspaceProjectId : null;
                     if (!pId) { alert("Error: No active project context detected."); return; }
 
-                    // 1. Get Assignees
                     const assigneeSelect = document.getElementById('tAssignee');
                     const selectedAssignees = Array.from(assigneeSelect.selectedOptions).map(opt => opt.value);
                     const assigneesString = selectedAssignees.join(', ');
 
-                    // 2. Get Checklist
                     const rawChecklistText = document.getElementById('tChecklist').value;
                     const checklistItems = rawChecklistText.split('\n')
                         .map(line => line.trim())
                         .filter(line => line.length > 0);
 
-                    // 3. Get Target Due Date
                     const dueDateField = document.getElementById('tDueDate');
                     if (!dueDateField) {
-                        console.error("CRITICAL ERROR: Could not find element with ID 'tDueDate'. Check your HTML.");
+                        console.error("CRITICAL ERROR: Could not find element with ID 'tDueDate'.");
                         alert("System Error: Target Due Date metric not found in the form.");
                         return;
                     }
@@ -160,8 +179,8 @@
                     });
                 });
             }
-        }); // Closes the unified DOMContentLoaded listener
-    } // Closes the security auth guard else block
+        });
+    }
 </script>
   
 
@@ -1439,6 +1458,9 @@ async function fetchMasterSuiteDataset() {
 
         fetchProjectTasks(projectId);
     }
+
+    window.launchWorkspaceHub = launchWorkspaceHub;
+    window.fetchProjectTasks = fetchProjectTasks; // If called from inline HTML attributes
 
     function refreshWorkspaceUI() {
         if (!activeWorkspaceProjectId) return;
