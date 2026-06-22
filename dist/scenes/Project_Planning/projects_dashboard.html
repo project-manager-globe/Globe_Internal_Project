@@ -33,33 +33,49 @@ window.addEventListener('DOMContentLoaded', ()=>{
     // =====================================================================
     window.checkWorkspaceAccess = function(projectToken) {
         if (!projectToken) return false;
-        const lowerCurrentUser = String(currentUser).trim().toLowerCase();
+        // 🔄 LIVE LOOKUP: Pull freshly on every call to beat execution race conditions
+        const liveUser = (sessionStorage.getItem('currentUser_ICT') || "").trim().toLowerCase();
         const lowerToken = String(projectToken).trim().toLowerCase();
-        // Rule A: Master Overrides
-        if (role === 'admin' || allowedProjects.map((p)=>p.toLowerCase()).includes('all') || allowedProjects.map((p)=>p.toLowerCase()).includes('projects_dashboard')) return true;
+        let liveRole = "user";
+        let liveAllowedProjects = [];
+        // Extract permissions from your local credentials file dynamically if present
+        if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
+            const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase() === liveUser);
+            if (matchedKey) {
+                liveRole = authorizedUsers[matchedKey].role || "user";
+                liveAllowedProjects = authorizedUsers[matchedKey].projects || [];
+            }
+        }
+        // Rule A: Master Overrides (Admins and global dashboard tokens pass immediately)
+        if (liveRole === 'admin' || liveAllowedProjects.map((p)=>p.toLowerCase()).includes('all') || liveAllowedProjects.map((p)=>p.toLowerCase()).includes('projects_dashboard')) return true;
         // Rule B: Local Credentials Arrays Verification
-        if (allowedProjects.map((p)=>p.toLowerCase()).includes(lowerToken)) return true;
+        if (liveAllowedProjects.map((p)=>p.toLowerCase()).includes(lowerToken)) return true;
         // Rule C: Dynamic Google Sheet Team Column Verification
         if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
-            // 🔑 UPDATED: Flexible ID matching loop covering both dataset row variations
+            // 🔑 CASE-INSENSITIVE ID RESOLUTION: Matches .projectId, .id, .ProjectID, or .Id
             const activeProject = projectDataset.find((proj)=>{
-                const actualId = proj.projectId || proj.id;
+                const actualId = proj.projectId || proj.id || proj.projectID || proj.Id;
                 return actualId && String(actualId).toLowerCase().trim() === lowerToken;
             });
             if (activeProject) {
-                if (activeProject.team) {
-                    // Split names by commas, trim layout whitespace, and match lowercased strings
-                    const sheetTeamArray = activeProject.team.split(',').map((name)=>name.trim().toLowerCase());
-                    console.log(`\u{1F510} Gatekeeper evaluating '${lowerCurrentUser}' against team list:`, sheetTeamArray);
-                    if (sheetTeamArray.includes(lowerCurrentUser)) return true; // Match found! Access granted dynamically.
-                    else console.warn(`\u{1F6AB} Access Denied: User '${lowerCurrentUser}' is not listed in the team array for project '${lowerToken}'.`);
-                } else console.warn(`\u{26A0}\u{FE0F} Access Denied: The team column for project '${lowerToken}' is completely blank or missing in the Sheet dataset.`);
-            } else console.warn(`\u{274C} Access Denied: Token '${lowerToken}' could not be mapped to any existing project row.`);
+                // 🔑 CASE-INSENSITIVE COLUMN RESOLUTION: Matches .team, .Team, or .projectTeam
+                const teamField = activeProject.team || activeProject.Team || activeProject.projectTeam || activeProject.TeamMembers;
+                if (teamField) {
+                    const sheetTeamArray = String(teamField).split(',').map((name)=>name.trim().toLowerCase());
+                    if (sheetTeamArray.includes(liveUser)) return true; // Username verified inside the spreadsheet row!
+                }
+            }
         }
-        return false; // Denied entry fallback
+        return false; // Secure fallback lock
     };
     // Safeguard to reveal structural administrative modules
-    if (role === 'admin') document.querySelectorAll('.admin-only-action').forEach((b)=>b.style.setProperty('display', 'inline-block', 'important'));
+    const currentLiveUser = (sessionStorage.getItem('currentUser_ICT') || "").trim().toLowerCase();
+    let resolvedRole = "user";
+    if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
+        const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase() === currentLiveUser);
+        if (matchedKey) resolvedRole = authorizedUsers[matchedKey].role || "user";
+    }
+    if (resolvedRole === 'admin') document.querySelectorAll('.admin-only-action').forEach((b)=>b.style.setProperty('display', 'inline-block', 'important'));
     // --- EXISTING LOGOUT LOGIC ---
     const logBtn = document.getElementById('logoutBtn');
     if (logBtn) logBtn.addEventListener('click', (e)=>{
@@ -120,7 +136,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
             assignee: assigneesString,
             status: "New",
             dueDate: selectedDueDate,
-            creator: window.currentUserName || "System Portal"
+            creator: sessionStorage.getItem('currentUser_ICT') || "System Portal"
         };
         const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
         console.log("Submitting structured payload:", payload);
@@ -141,7 +157,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
             alert("Error trying to commit task updates. See console logs.");
         });
     });
-});
+}); // Matches your outer script loop closures
 
 </script>
   
