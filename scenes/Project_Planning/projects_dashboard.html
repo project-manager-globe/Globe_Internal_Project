@@ -14,7 +14,7 @@
         
         // 2. DOM-Dependent Logic & Authorization Core
         window.addEventListener('DOMContentLoaded', () => {
-            const currentUser = (sessionStorage.getItem('currentUser_ICT') || "").trim();
+            const currentUser = sessionStorage.getItem('currentUser_ICT') || "";
             
             // Establish fallback baselines for users managed dynamically via Google Sheets
             let role = "user";
@@ -22,7 +22,7 @@
             
             if (typeof authorizedUsers !== 'undefined') {
                 // Perform a case-insensitive check against the local credentials object keys
-                const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase().trim() === currentUser.toLowerCase());
+                const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === currentUser.toLowerCase());
                 if (matchedKey) {
                     const userData = authorizedUsers[matchedKey];
                     role = userData.role || "user";
@@ -52,7 +52,7 @@
 
                 // Pull user's explicit permissions profile from credentials.js context
                 if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
-                    const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase().trim() === liveUser);
+                    const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === liveUser);
                     if (matchedKey) {
                         liveRole = authorizedUsers[matchedKey].role || "user";
                         liveAllowedProjects = authorizedUsers[matchedKey].projects || [];
@@ -66,54 +66,66 @@
                     return true;
                 }
                 
-                // 🛡️ VECTOR 2: Direct Slug Match (Enhanced with Space-Insensitive Evaluation)
-                const lowerAllowedProjects = liveAllowedProjects.map(p => p.toLowerCase().trim().replace(/\s+/g, ''));
-                if (lowerAllowedProjects.includes(squashedToken)) {
+                // 🛡️ VECTOR 2: Direct Slug Match (Supports exact and space-stripped values)
+                const lowerAllowedProjects = liveAllowedProjects.map(p => p.toLowerCase().trim());
+                const squashedAllowedProjects = lowerAllowedProjects.map(p => p.replace(/\s+/g, ''));
+                if (lowerAllowedProjects.includes(lowerToken) || squashedAllowedProjects.includes(squashedToken)) {
                     return true;
                 }
                 
                 // 🛡️ VECTOR 3: Multi-Property Spreadsheet Row Validation
                 if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
-                    // Look up the row matching against EVERY possible identifying field variant
                     const activeProject = projectDataset.find(proj => {
                         if (!proj) return false;
-                        const rowId = String(proj.id || proj.projectId || proj.projectID || proj.Id || "").toLowerCase().trim().replace(/\s+/g, '');
-                        const rowTitle = String(proj.title || proj.projectName || proj.Name || "").toLowerCase().trim().replace(/\s+/g, '');
-                        const rowSlug = String(proj.slug || proj.token || proj.code || "").toLowerCase().trim().replace(/\s+/g, '');
                         
-                        return rowId === squashedToken || 
-                               rowTitle === squashedToken || 
-                               rowSlug === squashedToken ||
-                               (rowId && squashedToken.includes(rowId)) ||
-                               (rowTitle && rowTitle.includes(squashedToken));
+                        const rowId = String(proj.id || proj.projectId || proj.projectID || proj.Id || "").toLowerCase().trim();
+                        const rowTitle = String(proj.title || proj.projectName || proj.Name || "").toLowerCase().trim();
+                        const rowSlug = String(proj.slug || proj.token || proj.code || "").toLowerCase().trim();
+                        
+                        const squashedId = rowId.replace(/\s+/g, '');
+                        const squashedTitle = rowTitle.replace(/\s+/g, '');
+                        const squashedSlug = rowSlug.replace(/\s+/g, '');
+                        
+                        return rowId === lowerToken || squashedId === squashedToken ||
+                               rowTitle === lowerToken || squashedTitle === squashedToken ||
+                               rowSlug === lowerToken || squashedSlug === squashedToken ||
+                               (rowId && lowerToken.includes(rowId)) || (squashedId && squashedToken.includes(squashedId)) ||
+                               (rowTitle && rowTitle.includes(lowerToken)) || (squashedTitle && squashedTitle.includes(squashedToken));
                     });
                     
                     if (activeProject) {
-                        // Check A: Is the username inside the Spreadsheet row's Team/Assignee column?
+                        // Check A: Is the user inside the Spreadsheet row's Team/Assignee column?
+                        // Includes a fallback smart-match if usernames contain domain extensions or spaces
                         const teamField = activeProject.team || activeProject.Team || activeProject.projectTeam || activeProject.TeamMembers || activeProject.assignees || activeProject.assignee;
                         if (teamField) {
                             const sheetTeamArray = String(teamField).split(/[,;/]/).map(name => name.trim().toLowerCase());
-                            if (sheetTeamArray.includes(liveUser)) {
-                                return true; 
-                            }
+                            const isUserAssigned = sheetTeamArray.some(name => 
+                                name === liveUser || 
+                                (name.length > 2 && liveUser.includes(name)) || 
+                                (liveUser.length > 2 && name.includes(name))
+                            );
+                            if (isUserAssigned) return true; 
                         }
                         
                         // Check B: Cross-reference row data fields back against credentials.js allowed slugs
-                        const rowId = String(activeProject.id || activeProject.projectId || "").toLowerCase().trim().replace(/\s+/g, '');
-                        const rowTitle = String(activeProject.title || "").toLowerCase().trim().replace(/\s+/g, '');
-                        const rowSlug = String(activeProject.slug || activeProject.token || "").toLowerCase().trim().replace(/\s+/g, '');
+                        const rowId = String(activeProject.id || activeProject.projectId || "").toLowerCase().trim();
+                        const rowTitle = String(activeProject.title || "").toLowerCase().trim();
+                        const rowSlug = String(activeProject.slug || activeProject.token || "").toLowerCase().trim();
                         
-                        const hasSlugMatch = lowerAllowedProjects.some(slug => 
-                            slug === rowId ||
-                            slug === rowSlug ||
-                            (rowId && rowId.includes(slug)) || 
-                            (rowSlug && rowSlug.includes(slug)) || 
-                            (rowTitle && rowTitle.includes(slug))
-                        );
+                        const squashedId = rowId.replace(/\s+/g, '');
+                        const squashedTitle = rowTitle.replace(/\s+/g, '');
+                        const squashedSlug = rowSlug.replace(/\s+/g, '');
                         
-                        if (hasSlugMatch) {
-                            return true; 
-                        }
+                        const hasSlugMatch = lowerAllowedProjects.some((slug, idx) => {
+                            const sSlug = squashedAllowedProjects[idx];
+                            return slug === rowId || sSlug === squashedId ||
+                                   slug === rowSlug || sSlug === squashedSlug ||
+                                   (rowId && rowId.includes(slug)) || (squashedId && squashedId.includes(sSlug)) ||
+                                   (rowSlug && rowSlug.includes(slug)) || (squashedSlug && squashedSlug.includes(sSlug)) ||
+                                   (rowTitle && rowTitle.includes(slug)) || (squashedTitle && squashedTitle.includes(sSlug));
+                        });
+                        
+                        if (hasSlugMatch) return true; 
                     }
                 }
 
@@ -121,10 +133,14 @@
                 try {
                     const activeCards = document.querySelectorAll('.project-card');
                     for (let card of activeCards) {
-                        const cardId = String(card.getAttribute('data-id') || "").toLowerCase().trim().replace(/\s+/g, '');
-                        if (cardId === squashedToken || squashedToken.includes(cardId)) {
-                            const cardText = card.innerText.toLowerCase().replace(/\s+/g, '');
-                            if (cardText.includes(liveUser) || lowerAllowedProjects.some(slug => cardText.includes(slug))) {
+                        const cardId = String(card.getAttribute('data-id') || "").toLowerCase().trim();
+                        const squashedCardId = cardId.replace(/\s+/g, '');
+                        if (cardId === lowerToken || squashedCardId === squashedToken || lowerToken.includes(cardId) || squashedToken.includes(squashedCardId)) {
+                            const cardText = card.innerText.toLowerCase();
+                            const squashedCardText = cardText.replace(/\s+/g, '');
+                            if (cardText.includes(liveUser) || 
+                                lowerAllowedProjects.some(slug => cardText.includes(slug)) || 
+                                squashedAllowedProjects.some(sSlug => squashedCardText.includes(sSlug))) {
                                 return true;
                             }
                         }
@@ -133,7 +149,7 @@
                     console.error("DOM fail-safe parsing exception:", domErr);
                 }
 
-                return false; // Fail-secure protection
+                return false; 
             };
 
             // Safeguard to reveal structural administrative modules
@@ -141,7 +157,7 @@
             let resolvedRole = "user";
             
             if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
-                const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase().trim() === currentLiveUser);
+                const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === currentLiveUser);
                 if (matchedKey) resolvedRole = authorizedUsers[matchedKey].role || "user";
             }
 
@@ -156,9 +172,7 @@
                     e.preventDefault();
                     sessionStorage.removeItem('isLoggedIn_ICT');
                     sessionStorage.removeItem('currentUser_ICT');
-                    
-                    // Root-relative path targeting the absolute root of your live instance
-                    window.location.replace("/index.html"); 
+                    window.location.replace("../../index.html"); 
                 });
             }
 
