@@ -17,7 +17,7 @@ const authorizedUsers = {
         password: "lbGlobe002",
         role: "user",
         projects: [
-            "nowtech"
+            "exco"
         ]
     },
     "carmin": {

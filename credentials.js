@@ -1,7 +1,7 @@
 const authorizedUsers = {
   "estelle": { password: "Estelle2026!", role: "admin", projects: ["all"] },
   "eugene":  { password: "esGlobe001",  role: "admin",  projects: ["all"] },
-  "lucien":  { password: "lbGlobe002",  role: "user",  projects: ["nowtech"] },
+  "lucien":  { password: "lbGlobe002",  role: "user",  projects: ["exco"] },
   "carmin":  { password: "coGlobe004",  role: "user",  projects: ["procurement", "resources", "exco", "strategy"] },
   "wayne": { password: "wbGlobe005",  role: "user",  projects: ["activityMeasures", "exco"] },
   "abri": { password: "amGlobe006",  role: "user",  projects: ["activityMeasures", "exco"] },

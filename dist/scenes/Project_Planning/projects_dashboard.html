@@ -4,20 +4,20 @@
   <meta charset="UTF-8">
   <title>ICTGlobe Project Management Hub</title>
   
-  <script src="/index.e9a59d41.js"></script>
+<script src="/index.e9a59d41.js"></script>
 <script>// 1. Immediate Session Guard Redirect
 if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
     sessionStorage.setItem('redirect_target', window.location.href);
     window.location.replace("../../index.html");
 } else // 2. DOM-Dependent Logic & Authorization Core
 window.addEventListener('DOMContentLoaded', ()=>{
-    const currentUser = sessionStorage.getItem('currentUser_ICT') || "";
+    const currentUser = (sessionStorage.getItem('currentUser_ICT') || "").trim();
     // Establish fallback baselines for users managed dynamically via Google Sheets
     let role = "user";
     let allowedProjects = [];
     if (typeof authorizedUsers !== 'undefined') {
         // Perform a case-insensitive check against the local credentials object keys
-        const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase() === currentUser.toLowerCase());
+        const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase().trim() === currentUser.toLowerCase());
         if (matchedKey) {
             const userData = authorizedUsers[matchedKey];
             role = userData.role || "user";
@@ -36,11 +36,12 @@ window.addEventListener('DOMContentLoaded', ()=>{
         // 🔄 LIVE LOOKUP: Always pull the absolute freshest username from session storage
         const liveUser = (sessionStorage.getItem('currentUser_ICT') || "").trim().toLowerCase();
         const lowerToken = String(projectToken).trim().toLowerCase();
+        const squashedToken = lowerToken.replace(/\s+/g, '');
         let liveRole = "user";
         let liveAllowedProjects = [];
         // Pull user's explicit permissions profile from credentials.js context
         if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
-            const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase() === liveUser);
+            const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase().trim() === liveUser);
             if (matchedKey) {
                 liveRole = authorizedUsers[matchedKey].role || "user";
                 liveAllowedProjects = authorizedUsers[matchedKey].projects || [];
@@ -48,42 +49,41 @@ window.addEventListener('DOMContentLoaded', ()=>{
         }
         // 🛡️ VECTOR 1: Master Admin / Global Override
         if (liveRole === 'admin' || liveAllowedProjects.map((p)=>p.toLowerCase()).includes('all') || liveAllowedProjects.map((p)=>p.toLowerCase()).includes('projects_dashboard')) return true;
-        // 🛡️ VECTOR 2: Direct Slug Match (If token matches credentials array string directly)
-        const lowerAllowedProjects = liveAllowedProjects.map((p)=>p.toLowerCase().trim());
-        if (lowerAllowedProjects.includes(lowerToken)) return true;
+        // 🛡️ VECTOR 2: Direct Slug Match (Enhanced with Space-Insensitive Evaluation)
+        const lowerAllowedProjects = liveAllowedProjects.map((p)=>p.toLowerCase().trim().replace(/\s+/g, ''));
+        if (lowerAllowedProjects.includes(squashedToken)) return true;
         // 🛡️ VECTOR 3: Multi-Property Spreadsheet Row Validation
         if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
             // Look up the row matching against EVERY possible identifying field variant
             const activeProject = projectDataset.find((proj)=>{
                 if (!proj) return false;
-                const rowId = String(proj.id || proj.projectId || proj.projectID || proj.Id || "").toLowerCase().trim();
-                const rowTitle = String(proj.title || proj.projectName || proj.Name || "").toLowerCase().trim();
-                const rowSlug = String(proj.slug || proj.token || proj.code || "").toLowerCase().trim();
-                return rowId === lowerToken || rowTitle === lowerToken || rowSlug === lowerToken || rowId && lowerToken.includes(rowId) || rowTitle && rowTitle.includes(lowerToken);
+                const rowId = String(proj.id || proj.projectId || proj.projectID || proj.Id || "").toLowerCase().trim().replace(/\s+/g, '');
+                const rowTitle = String(proj.title || proj.projectName || proj.Name || "").toLowerCase().trim().replace(/\s+/g, '');
+                const rowSlug = String(proj.slug || proj.token || proj.code || "").toLowerCase().trim().replace(/\s+/g, '');
+                return rowId === squashedToken || rowTitle === squashedToken || rowSlug === squashedToken || rowId && squashedToken.includes(rowId) || rowTitle && rowTitle.includes(squashedToken);
             });
             if (activeProject) {
-                // Check A: Is the username inside the Spreadsheet row's Team/Assignee column?
+                // Check A: Is the username inside the Spreadsheet row's Team/Assignee column? (Supports multi-character delimiters)
                 const teamField = activeProject.team || activeProject.Team || activeProject.projectTeam || activeProject.TeamMembers || activeProject.assignees || activeProject.assignee;
                 if (teamField) {
-                    const sheetTeamArray = String(teamField).split(',').map((name)=>name.trim().toLowerCase());
+                    const sheetTeamArray = String(teamField).split(/[,;/]/).map((name)=>name.trim().toLowerCase());
                     if (sheetTeamArray.includes(liveUser)) return true;
                 }
                 // Check B: Cross-reference row data fields back against credentials.js allowed slugs
-                const rowId = String(activeProject.id || activeProject.projectId || "").toLowerCase().trim();
-                const rowTitle = String(activeProject.title || "").toLowerCase().trim();
-                const rowSlug = String(activeProject.slug || activeProject.token || "").toLowerCase().trim();
+                const rowId = String(activeProject.id || activeProject.projectId || "").toLowerCase().trim().replace(/\s+/g, '');
+                const rowTitle = String(activeProject.title || "").toLowerCase().trim().replace(/\s+/g, '');
+                const rowSlug = String(activeProject.slug || activeProject.token || "").toLowerCase().trim().replace(/\s+/g, '');
                 const hasSlugMatch = lowerAllowedProjects.some((slug)=>slug === rowId || slug === rowSlug || rowId && rowId.includes(slug) || rowSlug && rowSlug.includes(slug) || rowTitle && rowTitle.includes(slug));
                 if (hasSlugMatch) return true;
             }
         }
         // 🛡️ VECTOR 4: DOM Render Visual Scan Fail-Safe
-        // If spreadsheet dataset arrays are locked behind timing closures, read the active visible elements directly
         try {
             const activeCards = document.querySelectorAll('.project-card');
             for (let card of activeCards){
-                const cardId = String(card.getAttribute('data-id') || "").toLowerCase().trim();
-                if (cardId === lowerToken || lowerToken.includes(cardId)) {
-                    const cardText = card.innerText.toLowerCase();
+                const cardId = String(card.getAttribute('data-id') || "").toLowerCase().trim().replace(/\s+/g, '');
+                if (cardId === squashedToken || squashedToken.includes(cardId)) {
+                    const cardText = card.innerText.toLowerCase().replace(/\s+/g, '');
                     // If the active card explicitly prints their username or allowed project slug, permit access
                     if (cardText.includes(liveUser) || lowerAllowedProjects.some((slug)=>cardText.includes(slug))) return true;
                 }
@@ -97,7 +97,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     const currentLiveUser = (sessionStorage.getItem('currentUser_ICT') || "").trim().toLowerCase();
     let resolvedRole = "user";
     if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
-        const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase() === currentLiveUser);
+        const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase().trim() === currentLiveUser);
         if (matchedKey) resolvedRole = authorizedUsers[matchedKey].role || "user";
     }
     if (resolvedRole === 'admin') document.querySelectorAll('.admin-only-action').forEach((b)=>b.style.setProperty('display', 'inline-block', 'important'));
@@ -684,7 +684,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
                             <li class="nav-item"><a href="/scenes/Project_Planning/strategy.html" class="myTopButton">Strategy</a></li>
                             <li class="nav-item"><a href="/index.html#devisions" class="myTopButton">Devisions</a></li>
                             <li class="nav-item"><a href="/scenes/Project_Planning/resources.html" class="myTopButton" data-project="resources">Resources</a></li>
-                            <li class="nav-item"><a href="/scenes/Project_Planning/projects.html" class="myTopButton">Projects</a></li>
+                            <li class="nav-item"><a href="/scenes/Project_Planning/projects_dashboard.html" class="myTopButton">Projects</a></li>
                             <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137fb; font-weight: bold">Logout</a></li>
                         </ul>
                     </div>
@@ -698,8 +698,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
     <div id="mainDashboardView" class="dashboard-container fade-view" style="width: 100% !important; display: block !important">
         <main>
             <div class="text-center mb-5 mt-3">
-             <h1>THE SERVER IS UPDATING</h1>
-                <h1 class="content__START font-weight-bold m-0" style="letter-spacing: -.5px; font-size: 2.6rem">SLiM Project Suite</h1>
+                <h1 class="content__START font-weight-bold m-0" style="letter-spacing: -.5px; padding-top: 50px; font-size: 2.6rem">SLiM Project Suite</h1>
                 <p class="text-secondary mt-1 mb-0" style="font-family: Roboto, sans-serif; font-size: 1.15rem">
                     <strong class="HOW">S</strong>trategy &middot; <strong class="HOW">L</strong>eadership &middot; <strong class="HOW">I</strong>mprove &middot; <strong class="HOW">M</strong>easure
                 </p>
