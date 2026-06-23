@@ -63,7 +63,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
                 return rowId === squashedToken || rowTitle === squashedToken || rowSlug === squashedToken || rowId && squashedToken.includes(rowId) || rowTitle && rowTitle.includes(squashedToken);
             });
             if (activeProject) {
-                // Check A: Is the username inside the Spreadsheet row's Team/Assignee column? (Supports multi-character delimiters)
+                // Check A: Is the username inside the Spreadsheet row's Team/Assignee column?
                 const teamField = activeProject.team || activeProject.Team || activeProject.projectTeam || activeProject.TeamMembers || activeProject.assignees || activeProject.assignee;
                 if (teamField) {
                     const sheetTeamArray = String(teamField).split(/[,;/]/).map((name)=>name.trim().toLowerCase());
@@ -84,7 +84,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
                 const cardId = String(card.getAttribute('data-id') || "").toLowerCase().trim().replace(/\s+/g, '');
                 if (cardId === squashedToken || squashedToken.includes(cardId)) {
                     const cardText = card.innerText.toLowerCase().replace(/\s+/g, '');
-                    // If the active card explicitly prints their username or allowed project slug, permit access
                     if (cardText.includes(liveUser) || lowerAllowedProjects.some((slug)=>cardText.includes(slug))) return true;
                 }
             }
@@ -107,7 +106,8 @@ window.addEventListener('DOMContentLoaded', ()=>{
         e.preventDefault();
         sessionStorage.removeItem('isLoggedIn_ICT');
         sessionStorage.removeItem('currentUser_ICT');
-        window.location.replace("../../index.html");
+        // Root-relative path targeting the absolute root of your live instance
+        window.location.replace("/index.html");
     });
     // --- ADD TASK OVERLAY INTERACTION DELEGATION ---
     document.addEventListener("click", function(event) {
