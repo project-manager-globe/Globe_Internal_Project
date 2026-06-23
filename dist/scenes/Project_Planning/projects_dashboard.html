@@ -16,7 +16,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
     let role = "user";
     let allowedProjects = [];
     if (typeof authorizedUsers !== 'undefined') {
-        // Perform a case-insensitive check against the local credentials object keys
         const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase() === currentUser.toLowerCase());
         if (matchedKey) {
             const userData = authorizedUsers[matchedKey];
@@ -29,17 +28,15 @@ window.addEventListener('DOMContentLoaded', ()=>{
     window.currentUserName = currentUser;
     window.currentUserAllowedProjects = allowedProjects;
     // =====================================================================
-    // ======= GLOBALLY EXPOSED WORKSPACE ACCESS CHECK (BUILT FOR ALL) =====
+    // ==================== OMNI-SEARCH WORKSPACE ACCESS ===================
     // =====================================================================
     window.checkWorkspaceAccess = function(projectToken) {
         if (!projectToken) return false;
-        // 🔄 LIVE LOOKUP: Always pull the absolute freshest username from session storage
         const liveUser = (sessionStorage.getItem('currentUser_ICT') || "").trim().toLowerCase();
-        const lowerToken = String(projectToken).trim().toLowerCase();
-        const squashedToken = lowerToken.replace(/\s+/g, '');
+        const rawToken = String(projectToken).trim().toLowerCase();
+        const squashedToken = rawToken.replace(/\s+/g, '');
         let liveRole = "user";
         let liveAllowedProjects = [];
-        // Pull user's explicit permissions profile from credentials.js context
         if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
             const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase() === liveUser);
             if (matchedKey) {
@@ -47,61 +44,41 @@ window.addEventListener('DOMContentLoaded', ()=>{
                 liveAllowedProjects = authorizedUsers[matchedKey].projects || [];
             }
         }
-        // 🛡️ VECTOR 1: Master Admin / Global Override
+        // 🛡️ VECTOR 1: Master Admin Auto-Pass
         if (liveRole === 'admin' || liveAllowedProjects.map((p)=>p.toLowerCase()).includes('all') || liveAllowedProjects.map((p)=>p.toLowerCase()).includes('projects_dashboard')) return true;
-        // 🛡️ VECTOR 2: Direct Slug Match (Supports exact and space-stripped values)
-        const lowerAllowedProjects = liveAllowedProjects.map((p)=>p.toLowerCase().trim());
-        const squashedAllowedProjects = lowerAllowedProjects.map((p)=>p.replace(/\s+/g, ''));
-        if (lowerAllowedProjects.includes(lowerToken) || squashedAllowedProjects.includes(squashedToken)) return true;
-        // 🛡️ VECTOR 3: Multi-Property Spreadsheet Row Validation
+        // 🛡️ VECTOR 2: Direct Credential Match
+        const squashedAllowed = liveAllowedProjects.map((p)=>p.toLowerCase().trim().replace(/\s+/g, ''));
+        if (squashedAllowed.includes(squashedToken) || liveAllowedProjects.map((p)=>p.toLowerCase().trim()).includes(rawToken)) return true;
+        // 🛡️ VECTOR 3: The Object Omni-Search (Google Sheet Data)
+        // This ignores column names entirely. It converts the whole row to a string and searches it.
         if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
-            const activeProject = projectDataset.find((proj)=>{
+            const matchedRow = projectDataset.find((proj)=>{
                 if (!proj) return false;
-                const rowId = String(proj.id || proj.projectId || proj.projectID || proj.Id || "").toLowerCase().trim();
-                const rowTitle = String(proj.title || proj.projectName || proj.Name || "").toLowerCase().trim();
-                const rowSlug = String(proj.slug || proj.token || proj.code || "").toLowerCase().trim();
-                const squashedId = rowId.replace(/\s+/g, '');
-                const squashedTitle = rowTitle.replace(/\s+/g, '');
-                const squashedSlug = rowSlug.replace(/\s+/g, '');
-                return rowId === lowerToken || squashedId === squashedToken || rowTitle === lowerToken || squashedTitle === squashedToken || rowSlug === lowerToken || squashedSlug === squashedToken || rowId && lowerToken.includes(rowId) || squashedId && squashedToken.includes(squashedId) || rowTitle && rowTitle.includes(lowerToken) || squashedTitle && squashedTitle.includes(squashedToken);
+                const rowString = JSON.stringify(proj).toLowerCase().replace(/\s+/g, '');
+                return rowString.includes(squashedToken) || rowString.includes(rawToken);
             });
-            if (activeProject) {
-                // Check A: Is the user inside the Spreadsheet row's Team/Assignee column?
-                // Includes a fallback smart-match if usernames contain domain extensions or spaces
-                const teamField = activeProject.team || activeProject.Team || activeProject.projectTeam || activeProject.TeamMembers || activeProject.assignees || activeProject.assignee;
-                if (teamField) {
-                    const sheetTeamArray = String(teamField).split(/[,;/]/).map((name)=>name.trim().toLowerCase());
-                    const isUserAssigned = sheetTeamArray.some((name)=>name === liveUser || name.length > 2 && liveUser.includes(name) || liveUser.length > 2 && name.includes(name));
-                    if (isUserAssigned) return true;
-                }
-                // Check B: Cross-reference row data fields back against credentials.js allowed slugs
-                const rowId = String(activeProject.id || activeProject.projectId || "").toLowerCase().trim();
-                const rowTitle = String(activeProject.title || "").toLowerCase().trim();
-                const rowSlug = String(activeProject.slug || activeProject.token || "").toLowerCase().trim();
-                const squashedId = rowId.replace(/\s+/g, '');
-                const squashedTitle = rowTitle.replace(/\s+/g, '');
-                const squashedSlug = rowSlug.replace(/\s+/g, '');
-                const hasSlugMatch = lowerAllowedProjects.some((slug, idx)=>{
-                    const sSlug = squashedAllowedProjects[idx];
-                    return slug === rowId || sSlug === squashedId || slug === rowSlug || sSlug === squashedSlug || rowId && rowId.includes(slug) || squashedId && squashedId.includes(sSlug) || rowSlug && rowSlug.includes(slug) || squashedSlug && squashedSlug.includes(sSlug) || rowTitle && rowTitle.includes(slug) || squashedTitle && squashedTitle.includes(sSlug);
-                });
-                if (hasSlugMatch) return true;
+            if (matchedRow) {
+                const fullRowText = JSON.stringify(matchedRow).toLowerCase();
+                if (fullRowText.includes(liveUser)) return true;
             }
         }
-        // 🛡️ VECTOR 4: DOM Render Visual Scan Fail-Safe
+        // 🛡️ VECTOR 4: The DOM Omni-Search (Visual Fallback)
+        // If data isn't loaded yet, it reads the physical text on the generated project cards
         try {
-            const activeCards = document.querySelectorAll('.project-card');
-            for (let card of activeCards){
-                const cardId = String(card.getAttribute('data-id') || "").toLowerCase().trim();
-                const squashedCardId = cardId.replace(/\s+/g, '');
-                if (cardId === lowerToken || squashedCardId === squashedToken || lowerToken.includes(cardId) || squashedToken.includes(squashedCardId)) {
-                    const cardText = card.innerText.toLowerCase();
-                    const squashedCardText = cardText.replace(/\s+/g, '');
-                    if (cardText.includes(liveUser) || lowerAllowedProjects.some((slug)=>cardText.includes(slug)) || squashedAllowedProjects.some((sSlug)=>squashedCardText.includes(sSlug))) return true;
+            // Target any card or element with a data-id attribute
+            const allCards = document.querySelectorAll('.card, .project-card, [data-id]');
+            for (let card of allCards){
+                const cardText = card.innerText.toLowerCase();
+                const cardHTML = card.innerHTML.toLowerCase().replace(/\s+/g, '');
+                const cardAttr = String(card.getAttribute('data-id') || "").toLowerCase().replace(/\s+/g, '');
+                // If this element belongs to the clicked project...
+                if (cardAttr === squashedToken || cardHTML.includes(squashedToken)) {
+                    // ...and the user's name is visibly printed inside it
+                    if (cardText.includes(liveUser)) return true;
                 }
             }
         } catch (domErr) {
-            console.error("DOM fail-safe parsing exception:", domErr);
+            console.warn("DOM check bypassed:", domErr);
         }
         return false;
     };
@@ -113,7 +90,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
         if (matchedKey) resolvedRole = authorizedUsers[matchedKey].role || "user";
     }
     if (resolvedRole === 'admin') document.querySelectorAll('.admin-only-action').forEach((b)=>b.style.setProperty('display', 'inline-block', 'important'));
-    // --- EXISTING LOGOUT LOGIC ---
+    // --- ORIGINAL LOGOUT LOGIC (RESTORED) ---
     const logBtn = document.getElementById('logoutBtn');
     if (logBtn) logBtn.addEventListener('click', (e)=>{
         e.preventDefault();
@@ -176,7 +153,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
             creator: sessionStorage.getItem('currentUser_ICT') || "System Portal"
         };
         const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
-        console.log("Submitting structured payload:", payload);
         fetch(url, {
             method: 'POST',
             mode: 'no-cors',
@@ -191,7 +167,7 @@ window.addEventListener('DOMContentLoaded', ()=>{
             if (typeof fetchProjectTasks === 'function') fetchProjectTasks(pId);
         }).catch((err)=>{
             console.error("Transmission Error:", err);
-            alert("Error trying to commit task updates. See console logs.");
+            alert("Error trying to commit task updates.");
         });
     });
 });
@@ -1348,6 +1324,7 @@ async function fetchMasterSuiteDataset() {
         if (!Array.isArray(data)) throw new TypeError("Invalid data payload type received. Expected an Array.");
         // 4. Secure data to the global registry variable safely
         projectDataset = data;
+        window.projectDataset = data;
         // 5. Diagnostic Logging
         console.log("--- RAW BACKEND DATA RECEIVED ---");
         console.log(data);
