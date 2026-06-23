@@ -1650,6 +1650,7 @@ function renderWorkspaceTasks(tasks) {
         if (!task) return;
         let rawStatus = (task.status || 'New').toString().trim();
         let normalizedStatus = rawStatus.replace(/\s+/g, '');
+        // Normalize status
         if (rawStatus === "In Progress" || normalizedStatus.toLowerCase() === "inprogress") normalizedStatus = "InProgress";
         else if (rawStatus === "Under Review" || normalizedStatus.toLowerCase() === "underreview") normalizedStatus = "UnderReview";
         else if (rawStatus === "Done" || rawStatus === "Completed" || normalizedStatus.toLowerCase() === "done") normalizedStatus = "Done";
@@ -1670,15 +1671,10 @@ function renderWorkspaceTasks(tasks) {
             card.style.width = "100%";
             card.setAttribute('data-task-id', task.taskId || task.id || 'TSK---');
             const taskPriority = task.priority || 'Normal';
-            if (taskPriority === 'High' || taskPriority === 'Critical') card.style.borderLeftColor = "#dc3545";
-            else if (taskPriority === 'Medium') card.style.borderLeftColor = "#ffc107";
-            else card.style.borderLeftColor = "#2ed573";
+            card.style.borderLeftColor = taskPriority === 'High' || taskPriority === 'Critical' ? "#dc3545" : taskPriority === 'Medium' ? "#ffc107" : "#2ed573";
             const displayTitle = task.title || task.taskName || "Untitled Task";
             const displayDesc = task.description || 'No execution descriptions documented.';
             const displayId = task.taskId || 'TSK---';
-            // 🔑 HIDE INLINE CHECKLIST FROM KANBAN OVERVIEW CARDS
-            // The item loop is omitted to keep the task board clean.
-            let inlineChecklistHTML = "";
             const isAdmin = window.currentUserRole === 'admin';
             const currentUserNameStr = (window.currentUserName || "").toLowerCase().trim();
             const taskAssigneesStr = (task.assignees || "").toLowerCase();
@@ -1686,14 +1682,9 @@ function renderWorkspaceTasks(tasks) {
             const updateBtnHTML = canUpdateTask ? `<button class="btn btn-xs btn-light text-primary border" style="font-size: 0.68rem; padding: 2px 6px; background: #f0f7ff; border-radius:4px;" onclick="event.stopPropagation(); openUpdateDrawer('${displayId}')">
                        <i class="fas fa-pencil-alt me-1"></i> Update
                    </button>` : ``;
-            let dueByHTML = "";
-            var cleanDueData = task.dueDate ? task.dueDate.toString().trim() : "";
-            if (cleanDueData !== "" && cleanDueData !== "N/A" && cleanDueData !== "undefined") dueByHTML = `<div class="text-danger fw-bold" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
-                                 <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>${cleanDueData}</span>
-                             </div>`;
-            else dueByHTML = `<div class="text-muted fw-normal" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important; opacity: 0.5; font-style: italic;">
-                                 <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>None Set</span>
-                             </div>`;
+            let dueByHTML = `<div class="text-danger fw-bold" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
+                                <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>${task.dueDate && task.dueDate !== "N/A" && task.dueDate !== "undefined" ? task.dueDate : "None Set"}</span>
+                            </div>`;
             card.innerHTML = `
                 <div style="text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; width: 100% !important;">
                     <div style="margin-bottom: 4px; text-align: left !important;">
@@ -1701,28 +1692,20 @@ function renderWorkspaceTasks(tasks) {
                             <i class="fas fa-tag me-1"></i>${displayId}
                         </span>
                     </div>
-                    <div style="margin-bottom: 6px; text-align: left !important; width: 100% !important;">
-                        <h5 class="fw-bold text-dark m-0" style="font-size:0.95rem; line-height:1.3; letter-spacing:-0.2px; text-align: left !important; width: 100% !important; display: block !important;">
-                            ${displayTitle}
-                        </h5>
-                    </div>
-                    <p class="text-muted" style="font-size:0.75rem; line-height:1.4; max-height:60px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; padding-left: 1px; text-align: left !important; width: 100% !important; margin-bottom: 8px !important;">
-                        ${displayDesc}
-                    </p>
-                    ${inlineChecklistHTML}
+                    <h5 class="fw-bold text-dark m-0" style="font-size:0.95rem; line-height:1.3; text-align: left !important; width: 100% !important;">${displayTitle}</h5>
+                    <p class="text-muted" style="font-size:0.75rem; line-height:1.4; max-height:60px; overflow:hidden; text-align: left !important; width: 100% !important; margin-bottom: 8px !important;">${displayDesc}</p>
                 </div>
-
-                <div class="mt-2 border-top pt-2" style="width: 100% !important; text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important;">
-                    <div style="text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 4px; width: 100% !important; line-height: 1.3; margin-bottom: 10px !important;">
-                        <div class="text-muted" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
-                            <i class="far fa-calendar-alt text-secondary me-1.5" style="width:12px; text-align: left;"></i>Created: <span class="fw-medium">${task.createdAt || 'N/A'}</span>
-                        </div>
-                        ${dueByHTML}
+                <div class="mt-2 border-top pt-2" style="width: 100% !important; text-align: left !important;">
+                    <div class="text-muted" style="font-size:0.68rem; margin-bottom: 4px;">
+                        <i class="far fa-calendar-alt text-secondary me-1.5"></i>Created: <span class="fw-medium">${task.createdAt || 'N/A'}</span>
                     </div>
-                    <div class="d-flex justify-content-end gap-2" style="width: 100% !important; pt-1 !important;">
-                        <button class="btn btn-xs btn-outline-secondary border-0 opacity-75" style="font-size: 0.68rem; padding: 3px 6px;" onclick="event.stopPropagation(); openViewDrawer('${displayId}')">
-                            <i class="fas fa-expand-alt me-1"></i> Details
-                        </button>
+                    ${dueByHTML}
+                    <div class="d-flex justify-content-between align-items-center mt-2" style="width: 100% !important;">
+                        <div>
+                            <button class="btn btn-xs btn-outline-secondary border-0 opacity-75" style="font-size: 0.68rem; padding: 3px 6px;" onclick="event.stopPropagation(); openViewDrawer('${displayId}')">
+                                <i class="fas fa-expand-alt me-1"></i> Details
+                            </button>
+                        </div>
                         ${updateBtnHTML}
                     </div>
                 </div>
@@ -1730,13 +1713,14 @@ function renderWorkspaceTasks(tasks) {
             targetList.appendChild(card);
         }
     });
+    // Final pillar update
     columns.forEach((col)=>{
         const pillBadge = document.getElementById(`badge-${col}`);
         if (pillBadge) pillBadge.innerText = counters[col];
         const targetList = document.getElementById(`list-${col}`);
         if (targetList && targetList.innerHTML === "") targetList.innerHTML = `<div class="text-center text-muted py-3 px-2 border rounded bg-light opacity-75" style="font-size:0.72rem; border-style:dashed !important;">No Tasks</div>`;
     });
-    populateAuditTrailLogStream(tasks);
+    if (typeof populateAuditTrailLogStream === 'function') populateAuditTrailLogStream(tasks);
 }
 function populateAuditTrailLogStream(tasks) {
     const auditStream = document.getElementById('wsAuditStream');
@@ -1775,7 +1759,6 @@ let utQuillEditorInstance = null;
 function initUpdateTaskQuill(isReadOnly = false) {
     const container = document.getElementById('utQuillEditorContainer');
     if (!container) return;
-    // Configured to precisely match your clean Exco styling configuration tools
     const toolbarOptions = isReadOnly ? false : [
         [
             'bold',
@@ -1801,7 +1784,6 @@ function initUpdateTaskQuill(isReadOnly = false) {
         });
         if (isReadOnly) {
             utQuillEditorInstance.disable();
-            // Hide formatting toolbar panel completely when locked
             const toolbar = container.parentElement.querySelector('.ql-toolbar');
             if (toolbar) toolbar.style.display = 'none';
         } else utQuillEditorInstance.enable();
@@ -1824,7 +1806,8 @@ window.openUpdateDrawer = function(taskId) {
     const task = window.activeTasksCache.find((t)=>t.taskId === taskId);
     if (!task) return;
     const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
-    const isAdmin = currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+    // Unified authentication verification with fallback validation layer support
+    const isAdmin = window.currentUserRole === 'admin' || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
     let assignedResources = [];
     if (task.assignees) assignedResources = task.assignees.toString().split(',').map((name)=>name.trim().toLowerCase());
     else if (task.assignee) assignedResources = [
@@ -1834,22 +1817,16 @@ window.openUpdateDrawer = function(taskId) {
     document.getElementById('utTaskId').value = task.taskId;
     document.getElementById('utTaskTitleDisplay').innerText = task.title;
     document.getElementById('utTaskDescriptionDisplay').innerText = task.description || "No description logged at creation.";
-    document.getElementById('utNote').value = "";
     const utNoteField = document.getElementById('utNote');
     if (utNoteField) {
-        // 1. Load the historical note into the hidden form field
         utNoteField.value = task.note || "";
-        // 2. Hydrate the Quill editor instance if it is currently initialized
-        // This allows the Quill editor to display the previous notes immediately
         if (typeof window.utQuillEditorInstance !== 'undefined' && window.utQuillEditorInstance) window.utQuillEditorInstance.root.innerHTML = task.note || "";
     }
-    // --------------------------------------------------
     const accessBadge = document.getElementById('utAccessBadge');
     const submitBtn = document.getElementById('submitUpdateTaskBtn');
     const statusSelect = document.getElementById('utStatus');
     const addCheckItemBtn = document.getElementById('utAddChecklistItemBtn');
     const checkInput = document.getElementById('utNewChecklistItemInput');
-    // Handle standard inputs/buttons permissions right away
     if (hasEditPrivileges) {
         if (accessBadge) accessBadge.style.display = "none";
         if (submitBtn) submitBtn.style.display = "block";
@@ -1868,19 +1845,75 @@ window.openUpdateDrawer = function(taskId) {
         if (normalizedValue.toLowerCase() === 'completed') normalizedValue = 'Done';
         statusSelect.value = normalizedValue;
     }
-    // Render Assignees
+    // ==========================================
+    // Render Assignees with Sleek Pill-Token Styling
+    // ==========================================
     const membersDisplay = document.getElementById('utTeamMembersDisplay');
     if (membersDisplay) {
         membersDisplay.innerHTML = "";
-        let originalNames = task.assignees || task.assignee || "Unassigned";
-        let namesArr = originalNames.toString().split(',');
-        namesArr.forEach((name)=>{
-            if (!name.trim()) return;
-            const span = document.createElement('span');
-            span.className = "badge bg-secondary-subtle text-dark border px-2 py-1 m-0";
-            span.innerText = name.trim();
-            membersDisplay.appendChild(span);
+        let originalNames = task.assignees || task.assignee || "";
+        let assignedArr = originalNames.toString().split(',').map((name)=>name.trim().toLowerCase());
+        if (isAdmin && typeof authorizedUsers !== 'undefined') Object.keys(authorizedUsers).forEach((username)=>{
+            const lowerUser = username.trim().toLowerCase();
+            if (lowerUser.includes('admin') || lowerUser.includes('system') || lowerUser === 'test') return;
+            const isChecked = assignedArr.includes(lowerUser);
+            const label = document.createElement('label');
+            // Base sleek styling for the token items
+            label.className = `border px-3 py-1 m-0 text-capitalize d-flex align-items-center gap-2 select-token-pill`;
+            label.style.fontSize = "0.72rem";
+            label.style.cursor = "pointer";
+            label.style.borderRadius = "50px";
+            label.style.userSelect = "none";
+            label.style.transition = "all 0.2s ease-in-out";
+            // Dynamic coloration states on load
+            if (isChecked) {
+                label.style.backgroundColor = "#e0f2fe"; // Soft premium blue tint
+                label.style.color = "#0369a1";
+                label.style.borderColor = "#bae6fd";
+                label.style.fontWeight = "600";
+            } else {
+                label.style.backgroundColor = "#f8f9fa"; // Clean off-white baseline
+                label.style.color = "#6c757d";
+                label.style.borderColor = "#dee2e6";
+                label.style.fontWeight = "500";
+            }
+            label.innerHTML = `
+                    <input type="checkbox" class="ut-assignee-matrix-checkbox form-check-input m-0" value="${username.trim()}" ${isChecked ? 'checked' : ''} 
+                        style="width: 13px; height: 13px; cursor: pointer; border-color: inherit; filter: none;" 
+                        onchange="
+                            const lbl = this.closest('label');
+                            if (this.checked) {
+                                lbl.style.backgroundColor = '#e0f2fe';
+                                lbl.style.color = '#0369a1';
+                                lbl.style.borderColor = '#bae6fd';
+                                lbl.style.fontWeight = '600';
+                            } else {
+                                lbl.style.backgroundColor = '#f8f9fa';
+                                lbl.style.color = '#6c757d';
+                                lbl.style.borderColor = '#dee2e6';
+                                lbl.style.fontWeight = '500';
+                            }
+                        "
+                    >
+                    <span>${username.trim()}</span>
+                `;
+            membersDisplay.appendChild(label);
         });
+        else {
+            // Standard user static display layout fallback
+            let namesArr = originalNames ? originalNames.toString().split(',') : [
+                "Unassigned"
+            ];
+            namesArr.forEach((name)=>{
+                if (!name.trim()) return;
+                const span = document.createElement('span');
+                span.className = "badge bg-light text-secondary border px-3 py-1.5 m-0 text-capitalize fw-medium";
+                span.style.borderRadius = "50px";
+                span.style.fontSize = "0.7rem";
+                span.innerText = name.trim();
+                membersDisplay.appendChild(span);
+            });
+        }
     }
     // Load Matrix Checklist Entries
     const chkContainer = document.getElementById('utChecklistContainer');
@@ -1912,11 +1945,9 @@ window.openUpdateDrawer = function(taskId) {
         });
         else chkContainer.innerHTML = `<span class="text-muted small mx-auto py-2 italic no-items-flag">No active checklist matrix items configured.</span>`;
     }
-    // 1. FIRST show the overlay to render the HTML containers on screen layout
     document.getElementById('updateTaskOverlay').style.display = 'flex';
     const bdrop = document.getElementById('drawerBackdrop');
     if (bdrop) bdrop.style.display = "block";
-    // 2. CRITICAL: Wait 60ms for the DOM browser repaint to finish, THEN bind Quill to the visible container
     setTimeout(()=>{
         initUpdateTaskQuill(!hasEditPrivileges);
     }, 60);
@@ -1933,7 +1964,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
         const noItemsFlag = chkContainer.querySelector('.no-items-flag');
         if (noItemsFlag) noItemsFlag.remove();
         const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
-        const isAdmin = currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+        const isAdmin = window.currentUserRole === 'admin' || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
         const currentIndex = chkContainer.querySelectorAll('.ut-matrix-item-row').length;
         const row = document.createElement('div');
         row.className = "ut-matrix-item-row";
@@ -1972,7 +2003,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
         else if (rawDropdownVal === "UnderReview") sheetFormattedStatus = "Under Review";
         else if (rawDropdownVal === "Done") sheetFormattedStatus = "Done";
         else if (rawDropdownVal === "Cancelled") sheetFormattedStatus = "Cancelled";
-        // Note Capture Fix: Pull live rich HTML contents directly out of the generated frame instance
         let progressNoteHTML = "";
         if (typeof utQuillEditorInstance !== 'undefined' && utQuillEditorInstance && utQuillEditorInstance.getLength() > 1) progressNoteHTML = utQuillEditorInstance.root.innerHTML.trim();
         else if (document.getElementById('utNote')) progressNoteHTML = document.getElementById('utNote').value.trim();
@@ -1988,6 +2018,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
                 });
             });
         }
+        // Capture Selected Assignees if user is an Administrator
+        const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
+        const isAdmin = window.currentUserRole === 'admin' || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+        let finalAssignees = null; // Leaving as null means backend doesn't overwrite if not altered
+        if (isAdmin) {
+            const checkedElements = document.querySelectorAll('.ut-assignee-matrix-checkbox:checked');
+            const checkedNames = Array.from(checkedElements).map((el)=>el.value);
+            finalAssignees = checkedNames.length > 0 ? checkedNames.join(', ') : "Unassigned";
+        }
         const payload = {
             action: "updateTaskStatus",
             taskId: document.getElementById('utTaskId').value,
@@ -1996,6 +2035,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
             checklist: dynamicChecklistPayload,
             user: window.currentUserName || "System"
         };
+        // If an administrator changed the resources, inject the new string value into the update payload
+        if (finalAssignees !== null) payload.assignees = finalAssignees;
         const btn = document.getElementById('submitUpdateTaskBtn');
         btn.disabled = true;
         fetch(googleWebAppUrl, {
