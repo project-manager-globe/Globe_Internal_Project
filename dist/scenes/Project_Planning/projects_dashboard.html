@@ -84,9 +84,48 @@ window.addEventListener('DOMContentLoaded', ()=>{
     window.currentUserRole = role;
     window.currentUserName = currentUser;
     // --- Workspace Access Check ---
+    // --- Workspace Access Check (RESTORING ORIGINAL SECURITY) ---
     window.checkWorkspaceAccess = function(projectToken) {
-        // ... (keep your existing checkWorkspaceAccess logic here)
-        return true; // Simplified for demo
+        if (!projectToken) return false;
+        const liveUser = (sessionStorage.getItem('currentUser_ICT') || "").trim().toLowerCase();
+        const rawToken = String(projectToken).trim().toLowerCase();
+        const squashedToken = rawToken.replace(/\s+/g, '');
+        let liveRole = window.currentUserRole || "user";
+        let liveAllowedProjects = [];
+        // Re-fetch project list for the current user
+        if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
+            const matchedKey = Object.keys(authorizedUsers).find((k)=>k.toLowerCase() === liveUser);
+            if (matchedKey) liveAllowedProjects = authorizedUsers[matchedKey].projects || [];
+        }
+        // 🛡️ VECTOR 1: Master Admin / All-Access
+        if (liveRole === 'admin' || liveAllowedProjects.map((p)=>p.toLowerCase()).includes('all') || liveAllowedProjects.map((p)=>p.toLowerCase()).includes('projects_dashboard')) return true;
+        // 🛡️ VECTOR 2: Direct Credential Match
+        const squashedAllowed = liveAllowedProjects.map((p)=>p.toLowerCase().trim().replace(/\s+/g, ''));
+        if (squashedAllowed.includes(squashedToken) || liveAllowedProjects.map((p)=>p.toLowerCase().trim()).includes(rawToken)) return true;
+        // 🛡️ VECTOR 3: The Object Omni-Search (Google Sheet Data)
+        if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
+            const matchedRow = projectDataset.find((proj)=>{
+                if (!proj) return false;
+                const rowString = JSON.stringify(proj).toLowerCase().replace(/\s+/g, '');
+                return rowString.includes(squashedToken) || rowString.includes(rawToken);
+            });
+            if (matchedRow) {
+                const fullRowText = JSON.stringify(matchedRow).toLowerCase();
+                if (fullRowText.includes(liveUser)) return true;
+            }
+        }
+        // 🛡️ VECTOR 4: DOM Omni-Search (Visual Fallback)
+        try {
+            const allCards = document.querySelectorAll('.card, .project-card, [data-id]');
+            for (let card of allCards){
+                const cardText = card.innerText.toLowerCase();
+                const cardAttr = String(card.getAttribute('data-id') || "").toLowerCase().replace(/\s+/g, '');
+                if (cardAttr === squashedToken && cardText.includes(liveUser)) return true;
+            }
+        } catch (domErr) {
+            console.warn("DOM check bypassed");
+        }
+        return false; // Deny access if no vectors pass
     };
     // --- Logout ---
     const logBtn = document.getElementById('logoutBtn');
