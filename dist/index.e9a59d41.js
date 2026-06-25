@@ -96,6 +96,11 @@ const authorizedUsers = {
         password: "qtSE004",
         role: "user",
         projects: []
+    },
+    "jacky": {
+        password: "jrSE005",
+        role: "user",
+        projects: []
     }
 };
 window.authorizedUsers = authorizedUsers;

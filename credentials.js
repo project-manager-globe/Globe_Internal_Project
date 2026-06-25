@@ -11,7 +11,8 @@ const authorizedUsers = {
   "bennie": { password: "bjSE001",  role: "user", projects:[]},
   "terrence": { password: "tbSE002",  role: "user", projects:[]},
   "adriaan": { password: "asSE003",  role: "user", projects:[]},
-  "quinten": { password: "qtSE004",  role: "user", projects:[]}
+  "quinten": { password: "qtSE004",  role: "user", projects:[]},
+  "jacky": { password: "jrSE005",  role: "user", projects:[]}
 };
 
 window.authorizedUsers = authorizedUsers;
