@@ -1,4 +1,4 @@
-5743
+5750
 74C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\js133980823774952093 1
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\postcss-value-parser\package.json133826269320000000 0
 75C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\css133980823774952093 1
@@ -13,7 +13,7 @@
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\generator\index.js133826269360000000 0
 126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\textcontent.js133826269390000000 0
 133C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\package-manager\test\fixtures\packages\a133980823581056564 1
-114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\project_Dash2.html134261742008474471 0
+114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\project_Dash2.html134269473856664450 0
 131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\htmlparser2\package.json133826269320000000 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\gsap\types\motion-path-plugin.d.ts133826269360000000 0
 88C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Devision1133980823649826740 1
@@ -22,7 +22,7 @@
 107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\semver\ranges\valid.js133826269330000000 0
 130C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\transformer-css\src\CSSTransformer.js133826269310000000 0
 126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\syntax\node\MediaFeature.cjs133826269340000000 0
-86C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\credentials.js134267796471913889 0
+86C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\credentials.js134268591133632933 0
 96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\src\images\6unsplash.jpg133823037800000000 0
 108C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\cjs\replace\atrule133980823528392295 1
 86C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\.gitattributes133826210540000000 0
@@ -35,7 +35,7 @@
 107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\mdn-data\css\readme.md133826269330000000 0
 132C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\_\_class_private_field_destructure133980823566482583 1
 93C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree133980823692169511 1
-76C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist134268478982849662 1
+76C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist134272044538727460 1
 107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\mdn-data\l10n\index.js133826269320000000 0
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\type-fest\source\readonly-deep.d.ts133826269330000000 0
 92C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\src\images\lines.jpg133823037800000000 0
@@ -58,13 +58,13 @@
 102C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\is-glob\README.md133826269320000000 0
 98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\nth-check\lib133980823565048736 1
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\video.js133826269400000000 0
-78C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images133980823775117177 1
+78C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images134268690600453312 1
 97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib133980823583638621 1
 113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\utils\names.cjs133826269340000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\esm\stringify.js.map133826269330000000 0
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\gsap\dist\ScrollTrigger.min.js133826269340000000 0
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\gsap\dist\Draggable.min.js.map133826269350000000 0
-82C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\index.html134266092764583289 0
+82C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\index.html134269437470791464 0
 126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\_\_class_private_method_init133980823566711697 1
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\htmlnano\lib\modules\custom.cjs133826269320000000 0
 97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\LICENSE133826269310000000 0
@@ -93,6 +93,9 @@
 106C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\oxygen-webhelp\template\img133980823585074230 1
 113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\lib\restructure\prepare133980823530751834 1
 91C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\projects.css134251275212249221 0
+128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\reporter-cli\lib\CLIReporter.js.map133826269330000000 0
+116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\NU.js133826269390000000 0
+117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\lightBulb.png134268687010865234 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\source-map\dist\wasm.js133826269330000000 0
 87C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\src\js\panel.js133823037800000000 0
 136C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_class_apply_descriptor_update.mjs133826269380000000 0
@@ -142,7 +145,7 @@
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\utils\url.js133826269370000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\esm\index.d.ts.map133826269330000000 0
 109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\strategy.html134266095228153352 0
-110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\resources.html134266095898709981 0
+110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\resources.html134268657576545064 0
 95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\gsap\utils133980823703408136 1
 109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\weak-lru-cache\README.md133826269320000000 0
 148C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\test\fixtures\invalid-source-not-file\package.json133826269360000000 0
@@ -215,7 +218,7 @@
 125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\types-internal\src\FileSystem.js133826269320000000 0
 96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\timsort\src133980823621717472 1
 94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\placeHolder.png133823037800000000 0
-103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages134262500960065648 1
+103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages134268687003526713 1
 104C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\type-fest\readme.md133826269310000000 0
 96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\src\images\5unsplash.jpg133823037800000000 0
 129C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\mdn-data\css\at-rules.json133826269320000000 0
@@ -253,7 +256,7 @@
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domelementtype\lib\esm\package.json133826269320000000 0
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\esm\traversal.d.ts.map133826269330000000 0
 94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\splitting133980823621415967 1
-105C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\exco.html134266095515550594 0
+105C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\exco.html134268628980502507 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\dom-serializer\lib\esm\index.d.ts.map133826269320000000 0
 107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lightningcss\README.md133826269320000000 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\parser\SyntaxError.js133826269370000000 0
@@ -262,14 +265,14 @@
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\zstd.js133826269410000000 0
 91C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\src\images\NEWS.png133823037800000000 0
 107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\transformer-js133980823663911867 1
-119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\projects_dashboard.html134268481835346835 0
+119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\projects_dashboard.html134272096765360788 0
 103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\gsap\TextPlugin.js133826269350000000 0
 128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\type-fest\source\union-to-intersection.d.ts133826269330000000 0
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\nth-check\lib\compile.d.ts.map133826269320000000 0
 97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\src\images\SGfreight2.png133823037800000000 0
 139C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\css-file-selector-button.js133826269360000000 0
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\syntax\node\String.cjs133826269350000000 0
-102C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesWiFi.9dfd08eb.png134268478958504184 0
+102C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesWiFi.9dfd08eb.png134272044531863545 0
 140C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lmdb\libraries\liblmdb\sample-mdb.txt133826269360000000 0
 109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\1.png133823037800000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\htmlparser2\lib\WritableStream.js133826269320000000 0
@@ -286,7 +289,7 @@
 88C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Devision2133980823649906846 1
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\utils\src\getCertificate.js133826269330000000 0
 88C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\index.css134251248948452158 0
-95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning134265993742013750 1
+95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning134272096765551178 1
 88C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\light.css134251225943809141 0
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\credentials.js134265972384859550 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\type-fest\source\promisable.d.ts133826269330000000 0
@@ -315,7 +318,7 @@
 134C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\entities\lib\esm\generated\decode-data-xml.js.map133826269330000000 0
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\semver\functions\patch.js133826269330000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\CH.js133826269340000000 0
-116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\activityMeasure.html134266096094516618 0
+116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\activityMeasure.html134268628055891845 0
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\transformer-babel\src\types.js133826269320000000 0
 131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\cjs\utils\ident.cjs133826269330000000 0
 127C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\css-overflow.js133826269360000000 0
@@ -351,7 +354,7 @@
 133C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lmdb\libraries\liblmdb\LICENSE133826269320000000 0
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\svg-smil.js133826269390000000 0
 109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\4.png133823037800000000 0
-99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\5unsplash.41edbeb5.jpg134268478974225779 0
+99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\5unsplash.41edbeb5.jpg134272044537946849 0
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_non_iterable_rest.cjs133826269340000000 0
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\detect-libc\bin\detect-libc.js133826269320000000 0
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\lib\restructure\index.js133826269340000000 0
@@ -443,9 +446,6 @@
 103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\.package-lock.json134242714639566637 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\deparments.png134250536841565844 0
 108C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-select\lib\index.js133826269330000000 0
-109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\htmlnano\lib\helpers.mjs133826269340000000 0
-107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lmdb133980823535594212 1
-121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\plugins\removeOffCanvasPaths.js133826269340000000 0
 130C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\utils\index.js133826269360000000 0
 101C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\dotenv\README.md133826269320000000 0
 104C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\ordered-binary\dist133980823645001577 1
@@ -535,7 +535,7 @@
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\utility-types\dist\mapped-types.js133826269320000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\internet.png133836685280000000 0
 99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\semver\classes133980823619778683 1
-97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\digital.0418e48c.png134268478949772553 0
+97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\digital.0418e48c.png134272044531409510 0
 140C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_class_check_private_static_access.mjs133826269380000000 0
 113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\manipulation.js133826269320000000 0
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\intro1.jpg133823037800000000 0
@@ -559,7 +559,7 @@
 111C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\entities\lib\esm\encode.js133826269320000000 0
 127C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\syntax\node\ClassSelector.cjs133826269320000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\oxygen-webhelp\app\indexterms.css.map133823037800000000 0
-95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.e9a92ad8.css134268478979804868 0
+95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.e9a92ad8.css134272044530547392 0
 125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml-parser\dist\location-tracker.js133826269310000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\SL.js133826269390000000 0
 111C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\js-yaml\lib\type\binary.js133826269310000000 0
@@ -622,9 +622,9 @@
 121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\ServicesPhone.png134243605059223586 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\htmlparser2\lib133980823539779675 1
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\ServicesWiFi.png134243609286227414 0
-113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\solar.png133836684590000000 0
 126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\source-map-js\lib\source-map-generator.js133826269320000000 0
 161C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\dom-serializer\node_modules\entities\lib\maps\xml.json133826269320000000 0
+140C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\Snaptel - Quick Desktop Guide V1.pdf134268656384518596 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\type-fest\source\set-optional.d.ts133826269330000000 0
 121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\utils133980823535071269 1
 105C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\browserslist\LICENSE133826269310000000 0
@@ -633,6 +633,7 @@
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\source-map-js\lib\source-node.d.ts133826269330000000 0
 126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\mdn-data\css\units.json133826269330000000 0
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\soon.mp4133836647120000000 0
+113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\solar.png133836684590000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\HR.js133826269380000000 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\src\public\Symbols.js133826269360000000 0
 132C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\Project_Planning\Pimages\StrategicUnbinding_Video.mp4134238262294263128 0
@@ -765,7 +766,7 @@
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\menu.js133826269390000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\htmlnano\lib\modules\minifyJs.mjs133826269340000000 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\oxygen-webhelp\app\7905db3e6db01ebd2b30.svg133823037800000000 0
-121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\activityMeasure.html134268478983236852 0
+121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\activityMeasure.html134272044530468288 0
 128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\htmlnano\lib\modules\removeOptionalTags.mjs133826269340000000 0
 129C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\css-page-break.js133826269360000000 0
 95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\ev-emitter133980823713695224 1
@@ -793,7 +794,7 @@
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\download.js133826269370000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\_\_to_property_key133980823568878477 1
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\oxygen-webhelp\app\commons.js.map133823037800000000 0
-131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\New Customer Invoice.mp4134268478992310385 0
+131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\New Customer Invoice.mp4134268649005477702 0
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\oxygen-webhelp\app\context-help133980823585130268 1
 97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\is-json\test133980823713770776 1
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\utility-types\dist\mapped-types.js.map133826269320000000 0
@@ -819,8 +820,8 @@
 103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\dom-serializer\lib133980823562020968 1
 95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\nullthrows133980823750510280 1
 113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\htmlparser2\lib\index.js.map133826269320000000 0
-118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\htmlparser2133980823539779675 1
 131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_interop_require_wildcard.mjs133826269380000000 0
+118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\htmlparser2133980823539779675 1
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\source-map\dist\types.js133826269320000000 0
 145C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\scope\atrulePrelude.js133826269360000000 0
 109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-what\lib\es\parse.js133826269320000000 0
@@ -842,7 +843,7 @@
 145C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\dom-serializer\lib\esm\foreignNames.js133826269310000000 0
 135C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\.bin\node-gyp-build-optional-packages-optional.cmd133826269420000000 0
 113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml-parser\package.json133826269320000000 0
-96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\engage.2d766965.png134268478950488502 0
+96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\engage.2d766965.png134272044531239435 0
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\oxygen-webhelp\app\localization133980823585175397 1
 138C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_class_static_private_method_get.mjs133826269380000000 0
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\js-yaml\lib\type\pairs.js133826269330000000 0
@@ -957,7 +958,7 @@
 128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\oxygen-webhelp\app\search\index\link-to-parent.js133823037800000000 0
 140C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\cjs\syntax\scope\default.cjs133826269330000000 0
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\node-addon-api\tools\README.md133826269330000000 0
-126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.09271b42.css.map134268478977895853 0
+126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.09271b42.css.map134272044530713128 0
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\msgpackr-extract\node_modules133980823583253710 1
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\node-releases\data\release-schedule133980823564762651 1
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\scenes\oxygen-webhelp\app\search\index\stopwords.js133823037800000000 0
@@ -1093,7 +1094,7 @@
 126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\typedarrays.js133826269400000000 0
 99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\dom-serializer133980823561986895 1
 125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\es6-number.js133826269370000000 0
-101C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\strategy.6f0f46a2.js.map134268478967760884 0
+101C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\strategy.6f0f46a2.js.map134272044533486418 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\utils\src\shared-buffer.js133826269340000000 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\esm\_await_value.js133826269350000000 0
 98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\dotenv-expand133980823713235768 1
@@ -1175,7 +1176,7 @@
 154C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\entities\lib\generated\decode-data-xml.d.ts.map133826269320000000 0
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\workers\lib\Handle.js133826269330000000 0
 99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\node-addon-api133980823690906079 1
-98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ictglobe.8df8469d.png134268478949716944 0
+98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ictglobe.8df8469d.png134272044530438175 0
 162C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\test\fixtures\plugins\node_modules\parcel-transformer-no-engines133980823580918044 1
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\events\test\Disposable.test.js133826269320000000 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\node-gyp-build-optional-packages133980823523862923 1
@@ -1215,7 +1216,7 @@
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\semver\functions\compare-loose.js133826269320000000 0
 141C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\definition-syntax\walk.js133826269370000000 0
 128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_await_async_generator.mjs133826269380000000 0
-124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\projects_dashboard.html134268478985504180 0
+124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\projects_dashboard.html134272096769442819 0
 131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\devicepixelratio.js133826269370000000 0
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\_\_class_private_field_set133980823566619314 1
 128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\source-map-js\lib\source-map-generator.d.ts133826269330000000 0
@@ -1328,17 +1329,13 @@
 103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\picocolors\LICENSE133826269310000000 0
 128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\entities\package.json133826269320000000 0
 165C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\msgpackr-extract\node_modules\node-gyp-build-optional-packages\node-gyp-build.js133826269320000000 0
-139C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\Nowtech - Project Brief [V1].pdf134268478950508518 0
+139C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\Nowtech - Project Brief [V1].pdf134268648952865646 0
 128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\htmlparser2\README.md133826269320000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\cosmiconfig\dist\loaders.js.map133826269330000000 0
 98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\timsort\build133980823621645999 1
 102C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\type-fest\license133826269310000000 0
 136C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\css-text-wrap-balance.js133826269370000000 0
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\definition-syntax\parse.js133826269360000000 0
-103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\parse-json\license133826269310000000 0
-116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\QA.js133826269390000000 0
-144C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lmdb-data-v1\libraries\liblmdb\mdb_copy.c133826269330000000 0
-119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\plugins\removeRasterImages.js133826269340000000 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\type-fest\source\set-return-type.d.ts133826269330000000 0
 107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\type-fest\package.json133826269310000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\ME.js133826269390000000 0
@@ -1549,6 +1546,13 @@
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\plugins\removeEmptyContainers.js133826269340000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\plugins\removeHiddenElems.js133826269340000000 0
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\plugins\removeMetadata.js133826269340000000 0
+109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\htmlnano\lib\helpers.mjs133826269340000000 0
+107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lmdb133980823535594212 1
+121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\plugins\removeOffCanvasPaths.js133826269340000000 0
+103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\parse-json\license133826269310000000 0
+116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\QA.js133826269390000000 0
+144C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lmdb-data-v1\libraries\liblmdb\mdb_copy.c133826269330000000 0
+119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\plugins\removeRasterImages.js133826269340000000 0
 132C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\create.js133826269360000000 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\plugins\removeStyleElement.js133826269340000000 0
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\esm\_update.js133826269360000000 0
@@ -1607,7 +1611,7 @@
 105C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\.bin\detect-libc.ps1133826269420000000 0
 138C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\posthtml-parser\dist\index.d.ts133826269320000000 0
 109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\cjs\replace\Url.cjs133826269330000000 0
-126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.34a98ac0.css.map134268478980656735 0
+126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.34a98ac0.css.map134272044530522005 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\test\BundleGraph.test.js133826269330000000 0
 125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\node_modules\commander\package.json133826269320000000 0
 129C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\runtime-js\lib\helpers\bundle-url.js133826269320000000 0
@@ -1619,8 +1623,8 @@
 130C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\esm\_async_generator_delegate.js133826269340000000 0
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\node_modules\commander\typings133980823541415068 1
 107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\ansi-styles\index.d.ts133826269320000000 0
-103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\lib\parser.js133826269330000000 0
 145C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\msgpackr-extract\node_modules\detect-libc\lib\detect-libc.js133826269310000000 0
+103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\lib\parser.js133826269330000000 0
 109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\js-yaml\lib\exception.js133826269320000000 0
 134C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\posthtml\node_modules\htmlparser2\lib\Parser.d.ts133826269320000000 0
 101C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\svgo\lib\path.js133826269330000000 0
@@ -2159,7 +2163,6 @@
 103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\is-number\index.js133826269310000000 0
 105C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\json5\lib\index.d.ts133826269330000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\TJ.js133826269390000000 0
-141C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\node\IdSelector.js133826269360000000 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\nth-check\lib\esm\compile.js.map133826269320000000 0
 140C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\cjs\syntax\config\parser.cjs133826269340000000 0
 113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\nth-check\lib\esm\index.d.ts133826269330000000 0
@@ -2202,7 +2205,7 @@
 152C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\node-gyp-build-optional-packages\node_modules\detect-libc\README.md133826269320000000 0
 109C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\packager-css\lib133980823658074799 1
 106C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\js-yaml\lib\common.js133826269320000000 0
-106C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs134268478996074734 1
+106C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs134272044540087730 1
 161C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\node-gyp-build-optional-packages\node_modules\detect-libc\lib\detect-libc.js133826269310000000 0
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\dragndrop.js133826269370000000 0
 160C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\node-gyp-build-optional-packages\node_modules\detect-libc\lib\filesystem.js133826269310000000 0
@@ -2329,7 +2332,7 @@
 106C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\msgpackr\dist\test.js133826269330000000 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\msgpackr\dist\unpack-no-eval.cjs133826269320000000 0
 128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\passwordrules.js133826269390000000 0
-100C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\deparments.d3a64838.png134268478958659578 0
+100C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\deparments.d3a64838.png134272044530487089 0
 138C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\node_modules\node-addon-api\package-support.json133826269320000000 0
 113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\lexer\units.cjs133826269350000000 0
 105C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\reporter-cli133980823661245177 1
@@ -2379,7 +2382,7 @@
 135C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lmdb\libraries\liblmdb\chacha8.h133826269340000000 0
 108C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\mdn-data\css\units.json133826269330000000 0
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\css-sel3.js133826269370000000 0
-95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\paper.bf4b0da4.jpg134268478962744605 0
+95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\paper.bf4b0da4.jpg134272044532540364 0
 144C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lmdb-data-v1\libraries\liblmdb\mdb_stat.c133826269330000000 0
 102C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\types\lib133980823673398338 1
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\mdn-data\css\units.schema.json133826269330000000 0
@@ -2406,7 +2409,7 @@
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\htmlparser2\lib\esm\WritableStream.d.ts133826269330000000 0
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_defaults.cjs133826269330000000 0
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\gsap\dist\PixiPlugin.min.js133826269340000000 0
-122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.34a98ac0.css134268478979804868 0
+122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.34a98ac0.css134272044529702392 0
 94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dict133980823693381635 1
 103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\clone\package.json133826269310000000 0
 94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dist133980823693474720 1
@@ -2503,7 +2506,7 @@
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lz4\lib\liblz4.pc.in133826269350000000 0
 113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\cosmiconfig\dist\defaults.js133826269320000000 0
 130C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\lexer\error.js133826269360000000 0
-95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\Couch.3c450125.png134268478949762457 0
+95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\Couch.3c450125.png134272044531179425 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lz4\lib\LICENSE133826269320000000 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\esm\_ts_decorate.js133826269360000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\lmdb\dependencies\lz4\lib\lz4.c133826269330000000 0
@@ -2663,7 +2666,7 @@
 105C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\js-yaml\CHANGELOG.md133826269330000000 0
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\walker\index.cjs133826269340000000 0
 133C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-select\lib\pseudo-selectors\filters.d.ts.map133826269330000000 0
-95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.748ad148.css134268478976162969 0
+95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.748ad148.css134272044530343122 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\RE.js133826269390000000 0
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\_\_call_super\package.json133826269360000000 0
 126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\esm\_wrap_async_generator.js133826269360000000 0
@@ -2955,7 +2958,7 @@
 111C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\gsap\src\ScrollToPlugin.js133826269340000000 0
 121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\mathml.js133826269390000000 0
 104C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\browserslist\cli.js133826269310000000 0
-108C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pimages134268479015946750 1
+108C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pimages134272044548185407 1
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\esm\traversal.d.ts133826269340000000 0
 107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\gsap\src\TextPlugin.js133826269350000000 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\pointer.js133826269390000000 0
@@ -3140,7 +3143,7 @@
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\index.js.map133826269330000000 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\transformer-html\node_modules133980823598887583 1
 107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\legacy.js133826269320000000 0
-110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\exco.html134268478981094563 0
+110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\exco.html134272044530176956 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\manipulation.js.map133826269330000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\FK.js133826269370000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\stringify.d.ts.map133826269330000000 0
@@ -3153,7 +3156,7 @@
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\syntax\node\Hash.js133826269360000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\esm\feeds.d.ts.map133826269330000000 0
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\esm\feeds.js133826269310000000 0
-131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\Numista New Customer.mp4134268478978862241 0
+131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\Numista New Customer.mp4134268649004112338 0
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\esm\feeds.js.map133826269330000000 0
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\esm\helpers.d.ts133826269330000000 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\domutils\lib\esm\legacy.d.ts.map133826269330000000 0
@@ -3248,10 +3251,11 @@
 134C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\node\CDO.js133826269360000000 0
 135C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\node\Hash.js133826269360000000 0
 141C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\node\Identifier.js133826269360000000 0
+141C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\node\IdSelector.js133826269360000000 0
 145C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\node\index-generate.js133826269360000000 0
 151C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\node\index-parse-selector.js133826269360000000 0
 141C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\same-site-cookie-attribute.js133826269390000000 0
-98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ictglobe.9abb1c45.png134268478958524191 0
+98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ictglobe.9abb1c45.png134272044530522005 0
 136C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\node\index.js133826269360000000 0
 143C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\csso\node_modules\css-tree\lib\syntax\node\MediaFeature.js133826269360000000 0
 113C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\_\_create_class133980823566974358 1
@@ -3703,7 +3707,7 @@
 104C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\_\_get133980823567321053 1
 106C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@lezer\common\LICENSE133826269310000000 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\syntax\node\String.js133826269370000000 0
-114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.html134268478981094563 0
+114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.html134272044527750116 0
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\syntax\node\StyleSheet.js133826269370000000 0
 125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\syntax\node\TypeSelector.js133826269370000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\syntax\node\Url.js133826269370000000 0
@@ -3738,7 +3742,7 @@
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\lexer\generic.js133826269360000000 0
 129C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\rel-noreferrer.js133826269390000000 0
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\lexer\index.js133826269360000000 0
-100C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning134268478985680595 1
+100C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning134272096769575800 1
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\lexer\Lexer.js133826269360000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\lexer\match-graph.js133826269360000000 0
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\lib\lexer\match.js133826269360000000 0
@@ -3852,7 +3856,7 @@
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\syntax\config\walker.cjs133826269360000000 0
 121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\syntax\atrule\media.cjs133826269340000000 0
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\syntax\atrule\nest.cjs133826269340000000 0
-100C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\data_Cloud.47d839fc.png134268478958559299 0
+100C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\data_Cloud.47d839fc.png134272044531853548 0
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\syntax\atrule\page.cjs133826269340000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\NZ.js133826269390000000 0
 132C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\src\requests\ParcelBuildRequest.js133826269350000000 0
@@ -3879,7 +3883,7 @@
 129C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-tree\cjs\definition-syntax\tokenizer.cjs133826269350000000 0
 125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\chrome-trace-event\dist\trace-event.d.ts133826269320000000 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\ac3-ec3.js133826269320000000 0
-95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\Dish1.c83e052d.jpg134268478949716944 0
+95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\Dish1.c83e052d.jpg134272044530438175 0
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\transformer-raw\lib133980823664828975 1
 108C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-select\package.json133826269330000000 0
 105C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\css-select\README.md133826269340000000 0
@@ -3998,7 +4002,7 @@
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\gyroscope.js133826269380000000 0
 134C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\runtime-js\src\helpers\node\css-loader.js133826269320000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\cosmiconfig\dist\index.d.ts.map133826269330000000 0
-118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\Numista.pdf134268478972488104 0
+118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\Numista.pdf134268635328771616 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\cosmiconfig\dist\loaders.d.ts.map133826269330000000 0
 134C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\css-relative-colors.js133826269360000000 0
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\cosmiconfig\dist\merge.d.ts133826269330000000 0
@@ -4089,7 +4093,7 @@
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\BW.js133826269340000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\BY.js133826269340000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\BZ.js133826269340000000 0
-97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\strategy.6f0f46a2.js134268478964141818 0
+97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\strategy.6f0f46a2.js134272044533368562 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\CA.js133826269340000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\CI.js133826269350000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\CK.js133826269350000000 0
@@ -4140,7 +4144,7 @@
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\MM.js133826269390000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\MN.js133826269390000000 0
 131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\meta-theme-color.js133826269390000000 0
-125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.beb6bc56.js.map134268478962824885 0
+125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.beb6bc56.js.map134272044528105803 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\MP.js133826269390000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\MQ.js133826269390000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\MR.js133826269390000000 0
@@ -4158,8 +4162,6 @@
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_jsx.mjs133826269380000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\NO.js133826269390000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\NR.js133826269390000000 0
-128C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\reporter-cli\lib\CLIReporter.js.map133826269330000000 0
-116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\NU.js133826269390000000 0
 130C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\mutation-events.js133826269390000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\PA.js133826269390000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\PE.js133826269390000000 0
@@ -4188,7 +4190,7 @@
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\SY.js133826269390000000 0
 99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\events133980823655405244 1
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\SZ.js133826269390000000 0
-121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.beb6bc56.js134268478958989924 0
+121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.beb6bc56.js134272044528000733 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\regions\TC.js133826269390000000 0
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\packager-js\src\DevPackager.js133826269320000000 0
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\esm\_iterable_to_array.js133826269360000000 0
@@ -4289,7 +4291,7 @@
 103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\types\LICENSE133826269310000000 0
 108C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@types\jquery\misc.d.ts133826269330000000 0
 134C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\css-filter-function.js133826269360000000 0
-94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.5d9dacde.js134268478958989924 0
+94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.5d9dacde.js134272044528000733 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@types\imagesloaded\package.json133826269320000000 0
 131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\css-first-letter.js133826269360000000 0
 141C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\utils\test\input\sourcemap\referenced-min.js.map133826269340000000 0
@@ -4365,7 +4367,7 @@
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\dom-range.js133826269370000000 0
 137C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\element-scroll-methods.js133826269370000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\eme.js133826269370000000 0
-122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.a9be943f.css134268478970845057 0
+122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.a9be943f.css134272044530522005 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_call_super.cjs133826269320000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\eot.js133826269370000000 0
 125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\es6-module.js133826269370000000 0
@@ -4381,7 +4383,7 @@
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\flow-root.js133826269370000000 0
 136C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\font-family-system-ui.js133826269380000000 0
 127C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\font-loading.js133826269380000000 0
-122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.09271b42.css134268478976173250 0
+122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\services.09271b42.css134272044530353129 0
 131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\font-size-adjust.js133826269380000000 0
 135C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\font-variant-numeric.js133826269380000000 0
 137C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\caniuse-lite\data\features\form-submit-attributes.js133826269380000000 0
@@ -4751,6 +4753,7 @@
 132C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_skip_first_generator_next.mjs133826269380000000 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_sliced_to_array.mjs133826269380000000 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_super_prop_base.mjs133826269380000000 0
+92C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\lightBulb.png134268687010865234 0
 130C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_tagged_template_literal.mjs133826269380000000 0
 100C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\.bin\semver.cmd133826269420000000 0
 136C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\src\_tagged_template_literal_loose.mjs133826269380000000 0
@@ -4870,7 +4873,7 @@
 140C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_class_check_private_static_access.cjs133826269330000000 0
 134C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\transformer-svg\test\parseFuncIRI.test.js133826269320000000 0
 127C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_class_name_tdz_error.cjs133826269330000000 0
-102C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\resources.0a051dff.js.map134268478966903138 0
+102C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\resources.0a051dff.js.map134272044527935425 0
 138C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_class_private_field_destructure.cjs133826269330000000 0
 130C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_class_private_field_get.cjs133826269330000000 0
 136C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_class_private_field_loose_key.cjs133826269330000000 0
@@ -4884,7 +4887,7 @@
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_construct.cjs133826269330000000 0
 135C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_define_enumerable_properties.cjs133826269330000000 0
 122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_define_property.cjs133826269330000000 0
-121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\ClientZone.pdf134268478955238230 0
+121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\ClientZone.pdf134268635323719565 0
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_dispose.cjs133826269330000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_export_star.cjs133826269330000000 0
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_inherits.cjs133826269330000000 0
@@ -4922,7 +4925,7 @@
 136C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_unsupported_iterable_to_array.cjs133826269340000000 0
 112C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_using.cjs133826269340000000 0
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\helpers\cjs\_write_only_error.cjs133826269340000000 0
-103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesCloud.5041ca3a.png134268478962164192 0
+103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesCloud.5041ca3a.png134272044531229436 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\BundleGraph.js133826269330000000 0
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\counter\CHANGELOG.md133826269310000000 0
 106C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@swc\counter\index.js133826269310000000 0
@@ -5377,7 +5380,7 @@
 141C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\package-manager\test\fixtures\empty\package.json133826269330000000 0
 140C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\package-manager\src\getCurrentPackageManager.js133826269310000000 0
 121C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\package-manager\src\index.js133826269320000000 0
-103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesPhone.ca44cd4e.png134268478950563605 0
+103C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesPhone.ca44cd4e.png134272044531359450 0
 131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\package-manager\src\JSONParseStream.js133826269330000000 0
 120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\package-manager\src\Pnpm.js133826269330000000 0
 134C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\package-manager\src\promiseFromProcess.js133826269330000000 0
@@ -5526,7 +5529,7 @@
 139C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\test\fixtures\invalid-source-not-file\src133980823580406460 1
 141C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\test\fixtures\invalid-distpath\package.json133826269360000000 0
 142C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\test\fixtures\duplicate-targets\package.json133826269360000000 0
-93C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\MSP.b0895052.png134268478959089636 0
+93C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\MSP.b0895052.png134272044531873524 0
 139C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\test\fixtures\custom-targets\package.json133826269360000000 0
 147C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\test\fixtures\custom-format-mismatch\package.json133826269360000000 0
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\types.js133826269360000000 0
@@ -5552,7 +5555,7 @@
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\src\ParcelConfig.js133826269350000000 0
 116C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\src\projectPath.js133826269360000000 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\src\ReporterRunner.js133826269360000000 0
-101C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\services.42642b52.js.map134268478966913250 0
+101C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\services.42642b52.js.map134272044531179425 0
 110C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\src\requests133980823597204394 1
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\src\RequestTracker.js133826269360000000 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\src\resolveOptions.js133826269360000000 0
@@ -5585,7 +5588,7 @@
 111C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\Parcel.js133826269350000000 0
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\ParcelConfig.js133826269350000000 0
 124C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\ParcelConfig.schema.js133826269350000000 0
-95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.c41b5a0e.css134268478970845057 0
+95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.c41b5a0e.css134272044529702392 0
 131C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\registerCoreWithSerializer.js133826269360000000 0
 119C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\resolveOptions.js133826269360000000 0
 115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\serializer.js133826269360000000 0
@@ -5606,7 +5609,7 @@
 117C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\public\Asset.js133826269330000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\public\Bundle.js133826269330000000 0
 123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\public\Environment.js133826269340000000 0
-99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.c41b5a0e.css.map134268478973615369 0
+99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.c41b5a0e.css.map134272044530522005 0
 125C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\public\PluginOptions.js133826269350000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\core\lib\public\Target.js133826269360000000 0
 118C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\node_modules\@parcel\config-default\index.json133826269320000000 0
@@ -5697,48 +5700,52 @@
 91C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\dealers1.png133823037800000000 0
 88C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\Dish1.jpg133823037800000000 0
 91C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\dishPink.jpg133823037800000000 0
+90C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\finance.jpg134268690027646525 0
 87C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\NEWS.png133823037800000000 0
 88C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\Nomsa.PNG133823037800000000 0
 99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\placeHolder copy.png133823037800000000 0
 95C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\placeHolder2.png133823037800000000 0
 99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\placeholderLogo.jpeg133823037800000000 0
 93C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\images\SGfreight2.png133823037800000000 0
-94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\3CX.0f3174c2.jpeg134268478959001676 0
-104C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\activityMeasure.b2568818.js134268478964141818 0
-108C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\activityMeasure.b2568818.js.map134268478967820939 0
-92C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\D5.47a05b29.jpg134268478952529868 0
-98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\dealers1.e83f1254.png134268478950518552 0
-96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\design.4e5cd6b1.jpg134268478958395732 0
-93C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\exco.5bfbb0cc.js134268478966193462 0
-97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\exco.5bfbb0cc.js.map134268478966913250 0
-99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\handshake.907e0292.png134268478949684294 0
-101C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ICTGlobe_AI.8a0fa6c4.png134268478950548513 0
-98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.5d9dacde.js.map134268478961560602 0
-99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.748ad148.css.map134268478977158164 0
-94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.e9a59d41.js134268478964131821 0
-98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.e9a59d41.js.map134268478966933341 0
-99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.e9a92ad8.css.map134268478981444021 0
-87C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.html134268478973363579 0
-96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\intro4.0b913426.jpg134268478952529868 0
-94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\NEWS.5c9c2828.png134268478982804408 0
-96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\office.bbda82fc.jpg134268478971463545 0
+94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\3CX.0f3174c2.jpeg134268676666914799 0
+104C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\activityMeasure.b2568818.js134272044533368562 0
+108C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\activityMeasure.b2568818.js.map134272044533486418 0
+92C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\D5.47a05b29.jpg134272044530522005 0
+98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\dealers1.e83f1254.png134272044531434746 0
+96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\design.4e5cd6b1.jpg134272044532156416 0
+93C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\exco.5bfbb0cc.js134272044529675385 0
+97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\exco.5bfbb0cc.js.map134272044531497617 0
+97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\finance.e58798ce.jpg134272044532435112 0
+99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\handshake.907e0292.png134272044531338488 0
+101C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ICTGlobe_AI.8a0fa6c4.png134268676672942288 0
+98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.5d9dacde.js.map134272044529675385 0
+99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.748ad148.css.map134272044530713128 0
+94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.e9a59d41.js134272044529658506 0
+98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.e9a59d41.js.map134272044530448237 0
+99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.e9a92ad8.css.map134272044531249400 0
+87C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\index.html134272044530458275 0
+96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\intro4.0b913426.jpg134272044531504960 0
+99C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\lightBulb.01281320.png134272044531169418 0
+94C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\NEWS.5c9c2828.png134272044538656933 0
+96C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\office.bbda82fc.jpg134272044537330118 0
 101C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\projects.ad1666d2.js.map134266095434055963 0
-107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\projects_dashboard.75f078e0.js134268478958989924 0
-111C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\projects_dashboard.75f078e0.js.map134268478961550630 0
-98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\resources.0a051dff.js134268478966193462 0
-97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\services.42642b52.js134268478966193462 0
-100C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesBI.76febfd5.png134268478951610158 0
-102C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesPaaS.61fd6bd2.jpg134268478950488502 0
-98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\teamBoat.d5bedd48.png134268478951580039 0
+107C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\projects_dashboard.75f078e0.js134272044533348568 0
+111C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\projects_dashboard.75f078e0.js.map134272044533486418 0
+98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\resources.0a051dff.js134272044527750116 0
+97C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\services.42642b52.js134272044529675385 0
+100C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesBI.76febfd5.png134272044531843514 0
+102C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\ServicesPaaS.61fd6bd2.jpg134272044531239435 0
+98C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\teamBoat.d5bedd48.png134272044531338488 0
 126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\projects.374304ea.css.map134266095434085947 0
 114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\projects.html134266095432270402 0
 135C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\projects_dashboard.4ad25406.js.map134265994459608291 0
-115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\resources.html134268478973363579 0
-122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.02076d37.css134268478976173250 0
-126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.02076d37.css.map134268478978862241 0
-126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.a9be943f.css.map134268478971487356 0
-114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.html134268478983236852 0
-137C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pimages\StrategicUnbinding_Video.mp4134268479015861806 0
-120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\QuoteTool.mp4134268478986018024 0
-115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\soon.mp4134268478990873905 0
-123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\VSP_reseller.pdf134268478966213432 0
+115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\resources.html134272044527920321 0
+122C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.02076d37.css134272044530547392 0
+126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.02076d37.css.map134272044531249400 0
+126C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.a9be943f.css.map134272044531239435 0
+114C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\strategy.html134272044530522005 0
+145C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pimages\Snaptel - Quick Desktop Guide V1.pdf134272044532178259 0
+137C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pimages\StrategicUnbinding_Video.mp4134272044548087541 0
+120C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\QuoteTool.mp4134268649005407608 0
+115C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\soon.mp4134272044540013461 0
+123C:\Users\Estelle\OneDrive\VS_Coding\ICT_Projects\Globe_Internal_Project\dist\scenes\Project_Planning\Pdocs\VSP_reseller.pdf134268652581745874 0

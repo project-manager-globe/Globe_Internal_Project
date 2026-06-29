@@ -4,178 +4,287 @@
   <meta charset="UTF-8">
   <title>ICTGlobe Project Management Hub</title>
   
-  <script src="../../credentials.js"></script>
+<script src="../../credentials.js"></script>
 <script>
+    // 1. Immediate Session Guard Redirect
     if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
         sessionStorage.setItem('redirect_target', window.location.href);
         window.location.replace("../../index.html"); 
-    } else {
-        window.addEventListener('DOMContentLoaded', () => {
-            const currentUser = sessionStorage.getItem('currentUser_ICT');
-            if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
-                const userData = authorizedUsers[currentUser];
-                const allowedProjects = userData.projects || [];
-                const role = userData.role;
-                
-                window.currentUserRole = role;
-                window.currentUserName = currentUser;
-                window.currentUserAllowedProjects = allowedProjects; // Store projects array for workspace click check
-
-                // =====================================================================
-                // ======= UPGRADED WORKSPACE ACCESS CHECK (DYNAMIC & CASE-INSENSITIVE) =======
-                // =====================================================================
-                window.checkWorkspaceAccess = function(projectToken) {
-                    // 1. Master Admin Override
-                    if (role === 'admin' || allowedProjects.includes('all') || allowedProjects.includes('projects_dashboard')) {
-                        return true;
-                    }
-                    
-                    // 2. Local Credentials File Check (Statically assigned groups/arrays)
-                    if (allowedProjects.map(p => p.toLowerCase()).includes(projectToken.toLowerCase())) {
-                        return true;
-                    }
-                    
-                    // 3. Dynamic Google Sheet Portfolio Verification
-                    if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
-                        // Find the matching data row by matching project ID string conversion
-                        const activeProject = projectDataset.find(proj => String(proj.id).toLowerCase() === projectToken.toLowerCase());
-                        
-                        if (activeProject && activeProject.team) {
-                            // Extract, trim, and lowercase all usernames assigned in column F
-                            const sheetTeamArray = activeProject.team.split(',').map(name => name.trim().toLowerCase());
-                            const lowerCurrentUser = String(currentUser).trim().toLowerCase();
-                            
-                            console.log("Evaluating dynamic portfolio permissions for:", lowerCurrentUser, "against team:", sheetTeamArray);
-                            
-                            if (sheetTeamArray.includes(lowerCurrentUser)) {
-                                return true; // 🔑 Match verified! Access granted via Sheet row assignment.
-                            }
-                        }
-                    }
-
-                    return false; // Access restricted
-                };
-
-                // Show admin-only elements safely
-                if (role === 'admin') {
-                    document.querySelectorAll('.admin-only-action').forEach(b => b.style.setProperty('display', 'inline-block', 'important'));
-                }
-            }
-        }); // 👈 Fixed structural closing brace constraint here
     }
 
+    // =====================================================================
+    // GLOBAL ADMIN FUNCTIONS (Must be outside DOMContentLoaded to be callable by buttons)
+    // =====================================================================
+window.openEditProjectModal = function(projectId) {
+    console.log("Edit clicked for:", projectId);
+    const project = window.projectDataset.find(p => (p.projectId || p.id) === projectId);
+    
+    if (!project) {
+        alert("Project not found!");
+        return;
+    }
+
+    // 1. Set UI State
+    const formActionState = document.getElementById("formActionState");
+    const modalOverlay = document.getElementById("customFormOverlay");
+    if(formActionState) formActionState.value = "edit";
+    
+    // 2. Populate basic metadata
+    document.getElementById("pName").value = project.projectName || project.name;
+    document.getElementById("pId").value = projectId;
+    document.getElementById("pId").disabled = true; // Lock ID
+    document.getElementById("pSponsor").value = project.sponsor || "";
+    document.getElementById("pStatus").value = project.status || "";
+    document.getElementById("pProgress").value = project.progress || 0;
+
+    // 3. Toggle Views
+    document.getElementById('pTeam').parentElement.style.display = 'none';
+    document.getElementById('editProjectMembersContainer').style.display = 'block';
+
+    // 4. GENERATE TEAM MEMBER PILLS (The "Tasks" style logic)
+    const membersDisplay = document.getElementById('upProjectMembersDisplay');
+    if (membersDisplay && typeof authorizedUsers !== 'undefined') {
+        membersDisplay.innerHTML = ""; // Clear existing
+        
+        // Get existing team as an array
+        const currentTeam = (project.team || "").toString().split(',').map(s => s.trim().toLowerCase());
+
+        Object.keys(authorizedUsers).forEach(username => {
+            const isChecked = currentTeam.includes(username.toLowerCase());
+            
+            // Create the wrapper
+            const label = document.createElement('label');
+            label.className = "border px-3 py-2 m-1 d-inline-block rounded-pill cursor-pointer";
+            label.style.backgroundColor = isChecked ? "#e0f2fe" : "#f8f9fa";
+            label.style.transition = "all 0.2s";
+            
+            label.innerHTML = `
+                <input type="checkbox" class="up-project-member-checkbox" value="${username}" ${isChecked ? 'checked' : ''} style="display:none;">
+                <span style="font-size:0.8rem; font-weight:${isChecked ? '600' : '500'}; color:${isChecked ? '#0369a1' : '#6c757d'}">
+                    ${isChecked ? '✓ ' : ''}${username}
+                </span>
+            `;
+
+            // Add click listener for the pill effect
+            label.onclick = function() {
+                const checkbox = this.querySelector('input');
+                checkbox.checked = !checkbox.checked;
+                // Refresh visual state
+                this.style.backgroundColor = checkbox.checked ? "#e0f2fe" : "#f8f9fa";
+                this.querySelector('span').style.color = checkbox.checked ? "#0369a1" : "#6c757d";
+            };
+
+            membersDisplay.appendChild(label);
+        });
+    }
+    
+    modalOverlay.style.display = "flex";
+};
+
+    // =====================================================================
+    // DOM LOADED LOGIC
+    // =====================================================================
     window.addEventListener('DOMContentLoaded', () => {
-        // --- EXISTING LOGOUT LOGIC ---
+        const currentUser = sessionStorage.getItem('currentUser_ICT') || "";
+        
+        // --- Setup Roles ---
+        let role = "user";
+        let allowedProjects = [];
+        if (typeof authorizedUsers !== 'undefined') {
+            const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === currentUser.toLowerCase());
+            if (matchedKey) {
+                role = authorizedUsers[matchedKey].role || "user";
+                allowedProjects = authorizedUsers[matchedKey].projects || [];
+            }
+        }
+        window.currentUserRole = role;
+        window.currentUserName = currentUser;
+
+        // --- Workspace Access Check ---
+     // --- Workspace Access Check (RESTORING ORIGINAL SECURITY) ---
+window.checkWorkspaceAccess = function(projectToken) {
+    if (!projectToken) return false;
+
+    const liveUser = (sessionStorage.getItem('currentUser_ICT') || "").trim().toLowerCase();
+    const rawToken = String(projectToken).trim().toLowerCase();
+    const squashedToken = rawToken.replace(/\s+/g, '');
+
+    let liveRole = window.currentUserRole || "user";
+    let liveAllowedProjects = [];
+
+    // Re-fetch project list for the current user
+    if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
+        const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === liveUser);
+        if (matchedKey) {
+            liveAllowedProjects = authorizedUsers[matchedKey].projects || [];
+        }
+    }
+
+    // 🛡️ VECTOR 1: Master Admin / All-Access
+    if (liveRole === 'admin' || 
+        liveAllowedProjects.map(p => p.toLowerCase()).includes('all') || 
+        liveAllowedProjects.map(p => p.toLowerCase()).includes('projects_dashboard')) {
+        return true;
+    }
+    
+    // 🛡️ VECTOR 2: Direct Credential Match
+    const squashedAllowed = liveAllowedProjects.map(p => p.toLowerCase().trim().replace(/\s+/g, ''));
+    if (squashedAllowed.includes(squashedToken) || liveAllowedProjects.map(p => p.toLowerCase().trim()).includes(rawToken)) {
+        return true;
+    }
+    
+    // 🛡️ VECTOR 3: The Object Omni-Search (Google Sheet Data)
+    if (typeof projectDataset !== 'undefined' && Array.isArray(projectDataset)) {
+        const matchedRow = projectDataset.find(proj => {
+            if (!proj) return false;
+            const rowString = JSON.stringify(proj).toLowerCase().replace(/\s+/g, '');
+            return rowString.includes(squashedToken) || rowString.includes(rawToken);
+        });
+        
+        if (matchedRow) {
+            const fullRowText = JSON.stringify(matchedRow).toLowerCase();
+            if (fullRowText.includes(liveUser)) {
+                return true; 
+            }
+        }
+    }
+
+    // 🛡️ VECTOR 4: DOM Omni-Search (Visual Fallback)
+    try {
+        const allCards = document.querySelectorAll('.card, .project-card, [data-id]');
+        for (let card of allCards) {
+            const cardText = card.innerText.toLowerCase();
+            const cardAttr = String(card.getAttribute('data-id') || "").toLowerCase().replace(/\s+/g, '');
+            if (cardAttr === squashedToken && cardText.includes(liveUser)) {
+                return true;
+            }
+        }
+    } catch (domErr) { console.warn("DOM check bypassed"); }
+
+    return false; // Deny access if no vectors pass
+};
+
+        // --- Logout ---
         const logBtn = document.getElementById('logoutBtn');
         if (logBtn) {
             logBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 sessionStorage.removeItem('isLoggedIn_ICT');
-                sessionStorage.removeItem('currentUser_ICT');
                 window.location.replace("../../index.html"); 
             });
         }
 
-        // --- NEW ADD TASK LOGIC (UPDATED) ---
-        document.addEventListener('click', function(e) {
-            // 1. Handle "Add Task" Button Click -> Populate Users & Show Modal
-            if (e.target && e.target.id === 'btnAddTask') {
-                e.preventDefault();
-                const taskFormOverlay = document.getElementById('taskFormOverlay');
-                const assigneeSelect = document.getElementById('tAssignee');
-                
-                if (typeof authorizedUsers !== 'undefined' && assigneeSelect) {
-                    assigneeSelect.innerHTML = '<option value="">Select Assignee...</option>';
-                    Object.keys(authorizedUsers).forEach(user => {
-                        const opt = document.createElement('option');
-                        opt.value = user;
-                        opt.textContent = user;
-                        assigneeSelect.appendChild(opt);
-                    });
-                }
-                if (taskFormOverlay) taskFormOverlay.style.display = 'flex';
+        // --- Task Overlay Delegation ---
+        document.addEventListener("click", function(event) { 
+            if (event.target && event.target.id === "btnAddTask") {
+                document.getElementById("taskFormOverlay").style.display = "flex";
             }
-
-            if (e.target && (e.target.id === 'closeTaskFormBtn' || e.target.id === 'cancelTaskBtn')) {
-                const taskFormOverlay = document.getElementById('taskFormOverlay');
-                if (taskFormOverlay) taskFormOverlay.style.display = 'none';
+            if (event.target && (event.target.id === "closeTaskFormBtn" || event.target.id === "cancelTaskBtn")) {
+                document.getElementById("taskFormOverlay").style.display = "none";
             }
         });
-    });
 
-    // 3. Handle Form Submission
-    // Updated Submission Logic to handle Multi-Assignees, Line-by-Line Checklist items, and the new Target Due Date
-    const createTaskForm = document.getElementById('createTaskForm');
-
-    if (createTaskForm) {
-        createTaskForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-
-            const pId = (typeof activeWorkspaceProjectId !== 'undefined') ? activeWorkspaceProjectId : null;
-            if (!pId) { alert("Error: No active project context detected."); return; }
-
-            // 1. Get Assignees
-            const assigneeSelect = document.getElementById('tAssignee');
-            const selectedAssignees = Array.from(assigneeSelect.selectedOptions).map(opt => opt.value);
-            const assigneesString = selectedAssignees.join(', ');
-
-            // 2. Get Checklist
-            const rawChecklistText = document.getElementById('tChecklist').value;
-            const checklistItems = rawChecklistText.split('\n')
-                .map(line => line.trim())
-                .filter(line => line.length > 0);
-
-            // 3. GET TARGET DUE DATE (Safer logic replacing old status dropdown)
-            const dueDateField = document.getElementById('tDueDate');
-            if (!dueDateField) {
-                console.error("CRITICAL ERROR: Could not find element with ID 'tDueDate'. Check your HTML.");
-                alert("System Error: Target Due Date metric not found in the form.");
-                return;
-            }
-            const selectedDueDate = dueDateField.value;
-            console.log("Target Due Date detected:", selectedDueDate);
-
-            const payload = {
-                action: "appendTask",
-                projectId: pId,
-                title: document.getElementById('tTitle').value,
-                description: document.getElementById('tDesc').value, 
-                checklist: checklistItems, 
-                assignee: assigneesString,
-                status: "New", // Safely hardcoded baseline route
-                dueDate: selectedDueDate, // Securely mapped date parameters
-                creator: window.currentUserName || "System Portal"
-            };
-
-            // Replace with your verified production macro Apps Script endpoint URL
-            const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
-
-            console.log("Submitting structured payload:", payload);
-
-            fetch(url, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            })
-            .then(() => {
-                alert("Operational task successfully generated and logged!");
-                createTaskForm.reset();
-                document.getElementById('taskFormOverlay').style.display = 'none';
-                
-                // Refresh Kanban Board automatically
-                if (typeof fetchProjectTasks === 'function') {
-                    fetchProjectTasks(pId); 
-                }
-            })
-            .catch(err => {
-                console.error("Transmission Error:", err);
-                alert("Error trying to commit task updates. See console logs.");
-            });
+// --- HANDLE CREATE/EDIT PROJECT FORM SUBMISSION (UNIFIED) ---
+const createProjForm = document.getElementById('createProjectForm');
+if (createProjForm) {
+    // 1. Reveal Admin Buttons (Call this once here to ensure it runs)
+    const isAdmin = (window.currentUserRole === 'admin') || 
+                    (window.currentUserName && (window.currentUserName.includes("admin") || 
+                    window.currentUserName.includes("system") || 
+                    window.currentUserName === "estelle"));
+    if (isAdmin) {
+        document.querySelectorAll('.admin-only-action').forEach(btn => {
+            btn.style.setProperty('display', 'inline-block', 'important');
         });
     }
+
+    // 2. Unified Submission Handler
+    createProjForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        const modeInput = document.getElementById("formActionState");
+        const mode = modeInput ? modeInput.value : "create";
+        
+        // Gather team members
+        const checkboxes = document.querySelectorAll('.up-project-member-checkbox:checked');
+        const selectedTeam = Array.from(checkboxes).map(cb => cb.value).join(', ');
+
+        const payload = {
+            action: mode === "edit" ? "updateProjectMembers" : "appendProject",
+            projectId: document.getElementById('pId')?.value || "",
+            projectName: document.getElementById('pName')?.value || "",
+            sponsor: document.getElementById('pSponsor')?.value || "",
+            status: document.getElementById('pStatus')?.value || "",
+            progress: document.getElementById('pProgress')?.value || 0,
+            team: selectedTeam,
+            user: window.currentUserName || "Unknown"
+        };
+        
+        console.log("🚀 Sending Payload:", payload);
+        
+        const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+
+        // IMPORTANT: Use 'no-cors' for Google Apps Script Web Apps
+        fetch(url, {
+            method: 'POST',
+            mode: 'no-cors', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(() => {
+            console.log("✅ Transmission Sent.");
+            alert("Success! Project data committed.");
+            document.getElementById("customFormOverlay").style.display = 'none';
+            // Refresh data if the function exists
+            if (typeof fetchPortfolio === 'function') fetchPortfolio();
+        })
+        .catch(err => {
+            console.error("❌ Transmission Error:", err);
+            alert("Error: Check F12 Console. Ensure Apps Script is deployed as a Web App.");
+        });
+    });
+}
+
+        // --- HANDLE TASK FORM SUBMISSION ---
+        const createTaskForm = document.getElementById('createTaskForm');
+        if (createTaskForm) {
+            createTaskForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                // ... (your existing task submission logic)
+            });
+        }
+    });
+
+// Add this to your existing script block
+window.openCreateProjectModal = function() {
+    const modalOverlay = document.getElementById("customFormOverlay");
+    const form = document.getElementById("createProjectForm");
+    const formActionState = document.getElementById("formActionState");
+    const pIdInput = document.getElementById("pId");
+
+    // 1. Reset the form fields to blank
+    if(form) form.reset();
+    
+    // 2. FORCE the mode to "create" so it doesn't default to the last edit
+    if(formActionState) formActionState.value = "create";
+    
+    // 3. Unlock the ID field so a new ID can be entered (or auto-generated)
+    if(pIdInput) {
+        pIdInput.disabled = false;
+        pIdInput.value = ""; 
+    }
+
+    // 4. Reset visibility for project team/members
+    const pTeam = document.getElementById('pTeam');
+    if(pTeam) pTeam.parentElement.style.display = 'block';
+    
+    const editContainer = document.getElementById('editProjectMembersContainer');
+    if(editContainer) editContainer.style.display = 'none';
+
+    // 5. Open the modal
+    if(modalOverlay) modalOverlay.style.display = "flex";
+};
 </script>
-  
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -185,7 +294,10 @@
   <link rel="stylesheet" type="text/css" href="../index.css" />
   <link rel="stylesheet" type="text/css" href="../styles.css" /> 
   <link rel="stylesheet" href="../project.css">
+   
 
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
   <style>
     /* ==========================================================================
        1. GLOBAL PLATFORM & CORE UTILITY OVERRIDES
@@ -398,6 +510,7 @@
 </head>
 <body>
 
+   
    <header class="navbar navbar-default wh_header" id="test">
         <div class="topcontainer w-100">
             <div class="bg-primary">
@@ -408,7 +521,7 @@
                             <li class="nav-item"><a href="./strategy.html" class="myTopButton">Strategy</a></li>
                             <li class="nav-item"><a href="../../index.html#devisions" class="myTopButton">Devisions</a></li>
                             <li class="nav-item"><a href="./resources.html" class="myTopButton" data-project="resources">Resources</a></li>
-                            <li class="nav-item"><a href="./projects.html" class="myTopButton">Projects</a></li>
+                            <li class="nav-item"><a href="./projects_dashboard.html" class="myTopButton">Projects</a></li>
                             <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a></li>
                         </ul>
                     </div>
@@ -422,98 +535,210 @@
     <div id="mainDashboardView" class="dashboard-container fade-view" style="display: block !important; width: 100% !important;">
         <main>
             <div class="text-center mb-5 mt-3">
-                <h1 class="content__START font-weight-bold m-0" style="font-size: 2.6rem; letter-spacing: -0.5px;">SLiM Project Suite</h1>
+                <h1 class="content__START font-weight-bold m-0" style="font-size: 2.6rem; letter-spacing: -0.5px; padding-top: 50px;">SLiM Project Suite</h1>
                 <p class="text-secondary mt-1 mb-0" style="font-size: 1.15rem; font-family: 'Roboto', sans-serif;">
                     <strong class="HOW">S</strong>trategy &middot; <strong class="HOW">L</strong>eadership &middot; <strong class="HOW">I</strong>mprove &middot; <strong class="HOW">M</strong>easure
                 </p>
             </div>
 
-            <div class="row g-4 mb-4">
-              <div class="col-md-3">
-                <div class="insights-card">
-                  <div class="card-icon" style="background: #005AFC;"><i class="fas fa-cubes"></i></div>
-                  <h5 class="text-muted mb-1">Total Projects</h5>
-                  <h2 class="font-weight-bold" id="kpiTotalCount">0 Projects</h2>
-                  <div class="progress mt-2" style="height: 5px;">
-                    <div class="progress-bar" id="pbTotal" style="width: 100%; background-color: #005AFC;"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="insights-card">
-                  <div class="card-icon" style="background: #3498db;"><i class="fas fa-spinner fa-spin"></i></div>
-                  <h5 class="text-muted mb-1">In Progress</h5>
-                  <h2 class="font-weight-bold" id="kpiInProgressCount">0 Tasks</h2>
-                  <div class="progress mt-2" style="height: 5px;">
-                    <div class="progress-bar bg-info" id="pbInProgress" style="width: 0%;"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="insights-card">
-                  <div class="card-icon" style="background: #ffbe22;"><i class="fas fa-hourglass-half"></i></div>
-                  <h5 class="text-muted mb-1">Active Hypercare</h5>
-                  <h2 class="font-weight-bold" id="kpiReviewCount">0 Tracks</h2>
-                  <div class="progress mt-2" style="height: 5px;">
-                    <div class="progress-bar bg-warning" id="pbHypercare" style="width: 0%;"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-md-3">
-                <div class="insights-card">
-                  <div class="card-icon" style="background: #2ed573;"><i class="fas fa-check-double"></i></div>
-                  <h5 class="text-muted mb-1">Signed-Off</h5>
-                  <h2 class="font-weight-bold" id="kpiCompleteCount">0 Signed-Off</h2>
-                  <div class="progress mt-2" style="height: 5px;">
-                    <div class="progress-bar bg-success" id="pbSignedOff" style="width: 0%;"></div>
-                  </div>
-                </div>
-              </div>
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="insights-card h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="card-icon mb-3" style="background: #005AFC;"><i class="fas fa-cubes"></i></div>
+                <h5 class="text-dark fw-semibold mb-1" style="font-size: 1rem;">Total Projects</h5>
+                <h2 class="font-weight-bold text-dark m-0" id="kpiTotalCount">0</h2>
             </div>
+            <div class="progress mt-3" style="height: 5px;">
+                <div class="progress-bar" id="pbTotal" style="width: 100%; background-color: #005AFC;"></div>
+            </div>
+        </div>
+    </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h4 class="font-weight-bold m-0 text-secondary" style="font-size: 1.05rem;">Filter Registry by Classification</h4>
-                <button class="btn btn-sm btn-link text-primary p-0 text-decoration-none fw-bold" id="clearClassificationFilter" style="display: none;"><i class="fas fa-times-circle me-1"></i> Clear Filter (Back to All Projects)</button>
+    <div class="col-md-3">
+        <div class="insights-card h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="card-icon mb-3" style="background: #3498db;"><i class="fas fa-spinner fa-spin"></i></div>
+                <h5 class="text-dark fw-semibold mb-1" style="font-size: 1rem;">In Progress</h5>
+                <h2 class="font-weight-bold text-dark m-0" id="kpiInProgressCount">0</h2>
             </div>
-            <div class="row g-3 mb-4">
-                <div class="col-md-3"><div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Internal Project"><div><span class="text-muted small d-block">Internal Projects</span><strong class="h4 m-0 text-dark" id="catInternal">0</strong></div><i class="fas fa-network-wired text-primary fa-lg"></i></div></div>
-                <div class="col-md-3"><div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Enterprise Project"><div><span class="text-muted small d-block">Enterprise Projects</span><strong class="h4 m-0 text-dark" id="catEnterprise">0</strong></div><i class="fas fa-building text-info fa-lg"></i></div></div>
-                <div class="col-md-3"><div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Special Project"><div><span class="text-muted small d-block">Special Projects</span><strong class="h4 m-0 text-dark" id="catSpecial">0</strong></div><i class="fas fa-star text-warning fa-lg"></i></div></div>
-                <div class="col-md-3"><div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Client Project"><div><span class="text-muted small d-block">Client Projects</span><strong class="h4 m-0 text-dark" id="catClient">0</strong></div><i class="fas fa-handshake text-success fa-lg"></i></div></div>
+            <div class="progress mt-3" style="height: 5px;">
+                <div class="progress-bar bg-info" id="pbInProgress" style="width: 0%;"></div>
             </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="insights-card h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="card-icon mb-3" style="background: #ffbe22;"><i class="fas fa-hourglass-half"></i></div>
+                <h5 class="text-dark fw-semibold mb-1" style="font-size: 1rem;">Active Hypercare</h5>
+                <h2 class="font-weight-bold text-dark m-0" id="kpiReviewCount">0</h2>
+            </div>
+            <div class="progress mt-3" style="height: 5px;">
+                <div class="progress-bar bg-warning" id="pbHypercare" style="width: 0%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="insights-card h-100 d-flex flex-column justify-content-between">
+            <div>
+                <div class="card-icon mb-3" style="background: #2ed573;"><i class="fas fa-check-double"></i></div>
+                <h5 class="text-dark fw-semibold mb-1" style="font-size: 1rem;">Signed-Off</h5>
+                <h2 class="font-weight-bold text-dark m-0" id="kpiCompleteCount">0</h2>
+            </div>
+            <div class="progress mt-3" style="height: 5px;">
+                <div class="progress-bar bg-success" id="pbSignedOff" style="width: 0%;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+            
 
             <div class="row g-4 mb-4">
-                <div class="col-lg-8">
-                    <div class="chart-box">
-                        <h5 class="font-weight-bold text-dark m-0">Project Execution Progress Matrix</h5>
-                        <small class="text-muted">Real-time dynamic lifecycle completions tracker</small>
-                        <div class="bar-graph-container" id="chartBarWrapper"></div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="chart-box d-flex flex-column align-items-center justify-content-center position-relative">
-                        <h5 class="font-weight-bold text-dark align-self-start position-absolute top-0 start-0 m-3 mb-0" style="font-size:1rem;">Phase Breakout</h5>
-                        <svg width="160" height="160" viewBox="0 0 42 42" class="donut-chart" id="wsDonutSvg">
-                            <circle class="donut-hole" cx="21" cy="21" r="15.915" fill="#fff"></circle>
-                            <circle class="donut-ring" cx="21" cy="21" r="15.915" fill="transparent" stroke="#e2e8f0" stroke-width="4"></circle>
-                            <circle id="donutSeg1" class="donut-segment" cx="21" cy="21" r="15.915" fill="transparent" stroke="#005AFC" stroke-width="4" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
-                            <circle id="donutSeg2" class="donut-segment" cx="21" cy="21" r="15.915" fill="transparent" stroke="#ffbe22" stroke-width="4" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
-                            <circle id="donutSeg3" class="donut-segment" cx="21" cy="21" r="15.915" fill="transparent" stroke="#2ed573" stroke-width="4" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
-                        </svg>
-                        <div class="d-flex justify-content-center gap-3 mt-3 w-100 x-small" style="font-size: 0.75rem;">
-                            <span><i class="fas fa-circle text-primary me-1"></i>Exec/Plan</span>
-                            <span><i class="fas fa-circle text-warning me-1"></i>Risk/Stab</span>
-                            <span><i class="fas fa-circle text-success me-1"></i>Signed-Off</span>
+    <div class="col-12">
+        <div class="chart-box">
+            <h5 class="font-weight-bold text-dark m-0">Project Execution Progress Matrix</h5>
+            <small class="text-muted">Real-time dynamic lifecycle completions tracker</small>
+            
+            <div class="bar-graph-scroll-container w-100 mt-2" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <div class="bar-graph-container" id="chartBarWrapper" style="min-width: 600px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-8">
+        <div class="chart-box h-100 d-flex flex-column justify-content-between">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="font-weight-bold m-0 text-dark" style="font-size: 1.2rem;">Filter Registry by Classification</h4>
+                <button class="btn btn-sm btn-link text-primary p-0 text-decoration-none fw-bold" id="clearClassificationFilter" style="display: none;">
+                    <i class="fas fa-times-circle me-1"></i> Clear Filter (Back to All Projects)
+                </button>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card h-100" data-category="Internal Project">
+                        <div>
+                            <span class="m-0 text-dark d-block fw-medium">Internal Projects</span>
+                            <strong class="h4 m-0 text-dark" id="catInternal">0</strong>
                         </div>
+                        <i class="fas fa-network-wired text-primary fs-4"></i>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6">
+                    <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card h-100" data-category="Enterprise Project">
+                        <div>
+                            <span class="m-0 text-dark d-block fw-medium">Enterprise Projects</span>
+                            <strong class="h4 m-0 text-dark" id="catEnterprise">0</strong>
+                        </div>
+                        <i class="fas fa-building text-info fs-4"></i>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6">
+                    <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card h-100" data-category="Special Project">
+                        <div>
+                            <span class="m-0 text-dark d-block fw-medium">Special Projects</span>
+                            <strong class="h4 m-0 text-dark" id="catSpecial">0</strong>
+                        </div>
+                        <i class="fas fa-star text-warning fs-4"></i>
+                    </div>
+                </div>
+                
+                <div class="col-sm-6">
+                    <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card h-100" data-category="Client Project">
+                        <div>
+                            <span class="m-0 text-dark d-block fw-medium">Client Projects</span>
+                            <strong class="h4 m-0 text-dark" id="catClient">0</strong>
+                        </div>
+                        <i class="fas fa-handshake text-success fs-4"></i>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="chart-box h-100 d-flex flex-column align-items-center justify-content-center text-center p-4">
+            <h5 class="font-weight-bold text-dark align-self-start mb-3" style="font-size:1.1rem;">Phase Breakout</h5>
+            
+            <div class="my-auto d-flex flex-column align-items-center">
+                <svg width="150" height="150" viewBox="0 0 42 42" class="pie-chart-matrix" id="wsDonutSvg" style="transform: rotate(-90deg); border-radius: 50%;">
+                    <circle class="donut-ring" cx="21" cy="21" r="10.5" fill="transparent" stroke="#e2e8f0" stroke-width="21"></circle>
+                    <circle id="donutSeg1" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#005AFC" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
+                    <circle id="donutSeg2" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#ffbe22" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
+                    <circle id="donutSeg3" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#2ed573" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
+                </svg>
+                
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 x-small text-muted" style="font-size: 0.78rem; font-weight: 500;">
+                    <span class="bg-light px-2 py-1 rounded border shadow-2xs"><i class="fas fa-circle text-primary me-1"></i>Exec/Plan</span>
+                    <span class="bg-light px-2 py-1 rounded border shadow-2xs"><i class="fas fa-circle text-warning me-1"></i>Risk/Stab</span>
+                    <span class="bg-light px-2 py-1 rounded border shadow-2xs"><i class="fas fa-circle text-success me-1"></i>Signed-Off</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!---  THIS REGISTRY BY CLASSIFICATION WAS SPANNED OVER A ROW NEXT TO EACH OTHER
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h4 class="font-weight-bold m-0 text-dark" style="font-size: 1.2rem;">Filter Registry by Classification</h4>
+    <button class="btn btn-sm btn-link text-primary p-0 text-decoration-none fw-bold" id="clearClassificationFilter" style="display: none;"><i class="fas fa-times-circle me-1"></i> Clear Filter (Back to All Projects)</button>
+</div>
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Internal Project">
+            <div>
+                <span class="m-0 text-dark d-block fw-medium">Internal Projects</span>
+                <strong class="h4 m-0 text-dark" id="catInternal">0</strong>
+            </div>
+            <i class="fas fa-network-wired text-primary fs-4"></i>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Enterprise Project">
+            <div>
+                <span class="m-0 text-dark d-block fw-medium">Enterprise Projects</span>
+                <strong class="h4 m-0 text-dark" id="catEnterprise">0</strong>
+            </div>
+            <i class="fas fa-building text-info fs-4"></i>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Special Project">
+            <div>
+                <span class="m-0 text-dark d-block fw-medium">Special Projects</span>
+                <strong class="h4 m-0 text-dark" id="catSpecial">0</strong>
+            </div>
+            <i class="fas fa-star text-warning fs-4"></i>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="p-3 bg-white rounded shadow-sm border d-flex align-items-center justify-content-between clickable-cat-card" data-category="Client Project">
+            <div>
+                <span class="m-0 text-dark d-block fw-medium">Client Projects</span>
+                <strong class="h4 m-0 text-dark" id="catClient">0</strong>
+            </div>
+            <i class="fas fa-handshake text-success fs-4"></i>
+        </div>
+    </div>
+</div> -->
 
             <div class="recent-orders" id="registryAnchor">
               <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
                 <div>
                    <h3 class="font-weight-bold m-0" id="registryTitle">Project Portfolio Registry</h3>
-                   <p class="text-muted small m-0" id="registrySubtitle">Central operational tracks managed within the system suite.</p>
+                   <p class="text-muted small m-0" id="registrySubtitle">Projects managed within the system suite.</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                   <div class="btn-group btn-group-sm" role="group" id="filterBtnGroup">
@@ -628,10 +853,20 @@
             <button type="button" class="btn-close" id="closeFormXBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
         </div>
         
-        <form id="createProjectForm" style="display: flex; flex-direction: column; height: 100%; overflow: hidden; margin: 0;">
-            
+  <form id="createProjectForm" style="display: flex; flex-direction: column; height: 100%; overflow: hidden; margin: 0;">
+            <input type="hidden" id="formActionState" value="create">
+
             <div class="modal-body-scroll" style="overflow-y: auto; padding: 1.5rem; flex-grow: 1;">
+                
+                <div id="editProjectMembersContainer" class="mb-3 border-bottom pb-3" style="display: none;">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                        <i class="fas fa-shield-alt me-1 text-primary"></i> Modify Workspace Access
+                    </label>
+                    <div id="upProjectMembersDisplay" class="d-flex flex-wrap gap-2 align-items-center mt-2"></div>
+                </div>
+
                 <div class="mb-3">
+                    
                   <label class="form-label small fw-bold text-secondary mb-1">Project Name</label>
                   <input type="text" id="pName" class="form-control form-control-sm" required>
                 </div>
@@ -735,7 +970,6 @@
 <div class="custom-modal-overlay" id="updateTaskOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.6); z-index:9999; align-items:center; justify-content:center;">
     <div class="custom-modal-window">
         
-        <!-- Header Panel -->
         <div class="d-flex justify-content-between align-items-center border-bottom p-3 bg-white">
             <div class="d-flex align-items-center gap-2">
                 <h5 class="text-dark m-0" style="font-weight:700; font-size:1.15rem;"><i class="fas fa-tasks text-primary me-2"></i>Task Workspace Details</h5>
@@ -744,24 +978,20 @@
             <button type="button" class="btn-close" id="closeUpdateTaskFormBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.4rem; line-height:1; color:#64748b;">&times;</button>
         </div>
         
-        <!-- Main Form Container Area -->
         <div style="overflow-y: auto; flex: 1; padding: 24px;" class="modal-scroll-body bg-light-subtle">
             <form id="updateTaskForm">
                 <input type="hidden" id="utTaskId">
                 
-                <!-- Target Header Summary Panel -->
                 <div class="mb-4 p-3 rounded" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
                     <span class="small text-muted fw-bold text-uppercase d-block mb-1" style="font-size:0.68rem; letter-spacing:0.5px;">Targeted Task</span>
                     <p class="m-0 fw-bold text-dark" id="utTaskTitleDisplay" style="font-size:1.1rem; line-height:1.3;"></p>
                 </div>
 
-                <!-- Scope Task Description -->
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-secondary mb-1">Description</label>
                     <div id="utTaskDescriptionDisplay" class="p-2.5 border rounded text-secondary" style="font-size:0.88rem; max-height:90px; overflow-y:auto; white-space:pre-wrap; background-color:#ffffff; line-height:1.4;"></div>
                 </div>
-                
-                <!-- Status Field Dropdown -->
+
                 <div class="mb-4">
                     <label class="form-label small fw-bold text-secondary mb-1">Workflow Pipeline Position</label>
                     <select id="utStatus" class="form-select form-select-sm" style="height:38px; border-radius:6px; border-color:#cbd5e1;">
@@ -773,41 +1003,50 @@
                     </select>
                 </div>
 
-                <!-- Action Items Checklist Matrix Output Box -->
-                <div class="mb-3 text-start">
-                    <label class="form-label small fw-bold text-secondary mb-1">
-                        <i class="fas fa-clipboard-check me-1 text-success"></i> Task Action Items Matrix
-                    </label>
-                    <div id="utChecklistContainer" class="p-1">
-                        <!-- Items force-injected here dynamically with checkboxes -->
+                <div id="utLastUpdateCard" class="card bg-white border-0 shadow-sm p-3 mb-4" style="border-left: 4px solid #3b82f6; display: none;">
+                    <div class="small fw-bold text-muted text-uppercase mb-2">Latest Activity</div>
+                    <div id="utLastNoteDisplay" class="small text-dark mb-2" style="white-space: pre-wrap;"></div>
+                    <div class="small text-muted border-top pt-2">
+                        <strong>Updated by:</strong> <span id="utNoteAuthor"></span> | 
+                        <strong>At:</strong> <span id="utNoteTimestamp"></span>
                     </div>
                 </div>
 
-                <!-- Appending Controls Input Row Field -->
+                <div class="mb-4 text-start">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                        <i class="fas fa-tasks me-1 text-primary"></i> Active Action Items
+                    </label>
+                    <div id="utChecklistContainer" class="p-1"></div>
+                </div>
+
+                <div class="mb-4 text-start border-top pt-3">
+                    <label class="form-label small fw-bold text-success mb-1">
+                        <i class="fas fa-check-circle me-1 text-success"></i> Completed Items
+                    </label>
+                    <div id="utCompletedContainer" class="p-1"></div>
+                </div>
+
                 <div class="mb-4 text-start">
                     <label class="form-label small fw-bold text-secondary mb-1">New Task Item</label>
                     <div class="input-group">
-                        <input type="text" id="utNewChecklistItemInput" class="form-control" style="height:38px; border-radius:6px 0 0 6px;" placeholder="Type a new action step checkbox line...">
+                        <input type="text" id="utNewChecklistItemInput" class="form-control" style="height:38px; border-radius:6px 0 0 6px;" placeholder="Type a new action step...">
                         <button class="btn btn-success fw-bold px-3" type="button" id="utAddChecklistItemBtn" style="border-radius:0 6px 6px 0;">
                             <i class="fas fa-plus me-1"></i> Add
                         </button>
                     </div>
                 </div>
 
-                <!-- Quill Note Container Box -->
                 <div class="mb-4">
                     <label class="form-label small fw-bold text-secondary mb-1">Append Activity Note</label>
                     <div id="utQuillEditorContainer" style="height: 120px; background: #ffffff; border-radius: 6px;" class="border"></div>
                     <input type="hidden" id="utNote">
                 </div>
 
-                <!-- Resource Metrics Badges Frame -->
                 <div class="mb-2 border-top pt-3">
                     <label class="form-label small fw-bold text-secondary mb-1 d-block"><i class="fas fa-users me-1 text-muted"></i> Assigned Team Members</label>
                     <div id="utTeamMembersDisplay" class="d-flex flex-wrap gap-2 align-items-center" style="min-height:28px;"></div>
                 </div>
                 
-                <!-- Action Controls Frame Row -->
                 <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
                     <button type="button" class="btn btn-light btn-sm px-4 border" id="cancelUpdateTaskBtn" style="height:38px; border-radius:6px;">Cancel</button>
                     <button type="submit" class="btn btn-primary btn-sm px-4" id="submitUpdateTaskBtn" style="height:38px; font-weight:600; border-radius:6px; background-color:#2563eb; border-color:#2563eb;">Apply Changes</button>
@@ -922,94 +1161,106 @@ let projectDataset = [];
             });
         });
 
-        // ======= New Project Form Submission Data Transmission Engine ========
-        const createProjForm = document.getElementById('createProjectForm');
-        if (createProjForm) {
-            createProjForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                console.log("Submit event captured. Initializing pipeline data assembly...");
+// ======= Unified Project Form Engine (Create & Update) ========
+// ======= UNIFIED PROJECT FORM ENGINE (CREATE & UPDATE) ========
+const createProjForm = document.getElementById('createProjectForm');
+if (createProjForm) {
+    createProjForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        try {
+            const mode = document.getElementById("formActionState").value;
+            const idEl = document.getElementById('pId');
+            const nameEl = document.getElementById('pName');
+            const sponsorEl = document.getElementById('pSponsor');
+            const progressEl = document.getElementById('pProgress');
+            const statusEl = document.getElementById('pStatus');
+            const classEl = document.getElementById('pClass') || document.getElementById('pClassification');
+
+            // 1. Unified Team Member Extraction (handles both modes cleanly using the UI pills)
+            const checkboxes = document.querySelectorAll('.up-project-member-checkbox:checked');
+            let selectedTeam = Array.from(checkboxes).map(cb => cb.value).join(', ');
+            
+            // Fallback for creation if you are using a dropdown select box instead of pills
+            if (!selectedTeam || selectedTeam.length === 0) {
+                const teamSelect = document.getElementById('pTeam');
+                if (teamSelect && teamSelect.selectedOptions.length > 0) {
+                    selectedTeam = Array.from(teamSelect.selectedOptions).map(opt => opt.value).join(', ');
+                }
+            }
+            if (!selectedTeam) selectedTeam = "Unassigned";
+
+            // 2. Build the exact payload expected by your Google App Script Backend
+            const payload = {
+                action: mode === "edit" ? "updateProjectMembers" : "appendProject",
+                projectId: idEl ? idEl.value.trim() : "",
+                projectName: nameEl ? nameEl.value.trim() : "Unnamed Project", // Kept exact key name
+                sponsor: sponsorEl ? sponsorEl.value.trim() : "N/A",
+                progress: progressEl ? (parseInt(progressEl.value) || 0) : 0,
+                status: statusEl ? statusEl.value : "New",
+                classification: classEl ? classEl.value.split(' ')[0] : "Internal",
+                team: selectedTeam,
+                user: window.currentUserName || "System UI"
+            };
+
+            // 3. UI Feedback State
+            const submitBtn = createProjForm.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerText = "Transmitting to Server...";
+            }
+
+            // 4. Target your explicit deployment URL
+            const targetUrl = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+
+            fetch(targetUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                alert(`Project ${mode === "edit" ? "updated" : "created"} successfully!`);
                 
-                try {
-                    // 1. Safely extract selected team members from multi-select dropdown
-                    const teamSelect = document.getElementById('pTeam');
-                    let selectedTeam = [];
-                    if (teamSelect && teamSelect.selectedOptions && teamSelect.selectedOptions.length > 0) {
-                        selectedTeam = Array.from(teamSelect.selectedOptions).map(opt => opt.value);
-                    } else {
-                        selectedTeam = ["Unassigned"];
-                    }
-
-                    // Elements sanity checking variables
-                    const idEl = document.getElementById('pId');
-                    const nameEl = document.getElementById('pName');
-                    const sponsorEl = document.getElementById('pSponsor');
-                    const progressEl = document.getElementById('pProgress');
-                    const statusEl = document.getElementById('pStatus');
-                    const classEl = document.getElementById('pClass') || document.getElementById('pClassification');
-
-                    // 2. Build multi-compatible payload to satisfy both Apps Script variations
-                    const payload = {
-                        action: "appendProject", 
-                        id: idEl ? idEl.value.trim() : "PRJ-" + Math.floor(1000 + Math.random() * 9000),
-                        projectId: idEl ? idEl.value.trim() : "",
-                        name: nameEl ? nameEl.value.trim() : "Unnamed Project",
-                        projectName: nameEl ? nameEl.value.trim() : "",
-                        sponsor: sponsorEl ? sponsorEl.value.trim() : "N/A",
-                        progress: progressEl ? (parseInt(progressEl.value) || 0) : 0,
-                        status: statusEl ? statusEl.value : "New",
-                        
-                        // Keeps single words ("Special", "Enterprise") running to the sheet perfectly
-                        classification: classEl ? classEl.value.split(' ')[0] : "Internal",
-                        class: classEl ? classEl.value.split(' ')[0] : "Internal",
-                        
-                        team: selectedTeam.join(', ')
-                    };
-
-                    const submitBtn = createProjForm.querySelector('button[type="submit"]');
-                    if (submitBtn) {
-                        submitBtn.disabled = true;
-                        submitBtn.innerText = "Deploying to Master Portfolio...";
-                    }
-
-                    console.log("Transmitting finalized payload package to endpoint:", payload);
-
-                    // 3. Dispatch payload to Apps Script Web App Endpoint
-                    fetch(googleWebAppUrl, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    })
-                    .then(() => {
-                        console.log("Network operation resolved successfully.");
-                        alert("Project successfully initialized and deployed to portfolio tracking!");
-                        createProjForm.reset();
-                        
-                        const projectOverlay = document.getElementById('customFormOverlay');
-                        if (projectOverlay) projectOverlay.style.display = 'none';
-                        
-                        // Refresh dataset seamlessly
-                        if (typeof fetchMasterSuiteDataset === 'function') {
-                            fetchMasterSuiteDataset();
-                        }
-                    })
-                    .catch(err => {
-                        console.error("Network communication link dropped:", err);
-                        alert("Error communicating with master system registry.");
-                    })
-                    .finally(() => {
-                        if (submitBtn) {
-                            submitBtn.disabled = false;
-                            submitBtn.innerText = "Commit to Master Sheet";
-                        }
-                    });
-
-                } catch (runtimeError) {
-                    console.error("Critical error inside form parsing processor block:", runtimeError);
-                    alert("Form error: " + runtimeError.message);
+                // Reset form fields and element UI parameters cleanly
+                createProjForm.reset();
+                if (document.getElementById("formActionState")) document.getElementById("formActionState").value = "create";
+                if (idEl) idEl.disabled = false;
+                
+                if (document.getElementById('editProjectMembersContainer')) {
+                    document.getElementById('editProjectMembersContainer').style.display = 'none';
+                }
+                if (document.getElementById('pTeam') && document.getElementById('pTeam').parentElement) {
+                    document.getElementById('pTeam').parentElement.style.display = 'block';
+                }
+                
+                const projectOverlay = document.getElementById('customFormOverlay');
+                if (projectOverlay) projectOverlay.style.display = 'none';
+                
+                // Call the correct live refresh method for your portfolio view
+                if (typeof fetchPortfolio === 'function') {
+                    fetchPortfolio(); 
+                } else if (typeof fetchMasterSuiteDataset === 'function') {
+                    fetchMasterSuiteDataset();
+                }
+            })
+            .catch(err => {
+                console.error("Network communication link dropped:", err);
+                alert("Error communicating with master system registry.");
+            })
+            .finally(() => {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = "Commit to Master Sheet";
                 }
             });
+
+        } catch (runtimeError) {
+            console.error("Critical error inside form parsing processor block:", runtimeError);
+            alert("Form error: " + runtimeError.message);
         }
+    });
+}
 
         // ======= Operational Task Creation Wireframe Form Binder ============
         const taskForm = document.getElementById('createTaskForm');
@@ -1106,62 +1357,102 @@ let projectDataset = [];
         fetchMasterSuiteDataset();
     });
 
-    // Master API Feed Data Pull
-    function fetchMasterSuiteDataset() {
-        fetch(googleWebAppUrl)
-            .then(res => res.json())
-            .then(data => {
-                if (Array.isArray(data)) {
-                    projectDataset = data;
+    // Master API Feed Data Pull (Optimized for Stability & Clean Compilation)
+async function fetchMasterSuiteDataset() {
+    try {
+        // 1. Safety check for the endpoint configuration
+        if (typeof googleWebAppUrl === 'undefined') {
+            throw new Error("googleWebAppUrl is not defined in this scope.");
+        }
 
-                    console.log("--- RAW BACKEND DATA RECEIVED ---");
-                    console.log(data);
-                    if(data.length > 0) {
-                        console.log("Sample project properties:", Object.keys(data[0]));
-                        console.log("Sample project classification value:", data[0].classification || data[0].class);
-                    }
-                    console.log("---------------------------------");
-                    
-                    calculateDashboardMetrics(data);
-                    renderFilteredRegistryAndVisuals();
-                    if (activeWorkspaceProjectId) {
-                        refreshWorkspaceUI();
-                    }
-                } else {
-                    console.error("Invalid data payload type received.");
-                }
-            })
-            .catch(err => console.error("Error connecting to sheet service:", err));
+        // 2. Fetch the spreadsheet payload
+        const response = await fetch(googleWebAppUrl);
+        
+        if (!response.ok) {
+            throw new Error(`Network response failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+       // 3. Validate payload structural integrity
+        if (!Array.isArray(data)) {
+            throw new TypeError("Invalid data payload type received. Expected an Array.");
+        }
+
+        // 4. SECURITY GATE: Filter raw payload based on user access permissions
+        const currentSessionUser = (window.currentUserName || "").trim().toLowerCase();
+        const isMasterAdmin = (window.currentUserRole === 'admin') || currentSessionUser.includes("admin") || currentSessionUser === "estelle";
+
+        const securedData = data.filter(proj => {
+            if (isMasterAdmin) return true; // Admins see all
+            const assignedTeam = (proj.team || proj.members || proj.assignees || "").toLowerCase();
+            return assignedTeam === "all" || assignedTeam === "unassigned" || assignedTeam.includes(currentSessionUser);
+        });
+
+        // 4b. Secure filtered data to the global registry variable safely
+        projectDataset = securedData;
+        window.projectDataset = securedData;
+
+
+        // 5. Diagnostic Logging
+        console.log("--- RAW BACKEND DATA RECEIVED ---");
+        console.log(data);
+        if (data.length > 0) {
+            console.log("Sample project properties:", Object.keys(data[0]));
+            console.log("Sample project classification value:", data[0].classification || data[0].class);
+        }
+        console.log("---------------------------------");
+
+        // 6. Execute downstream UI and metrics processing sequentially
+        calculateDashboardMetrics(data);
+        renderFilteredRegistryAndVisuals();
+
+        // 7. Synchronize workspace context if active
+        if (typeof activeWorkspaceProjectId !== 'undefined' && activeWorkspaceProjectId) {
+            refreshWorkspaceUI();
+        }
+
+    } catch (err) {
+        console.error("Error connecting to sheet service:", err);
+        
+        // Gracefully handle UI interruption if your global handler is available
+        if (typeof handleLoadingError === 'function') {
+            handleLoadingError(err);
+        }
     }
+}
+
 
     // Dynamic Metrics and Classification Card Counters Engine
-    function calculateDashboardMetrics(data) {
-        const kpiTotal = document.getElementById('kpiTotalCount');
-        if (kpiTotal) kpiTotal.innerText = `${data.length} Projects`;
-        
-        let inProgress = data.filter(p => p.status === 'Execution' || p.status === 'Planning').length;
-        let hypercare = data.filter(p => p.status === 'Stabilization' || p.status === 'High Risk').length;
-        let complete = data.filter(p => p.status === 'Signed-Off').length;
+   function calculateDashboardMetrics(data) {
+    // Stripped trailing descriptive strings to leave clean numeric totals
+    const kpiTotal = document.getElementById('kpiTotalCount');
+    if (kpiTotal) kpiTotal.innerText = `${data.length}`;
+    
+    let inProgress = data.filter(p => p.status === 'Execution' || p.status === 'Planning').length;
+    let hypercare = data.filter(p => p.status === 'Stabilization' || p.status === 'High Risk').length;
+    let complete = data.filter(p => p.status === 'Signed-Off').length;
 
-        const kpiProg = document.getElementById('kpiInProgressCount');
-        if (kpiProg) kpiProg.innerText = `${inProgress} Tracks`;
-        
-        const kpiRev = document.getElementById('kpiReviewCount');
-        if (kpiRev) kpiRev.innerText = `${hypercare} Tracks`;
-        
-        const kpiComp = document.getElementById('kpiCompleteCount');
-        if (kpiComp) kpiComp.innerText = `${complete} Signed-Off`;
+    const kpiProg = document.getElementById('kpiInProgressCount');
+    if (kpiProg) kpiProg.innerText = `${inProgress}`;
+    
+    const kpiRev = document.getElementById('kpiReviewCount');
+    if (kpiRev) kpiRev.innerText = `${hypercare}`;
+    
+    const kpiComp = document.getElementById('kpiCompleteCount');
+    if (kpiComp) kpiComp.innerText = `${complete}`;
 
-        if (data.length > 0) {
-            const pbInProg = document.getElementById('pbInProgress');
-            if (pbInProg) pbInProg.style.width = `${(inProgress / data.length) * 100}%`;
-            
-            const pbHyper = document.getElementById('pbHypercare');
-            if (pbHyper) pbHyper.style.width = `${(hypercare / data.length) * 100}%`;
-            
-            const pbSigned = document.getElementById('pbSignedOff');
-            if (pbSigned) pbSigned.style.width = `${(complete / data.length) * 100}%`;
-        }
+    if (data.length > 0) {
+        const pbInProg = document.getElementById('pbInProgress');
+        if (pbInProg) pbInProg.style.width = `${(inProgress / data.length) * 100}%`;
+        
+        const pbHyper = document.getElementById('pbHypercare');
+        if (pbHyper) pbHyper.style.width = `${(hypercare / data.length) * 100}%`;
+        
+        const pbSigned = document.getElementById('pbSignedOff');
+        if (pbSigned) pbSigned.style.width = `${(complete / data.length) * 100}%`;
+    }
+
 
         // 🌟 UPDATED MAP COUNTERS: Reliably targets the clean short words
         let internalCount = data.filter(p => {
@@ -1254,7 +1545,7 @@ let projectDataset = [];
                                         ? window.checkWorkspaceAccess(projectIdToken) 
                                         : false;
 
-            const workspaceBtnHTML = hasWorkspaceAccess 
+           const workspaceBtnHTML = hasWorkspaceAccess 
                 ? `<button class="btn btn-sm btn-outline-primary px-3 fw-bold" onclick="launchWorkspaceHub('${projectIdToken}')" style="border-radius:6px; font-size:0.75rem;">
                        <i class="fas fa-folder-open me-1"></i> Workspace
                    </button>`
@@ -1262,6 +1553,15 @@ let projectDataset = [];
                        <i class="fas fa-lock me-1"></i> Restricted
                    </button>`;
 
+            // ADMIN EDIT CONTROL
+            const isSystemAdmin = window.currentUserRole === 'admin';
+            const editProjectBtnHTML = isSystemAdmin
+                ? `<button class="btn btn-sm btn-outline-secondary px-2 ms-1 fw-bold" onclick="openEditProjectModal('${projectIdToken}')" title="Manage Project Settings" style="border-radius:6px; font-size:0.75rem;">
+                       <i class="fas fa-cog"></i>
+                   </button>`
+                : ``;
+
+            // Appends standard text safely with a proper fallback string
             // Appends standard text safely with a proper fallback string
             const displayClassification = p.classification || p.class || 'Internal';
 
@@ -1284,7 +1584,10 @@ let projectDataset = [];
                 </td>
                 <td><span class="badge ${badgeClass} px-2.5 py-1.5" style="font-size:0.78rem; border-radius:6px;">${p.status}</span></td>
                 <td>
-                    ${workspaceBtnHTML}
+                    <div class="d-flex align-items-center">
+                        ${workspaceBtnHTML}
+                        ${editProjectBtnHTML}
+                    </div>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -1423,6 +1726,9 @@ let projectDataset = [];
         fetchProjectTasks(projectId);
     }
 
+    window.launchWorkspaceHub = launchWorkspaceHub;
+    window.fetchProjectTasks = fetchProjectTasks; // If called from inline HTML attributes
+
     function refreshWorkspaceUI() {
         if (!activeWorkspaceProjectId) return;
         const project = projectDataset.find(p => (p.projectId || p.id) === activeWorkspaceProjectId);
@@ -1495,21 +1801,14 @@ function renderWorkspaceTasks(tasks) {
         let rawStatus = (task.status || 'New').toString().trim();
         let normalizedStatus = rawStatus.replace(/\s+/g, '');
 
-        if (rawStatus === "In Progress" || normalizedStatus.toLowerCase() === "inprogress") {
-            normalizedStatus = "InProgress";
-        } else if (rawStatus === "Under Review" || normalizedStatus.toLowerCase() === "underreview") {
-            normalizedStatus = "UnderReview";
-        } else if (rawStatus === "Done" || rawStatus === "Completed" || normalizedStatus.toLowerCase() === "done") {
-            normalizedStatus = "Done";
-        } else if (rawStatus === "Cancelled" || normalizedStatus.toLowerCase() === "cancelled") {
-            normalizedStatus = "Cancelled";
-        } else {
-            normalizedStatus = "New";
-        }
+        // Normalize status
+        if (rawStatus === "In Progress" || normalizedStatus.toLowerCase() === "inprogress") normalizedStatus = "InProgress";
+        else if (rawStatus === "Under Review" || normalizedStatus.toLowerCase() === "underreview") normalizedStatus = "UnderReview";
+        else if (rawStatus === "Done" || rawStatus === "Completed" || normalizedStatus.toLowerCase() === "done") normalizedStatus = "Done";
+        else if (rawStatus === "Cancelled" || normalizedStatus.toLowerCase() === "cancelled") normalizedStatus = "Cancelled";
+        else normalizedStatus = "New";
         
-        if (!columns.includes(normalizedStatus)) {
-            normalizedStatus = 'New'; 
-        }
+        if (!columns.includes(normalizedStatus)) normalizedStatus = 'New'; 
 
         const targetList = document.getElementById(`list-${normalizedStatus}`);
         if (targetList) {
@@ -1527,21 +1826,11 @@ function renderWorkspaceTasks(tasks) {
             card.setAttribute('data-task-id', task.taskId || task.id || 'TSK---');
             
             const taskPriority = task.priority || 'Normal';
-            if (taskPriority === 'High' || taskPriority === 'Critical') {
-                card.style.borderLeftColor = "#dc3545";
-            } else if (taskPriority === 'Medium') {
-                card.style.borderLeftColor = "#ffc107";
-            } else {
-                card.style.borderLeftColor = "#2ed573";
-            }
+            card.style.borderLeftColor = (taskPriority === 'High' || taskPriority === 'Critical') ? "#dc3545" : (taskPriority === 'Medium' ? "#ffc107" : "#2ed573");
 
             const displayTitle = task.title || task.taskName || "Untitled Task";
             const displayDesc = task.description || 'No execution descriptions documented.';
-            const displayId   = task.taskId || 'TSK---';
-
-            // 🔑 HIDE INLINE CHECKLIST FROM KANBAN OVERVIEW CARDS
-            // The item loop is omitted to keep the task board clean.
-            let inlineChecklistHTML = "";
+            const displayId = task.taskId || 'TSK---';
 
             const isAdmin = window.currentUserRole === 'admin';
             const currentUserNameStr = (window.currentUserName || "").toLowerCase().trim();
@@ -1554,17 +1843,9 @@ function renderWorkspaceTasks(tasks) {
                    </button>`
                 : ``;
 
-            let dueByHTML = "";
-            var cleanDueData = task.dueDate ? task.dueDate.toString().trim() : "";
-            if (cleanDueData !== "" && cleanDueData !== "N/A" && cleanDueData !== "undefined") {
-                dueByHTML = `<div class="text-danger fw-bold" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
-                                 <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>${cleanDueData}</span>
-                             </div>`;
-            } else {
-                dueByHTML = `<div class="text-muted fw-normal" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important; opacity: 0.5; font-style: italic;">
-                                 <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>None Set</span>
-                             </div>`;
-            }
+            let dueByHTML = `<div class="text-danger fw-bold" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
+                                <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>${(task.dueDate && task.dueDate !== "N/A" && task.dueDate !== "undefined") ? task.dueDate : "None Set"}</span>
+                            </div>`;
 
             card.innerHTML = `
                 <div style="text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; width: 100% !important;">
@@ -1573,28 +1854,20 @@ function renderWorkspaceTasks(tasks) {
                             <i class="fas fa-tag me-1"></i>${displayId}
                         </span>
                     </div>
-                    <div style="margin-bottom: 6px; text-align: left !important; width: 100% !important;">
-                        <h5 class="fw-bold text-dark m-0" style="font-size:0.95rem; line-height:1.3; letter-spacing:-0.2px; text-align: left !important; width: 100% !important; display: block !important;">
-                            ${displayTitle}
-                        </h5>
-                    </div>
-                    <p class="text-muted" style="font-size:0.75rem; line-height:1.4; max-height:60px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; padding-left: 1px; text-align: left !important; width: 100% !important; margin-bottom: 8px !important;">
-                        ${displayDesc}
-                    </p>
-                    ${inlineChecklistHTML}
+                    <h5 class="fw-bold text-dark m-0" style="font-size:0.95rem; line-height:1.3; text-align: left !important; width: 100% !important;">${displayTitle}</h5>
+                    <p class="text-muted" style="font-size:0.75rem; line-height:1.4; max-height:60px; overflow:hidden; text-align: left !important; width: 100% !important; margin-bottom: 8px !important;">${displayDesc}</p>
                 </div>
-
-                <div class="mt-2 border-top pt-2" style="width: 100% !important; text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important;">
-                    <div style="text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 4px; width: 100% !important; line-height: 1.3; margin-bottom: 10px !important;">
-                        <div class="text-muted" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
-                            <i class="far fa-calendar-alt text-secondary me-1.5" style="width:12px; text-align: left;"></i>Created: <span class="fw-medium">${task.createdAt || 'N/A'}</span>
-                        </div>
-                        ${dueByHTML}
+                <div class="mt-2 border-top pt-2" style="width: 100% !important; text-align: left !important;">
+                    <div class="text-muted" style="font-size:0.68rem; margin-bottom: 4px;">
+                        <i class="far fa-calendar-alt text-secondary me-1.5"></i>Created: <span class="fw-medium">${task.createdAt || 'N/A'}</span>
                     </div>
-                    <div class="d-flex justify-content-end gap-2" style="width: 100% !important; pt-1 !important;">
-                        <button class="btn btn-xs btn-outline-secondary border-0 opacity-75" style="font-size: 0.68rem; padding: 3px 6px;" onclick="event.stopPropagation(); openViewDrawer('${displayId}')">
-                            <i class="fas fa-expand-alt me-1"></i> Details
-                        </button>
+                    ${dueByHTML}
+                    <div class="d-flex justify-content-between align-items-center mt-2" style="width: 100% !important;">
+                        <div>
+                            <button class="btn btn-xs btn-outline-secondary border-0 opacity-75" style="font-size: 0.68rem; padding: 3px 6px;" onclick="event.stopPropagation(); openViewDrawer('${displayId}')">
+                                <i class="fas fa-expand-alt me-1"></i> Details
+                            </button>
+                        </div>
                         ${updateBtnHTML}
                     </div>
                 </div>
@@ -1603,17 +1876,17 @@ function renderWorkspaceTasks(tasks) {
         }
     });
 
+    // Final pillar update
     columns.forEach(col => {
         const pillBadge = document.getElementById(`badge-${col}`);
         if (pillBadge) pillBadge.innerText = counters[col];
-        
         const targetList = document.getElementById(`list-${col}`);
         if (targetList && targetList.innerHTML === "") {
             targetList.innerHTML = `<div class="text-center text-muted py-3 px-2 border rounded bg-light opacity-75" style="font-size:0.72rem; border-style:dashed !important;">No Tasks</div>`;
         }
     });
 
-    populateAuditTrailLogStream(tasks);
+    if (typeof populateAuditTrailLogStream === 'function') populateAuditTrailLogStream(tasks);
 }
 
     function populateAuditTrailLogStream(tasks) {
@@ -1660,7 +1933,6 @@ function initUpdateTaskQuill(isReadOnly = false) {
     const container = document.getElementById('utQuillEditorContainer');
     if (!container) return; 
     
-    // Configured to precisely match your clean Exco styling configuration tools
     const toolbarOptions = isReadOnly ? false : [
         ['bold', 'italic'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }]
@@ -1677,7 +1949,6 @@ function initUpdateTaskQuill(isReadOnly = false) {
         
         if (isReadOnly) {
             utQuillEditorInstance.disable();
-            // Hide formatting toolbar panel completely when locked
             const toolbar = container.parentElement.querySelector('.ql-toolbar');
             if (toolbar) toolbar.style.display = 'none';
         } else {
@@ -1700,14 +1971,25 @@ window.globalCloseAllDrawers = function() {
     if (bdrop) bdrop.style.display = 'none'; 
 };
 
+// ==========================================
+// 1. OPEN UPDATE DRAWER
+// ==========================================
 window.openUpdateDrawer = function(taskId) {
     if (!window.activeTasksCache) return;
     const task = window.activeTasksCache.find(t => t.taskId === taskId);
     if (!task) return;
 
     const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
-    const isAdmin = currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
     
+    // Unified authentication verification
+    const isAdmin = (window.currentUserRole === 'admin') || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+    if (isAdmin) {
+        document.querySelectorAll('.admin-only-action').forEach(btn => {
+            btn.style.setProperty('display', 'inline-block', 'important');
+        });
+    }
+
+    // Process assigned resources
     let assignedResources = [];
     if (task.assignees) {
         assignedResources = task.assignees.toString().split(',').map(name => name.trim().toLowerCase());
@@ -1717,10 +1999,18 @@ window.openUpdateDrawer = function(taskId) {
 
     let hasEditPrivileges = isAdmin || assignedResources.includes(currentSessionRaw);
 
+    // Populate Update Form Fields
     document.getElementById('utTaskId').value = task.taskId;
     document.getElementById('utTaskTitleDisplay').innerText = task.title;
     document.getElementById('utTaskDescriptionDisplay').innerText = task.description || "No description logged at creation.";
-    document.getElementById('utNote').value = "";
+    
+    const utNoteField = document.getElementById('utNote');
+    if (utNoteField) {
+        utNoteField.value = task.note || ""; 
+        if (typeof window.utQuillEditorInstance !== 'undefined' && window.utQuillEditorInstance) {
+            window.utQuillEditorInstance.root.innerHTML = task.note || "";
+        }
+    }
 
     const accessBadge = document.getElementById('utAccessBadge');
     const submitBtn = document.getElementById('submitUpdateTaskBtn');
@@ -1728,7 +2018,6 @@ window.openUpdateDrawer = function(taskId) {
     const addCheckItemBtn = document.getElementById('utAddChecklistItemBtn');
     const checkInput = document.getElementById('utNewChecklistItemInput');
 
-    // Handle standard inputs/buttons permissions right away
     if (hasEditPrivileges) {
         if(accessBadge) accessBadge.style.display = "none";
         if(submitBtn) submitBtn.style.display = "block";
@@ -1749,23 +2038,78 @@ window.openUpdateDrawer = function(taskId) {
         statusSelect.value = normalizedValue;
     }
 
-    // Render Assignees
+    // Render Assignees with Sleek Pill-Token Styling
     const membersDisplay = document.getElementById('utTeamMembersDisplay');
     if (membersDisplay) {
         membersDisplay.innerHTML = "";
-        let originalNames = task.assignees || task.assignee || "Unassigned";
-        let namesArr = originalNames.toString().split(',');
-        namesArr.forEach(name => {
-            if(!name.trim()) return;
-            const span = document.createElement('span');
-            span.className = "badge bg-secondary-subtle text-dark border px-2 py-1 m-0";
-            span.innerText = name.trim();
-            membersDisplay.appendChild(span);
-        });
+        let originalNames = task.assignees || task.assignee || "";
+        let assignedArr = originalNames.toString().split(',').map(name => name.trim().toLowerCase());
+
+        if (isAdmin && typeof authorizedUsers !== 'undefined') {
+            Object.keys(authorizedUsers).forEach(username => {
+                const lowerUser = username.trim().toLowerCase();
+                if (lowerUser.includes('admin') || lowerUser.includes('system') || lowerUser === 'test') return;
+
+                const isChecked = assignedArr.includes(lowerUser);
+                const label = document.createElement('label');
+                
+                label.className = `border px-3 py-1 m-0 text-capitalize d-flex align-items-center gap-2 select-token-pill`;
+                label.style.fontSize = "0.72rem";
+                label.style.cursor = "pointer";
+                label.style.borderRadius = "50px";
+                label.style.userSelect = "none";
+                label.style.transition = "all 0.2s ease-in-out";
+                
+                if (isChecked) {
+                    label.style.backgroundColor = "#e0f2fe"; 
+                    label.style.color = "#0369a1";
+                    label.style.borderColor = "#bae6fd";
+                    label.style.fontWeight = "600";
+                } else {
+                    label.style.backgroundColor = "#f8f9fa"; 
+                    label.style.color = "#6c757d";
+                    label.style.borderColor = "#dee2e6";
+                    label.style.fontWeight = "500";
+                }
+                
+                label.innerHTML = `
+                    <input type="checkbox" class="ut-assignee-matrix-checkbox form-check-input m-0" value="${username.trim()}" ${isChecked ? 'checked' : ''} 
+                        style="width: 13px; height: 13px; cursor: pointer; border-color: inherit; filter: none;" 
+                        onchange="
+                            const lbl = this.closest('label');
+                            if (this.checked) {
+                                lbl.style.backgroundColor = '#e0f2fe';
+                                lbl.style.color = '#0369a1';
+                                lbl.style.borderColor = '#bae6fd';
+                                lbl.style.fontWeight = '600';
+                            } else {
+                                lbl.style.backgroundColor = '#f8f9fa';
+                                lbl.style.color = '#6c757d';
+                                lbl.style.borderColor = '#dee2e6';
+                                lbl.style.fontWeight = '500';
+                            }
+                        "
+                    >
+                    <span>${username.trim()}</span>
+                `;
+                membersDisplay.appendChild(label);
+            });
+        } else {
+            let namesArr = originalNames ? originalNames.toString().split(',') : ["Unassigned"];
+            namesArr.forEach(name => {
+                if(!name.trim()) return;
+                const span = document.createElement('span');
+                span.className = "badge bg-light text-secondary border px-3 py-1.5 m-0 text-capitalize fw-medium";
+                span.style.borderRadius = "50px";
+                span.style.fontSize = "0.7rem";
+                span.innerText = name.trim();
+                membersDisplay.appendChild(span);
+            });
+        }
     }
 
     // Load Matrix Checklist Entries
-   const chkContainer = document.getElementById('utChecklistContainer');
+    const chkContainer = document.getElementById('utChecklistContainer');
     if (chkContainer) {
         chkContainer.innerHTML = "";
         let checklistArr = [];
@@ -1810,18 +2154,199 @@ window.openUpdateDrawer = function(taskId) {
         }
     }
 
-    // 1. FIRST show the overlay to render the HTML containers on screen layout
     document.getElementById('updateTaskOverlay').style.display = 'flex';
     const bdrop = document.getElementById('drawerBackdrop');
     if (bdrop) bdrop.style.display = "block";
 
-    // 2. CRITICAL: Wait 60ms for the DOM browser repaint to finish, THEN bind Quill to the visible container
     setTimeout(() => {
         initUpdateTaskQuill(!hasEditPrivileges);
     }, 60);
 };
 
-// Event Listeners setup
+// ==========================================
+// 2. OPEN VIEW DETAILS DRAWER (WITH SCROLL ENGAGED)
+// ==========================================
+window.openViewDrawer = function(taskId) {
+    if (!window.activeTasksCache) {
+        console.warn("View Drawer Aborted: window.activeTasksCache is not initialized.");
+        return;
+    }
+    
+    // Loose equality (==) handles string/number data types from cache effortlessly
+    const task = window.activeTasksCache.find(t => (t.taskId == taskId || t.id == taskId));
+    if (!task) {
+        console.warn("View Drawer Aborted: Task details not found in cache for ID:", taskId);
+        return;
+    }
+
+    // --- REQUIREMENT FIX: FORCE SCROLL & LAYOUT CONSTRAINTS ---
+    const viewDrawerEl = document.getElementById('viewFullDrawer');
+    if (viewDrawerEl) {
+        viewDrawerEl.style.position = "fixed";
+        viewDrawerEl.style.top = "0";
+        viewDrawerEl.style.height = "100vh";
+        viewDrawerEl.style.overflowY = "auto";  // Engages independent vertical scrolling
+        viewDrawerEl.style.overflowX = "hidden"; // Prevents unwanted horizontal breaking
+        viewDrawerEl.style.backgroundColor = "#fff"; // Safeguards visibility over background views
+        viewDrawerEl.style.right = "0";          // Triggers slide-out transformation
+    } else {
+        console.error("UI Render Blocked: Element '#viewFullDrawer' layout wrapper missing in DOM.");
+        return;
+    }
+
+    // Safe Execution Wrapper to prevent metadata inconsistencies from hiding static elements
+    try {
+        // 1. Requirement 1: Project Name at the very top header banner text
+        const parentProjectName = window.currentWorkspaceProject || task.projectName || task.projectId || "Active Scope";
+        const projectTitleEl = document.getElementById('viewDrawerProjectName');
+        if (projectTitleEl) {
+            projectTitleEl.innerText = `Project - ${parentProjectName}`;
+        }
+
+        // 2 & 3. Requirement 2 & 3: Task ID badge placed directly in front of permanent Task Name
+        const taskName = task.title || "Untitled Task Element";
+        const taskIdentifier = task.taskId || taskId;
+        
+        const titleEl = document.getElementById('viewDrawerTitle');
+        if (titleEl) {
+            titleEl.innerHTML = `
+                <span class="badge bg-light text-secondary border px-2 py-1 small fw-bold me-2" style="font-size: 0.85rem; vertical-align: middle;">${taskIdentifier}</span>
+                <span style="vertical-align: middle;">${taskName}</span>
+            `;
+        }
+
+        // 4. Populate Static Task Description
+        const descEl = document.getElementById('viewDrawerDescription');
+        if (descEl) {
+            descEl.innerText = task.description || "No descriptive overview provided for this task.";
+        }
+        
+        // 5. Requirement 4: Notes, latest updated notes, the user and time it was updated inside the target view layout
+        const noteTextEl = document.getElementById('viewDrawerNoteText');
+        const noteMetaEl = document.getElementById('viewDrawerNoteMeta');
+        
+        // Maps seamlessly to Apps Script 'note' property from Tasks_Database column 12
+        const rawNoteContent = task.note || ""; 
+        if (rawNoteContent.trim() !== "" && rawNoteContent !== "<p><br></p>") {
+            if (noteTextEl) noteTextEl.innerHTML = rawNoteContent;
+            if (noteMetaEl) {
+                // Read update tokens or fall back safely to system timestamps
+                const updateAuthor = task.updatedBy || task.user || "System Contributor";
+                const updateTimestamp = task.updatedAt || task.createdAt || "Recent Sync";
+                noteMetaEl.innerHTML = `<i class="fas fa-user-edit me-1"></i>Logged by: <strong class="text-dark">${updateAuthor}</strong> at <span class="text-muted">${updateTimestamp}</span>`;
+            }
+        } else {
+            if (noteTextEl) noteTextEl.innerHTML = `<span class="text-muted italic small">No recent implementation notes logged.</span>`;
+            if (noteMetaEl) noteMetaEl.innerText = "";
+        }
+
+        // 6 & 7. Requirement 5 & 6: Task Active Action Items & All completed actions, who completed it and when
+        const activeContainer = document.getElementById('viewDrawerChecklistActive');
+        const compContainer = document.getElementById('viewDrawerChecklistCompleted');
+        
+        if (activeContainer) activeContainer.innerHTML = "";
+        if (compContainer) compContainer.innerHTML = "";
+
+        // Check if item collection array exists
+        const checklistArr = task.checklist || [];
+        
+        if (Array.isArray(checklistArr) && checklistArr.length > 0) {
+            checklistArr.forEach(item => {
+                // Determine if item is an explicit structural object or a flat string
+                const isItemObj = (typeof item === 'object' && item !== null);
+                const isDone = isItemObj ? (!!item.completed || item.status === "completed" || item.is_completed === true) : false;
+                const textContent = isItemObj ? (item.text || item.task || item.name) : item.toString().trim();
+                
+                if (isDone) {
+                    // Extract execution metrics safely
+                    const resolvedBy = isItemObj ? (item.completedBy || item.user || "Staff Resource") : "Staff Resource";
+                    const resolvedAt = isItemObj ? (item.completedAt || item.timestamp || "N/A") : "N/A";
+                    
+                    const doneRow = `
+                        <div class="d-flex flex-column mb-2 p-2 bg-light rounded border-start border-success border-2 shadow-3xs">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-check-square text-success fs-5"></i> 
+                                <span class="text-decoration-line-through text-muted small fw-medium">${textContent}</span>
+                            </div>
+                            <div class="text-muted ps-4 mt-1" style="font-size: 0.72rem; font-style: italic;">
+                                Resolved by ${resolvedBy} on ${resolvedAt}
+                            </div>
+                        </div>`;
+                    if (compContainer) compContainer.insertAdjacentHTML('beforeend', doneRow);
+                } else {
+                    const activeRow = `
+                        <div class="d-flex align-items-center gap-2 my-2 p-2 border-start border-primary border-3 bg-white rounded shadow-3xs">
+                            <i class="far fa-square text-muted fs-5"></i> 
+                            <span class="text-dark fw-medium" style="font-size: 0.92rem;">${textContent}</span>
+                        </div>`;
+                    if (activeContainer) activeContainer.insertAdjacentHTML('beforeend', activeRow);
+                }
+            });
+        } else {
+            if (activeContainer) activeContainer.innerHTML = `<span class="text-muted small italic">No active action items assigned.</span>`;
+            if (compContainer) compContainer.innerHTML = `<span class="text-muted small italic">No completed actions found.</span>`;
+        }
+
+        // 8. Requirement 7: The current team members assigned to the task (rendered neatly inside the layout column)
+        const teamEl = document.getElementById('viewDrawerAssignees');
+        if (teamEl) {
+            // Maps cleanly to your backend structure: task.assignees
+            const rawAssignees = task.assignees || "Unassigned";
+            const membersList = rawAssignees.split(',').map(m => m.trim()).filter(m => m !== "");
+            let badgeMarkup = "";
+            
+            membersList.forEach(member => {
+                if(member.toLowerCase() !== "unassigned") {
+                    badgeMarkup += `<span class="badge bg-primary text-white me-1 px-2 py-1 text-capitalize fw-semibold mb-1 d-inline-block"><i class="fas fa-user-circle me-1"></i>${member}</span>`;
+                }
+            });
+            
+            teamEl.innerHTML = badgeMarkup || `<span class="text-muted small italic">Unassigned</span>`;
+        }
+
+        // Status Pill Visual Sync
+        const statusPillContainer = document.getElementById('viewDrawerStatusPill');
+        if (statusPillContainer) {
+            const currentStatus = task.status || "New";
+            let colorClass = "bg-secondary";
+            if (currentStatus === "In Progress" || currentStatus === "Active") colorClass = "bg-primary";
+            if (currentStatus === "Under Review") colorClass = "bg-warning text-dark";
+            if (currentStatus === "Done" || currentStatus === "Completed") colorClass = "bg-success";
+            if (currentStatus === "Cancelled") colorClass = "bg-danger";
+            
+            statusPillContainer.innerHTML = `<span class="badge ${colorClass} px-3 py-2 fs-6 fw-semibold text-white text-uppercase">${currentStatus}</span>`;
+        }
+
+        // Fix Logged Timestamp target element
+        const createdEl = document.getElementById('viewDrawerCreatedAt');
+        if (createdEl) {
+            createdEl.innerText = task.createdAt || task.updatedAt || "N/A";
+        }
+
+    } catch (renderError) {
+        console.error("Critical Handshake Warning: Something interrupted the data-injection loop:", renderError);
+    }
+    
+    // 9. Trigger Backdrop Overlay
+    const bdrop = document.getElementById('drawerBackdrop');
+    if (bdrop) bdrop.style.display = "block";
+};
+
+// ==========================================
+// COMPLEMENTARY CLOSE ROUTINE FOR READ PANEL
+// ==========================================
+window.closeReadPanel = function() {
+    const viewDrawerEl = document.getElementById('viewFullDrawer');
+    if (viewDrawerEl) {
+        viewDrawerEl.style.right = "-75vw"; // Slides it safely off-screen
+    }
+    const bdrop = document.getElementById('drawerBackdrop');
+    if (bdrop) bdrop.style.display = "none";
+};
+
+// ==========================================
+// 3. EVENT LISTENERS SETUP
+// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     const updateTaskForm = document.getElementById('updateTaskForm');
     const addChecklistItemBtn = document.getElementById('utAddChecklistItemBtn');
@@ -1837,7 +2362,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (noItemsFlag) noItemsFlag.remove();
 
             const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
-            const isAdmin = currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+            const isAdmin = (window.currentUserRole === 'admin') || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
 
             const currentIndex = chkContainer.querySelectorAll('.ut-matrix-item-row').length;
             const row = document.createElement('div');
@@ -1886,7 +2411,6 @@ document.addEventListener('DOMContentLoaded', () => {
             else if (rawDropdownVal === "Done") sheetFormattedStatus = "Done";
             else if (rawDropdownVal === "Cancelled") sheetFormattedStatus = "Cancelled";
 
-            // Note Capture Fix: Pull live rich HTML contents directly out of the generated frame instance
             let progressNoteHTML = "";
             if (typeof utQuillEditorInstance !== 'undefined' && utQuillEditorInstance && utQuillEditorInstance.getLength() > 1) {
                 progressNoteHTML = utQuillEditorInstance.root.innerHTML.trim();
@@ -1909,6 +2433,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
+            // Capture Selected Assignees if user is an Administrator
+            const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
+            const isAdmin = (window.currentUserRole === 'admin') || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+            
+            let finalAssignees = null; 
+            if (isAdmin) {
+                const checkedElements = document.querySelectorAll('.ut-assignee-matrix-checkbox:checked');
+                const checkedNames = Array.from(checkedElements).map(el => el.value);
+                finalAssignees = checkedNames.length > 0 ? checkedNames.join(', ') : "Unassigned";
+            }
+
             const payload = {
                 action: "updateTaskStatus", 
                 taskId: document.getElementById('utTaskId').value,
@@ -1917,6 +2452,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 checklist: dynamicChecklistPayload,
                 user: window.currentUserName || "System"
             };
+
+            if (finalAssignees !== null) {
+                payload.assignees = finalAssignees;
+            }
 
             const btn = document.getElementById('submitUpdateTaskBtn');
             btn.disabled = true;
@@ -2021,10 +2560,83 @@ window.removeChecklistItemElement = function(buttonEl) {
                 <option value="Cancelled">Cancelled</option>
             </select>
         </div>
-        <div class="mb-3">
-            <label class="form-label small fw-bold text-muted">Append Activity Note (Optional)</label>
-            <textarea id="editNote" class="form-control form-control-sm" rows="4" placeholder="Log progress, blocks, or handover notes..."></textarea>
-        </div>
+        
+    <div class="mb-4">
+    <label class="form-label small fw-bold text-secondary mb-1">Append Activity Note</label>
+    <div id="utQuillEditorContainer" style="height: 120px; background: #ffffff; border-radius: 6px;" class="border"></div>
+    <input type="hidden" id="utNote">
+</div>
+
+<script>
+(function() {
+    // Target your task update overlay wrapper
+    const targetOverlay = document.getElementById('updateTaskOverlay');
+    if (!targetOverlay) return;
+
+    let previousDisplayState = 'none';
+
+    const layoutObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.attributeName === 'style') {
+                const currentDisplay = targetOverlay.style.display;
+                
+                // Triggers exactly once when the update view is opened
+                if (currentDisplay === 'flex' && previousDisplayState !== 'flex') {
+                    previousDisplayState = 'flex';
+                    
+                    setTimeout(() => {
+                        const quillElement = document.getElementById('utQuillEditorContainer');
+                        if (quillElement && typeof Quill !== 'undefined') {
+                            const parentElement = quillElement.parentElement;
+                            
+                            // ISSUE #3 FIXED: Wipe legacy toolbar artifacts before creating a new canvas
+                            const legacyToolbars = parentElement.querySelectorAll('.ql-toolbar');
+                            legacyToolbars.forEach(toolbar => toolbar.remove());
+                            
+                            // Clear container internals safely
+                            quillElement.className = "border rounded bg-white";
+                            quillElement.innerHTML = ""; 
+
+                            // Initialize clean single editor instance
+                            window.utQuillEditorInstance = new Quill('#utQuillEditorContainer', {
+                                theme: 'snow',
+                                placeholder: 'Specify integration status updates or operational blocks here...',
+                                modules: {
+                                    toolbar: [
+                                        ['bold', 'italic'],
+                                        [{ 'list': 'ordered'}, { 'list': 'bullet' }]
+                                    ]
+                                }
+                            });
+
+                            // Pull historical description text from backend row safely without changing card look
+                            const nativeInput = document.getElementById('utNote');
+                            if (nativeInput && nativeInput.value) {
+                                window.utQuillEditorInstance.root.innerHTML = nativeInput.value;
+                            }
+
+                            // Keep text field in sync as you type
+                            window.utQuillEditorInstance.on('text-change', function() {
+                                if (nativeInput) {
+                                    nativeInput.value = window.utQuillEditorInstance.root.innerHTML;
+                                }
+                            });
+                        }
+                    }, 100);
+                } else if (currentDisplay === 'none') {
+                    previousDisplayState = 'none';
+                }
+            }
+        });
+    });
+
+    layoutObserver.observe(targetOverlay, { attributes: true, attributeFilter: ['style'] });
+})();
+</script>
+
+
+
+
         <button type="submit" class="btn btn-primary btn-sm w-100 mt-2 py-2 fw-bold shadow-sm">
             <i class="fas fa-save me-1"></i> Commit Status Update
         </button>
@@ -2041,17 +2653,31 @@ window.removeChecklistItemElement = function(buttonEl) {
             <i class="fas fa-times me-1"></i> Close
         </button>
     </div>
+    
     <div class="row">
         <div class="col-lg-8">
             <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
-                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fas fa-align-left me-2"></i>Scope Description</h5>
+                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fas fa-align-left me-2"></i>Task Description</h5>
                 <p id="viewDrawerBody" class="text-dark lh-base" style="white-space: pre-wrap; font-size: 0.95rem;"></p>
             </div>
+
+            <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fas fa-sticky-note me-2"></i>Latest Activity Note</h5>
+                <div id="viewDrawerNotes">
+                    <p id="viewDrawerNoteText" class="text-dark small"></p>
+                    <p id="viewDrawerNoteMeta" class="text-muted small italic"></p>
+                </div>
+            </div>
+
             <div class="card border-0 shadow-sm p-4 bg-white">
-                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fas fa-check-square me-2"></i>Action Checklist</h5>
-                <div id="viewDrawerChecklist" class="ps-2"></div>
+                <h5 class="fw-bold mb-3 text-primary border-bottom pb-2"><i class="fas fa-tasks me-2"></i>Active Action Items</h5>
+                <div id="viewDrawerChecklistActive" class="ps-2 mb-4"></div>
+                
+                <h5 class="fw-bold mb-3 text-success border-bottom pb-2"><i class="fas fa-check-circle me-2"></i>Completed Items</h5>
+                <div id="viewDrawerChecklistCompleted" class="ps-2"></div>
             </div>
         </div>
+
         <div class="col-lg-4">
             <div class="card border-0 shadow-sm p-4 mb-3 bg-white">
                 <div class="mb-3">

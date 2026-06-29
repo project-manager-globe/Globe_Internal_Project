@@ -184,75 +184,8 @@ window.checkWorkspaceAccess = function(projectToken) {
             }
         });
 
-// --- HANDLE CREATE/EDIT PROJECT FORM SUBMISSION (UNIFIED) ---
-const createProjForm = document.getElementById('createProjectForm');
-if (createProjForm) {
-    // 1. Reveal Admin Buttons (Call this once here to ensure it runs)
-    const isAdmin = (window.currentUserRole === 'admin') || 
-                    (window.currentUserName && (window.currentUserName.includes("admin") || 
-                    window.currentUserName.includes("system") || 
-                    window.currentUserName === "estelle"));
-    if (isAdmin) {
-        document.querySelectorAll('.admin-only-action').forEach(btn => {
-            btn.style.setProperty('display', 'inline-block', 'important');
-        });
-    }
-
-    // 2. Unified Submission Handler
-    createProjForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const modeInput = document.getElementById("formActionState");
-        const mode = modeInput ? modeInput.value : "create";
-        
-        // Gather team members
-        const checkboxes = document.querySelectorAll('.up-project-member-checkbox:checked');
-        const selectedTeam = Array.from(checkboxes).map(cb => cb.value).join(', ');
-
-        const payload = {
-            action: mode === "edit" ? "updateProjectMembers" : "appendProject",
-            projectId: document.getElementById('pId')?.value || "",
-            projectName: document.getElementById('pName')?.value || "",
-            sponsor: document.getElementById('pSponsor')?.value || "",
-            status: document.getElementById('pStatus')?.value || "",
-            progress: document.getElementById('pProgress')?.value || 0,
-            team: selectedTeam,
-            user: window.currentUserName || "Unknown"
-        };
-        
-        console.log("🚀 Sending Payload:", payload);
-        
-        const url = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
-
-        // IMPORTANT: Use 'no-cors' for Google Apps Script Web Apps
-        fetch(url, {
-            method: 'POST',
-            mode: 'no-cors', 
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        })
-        .then(() => {
-            console.log("✅ Transmission Sent.");
-            alert("Success! Project data committed.");
-            document.getElementById("customFormOverlay").style.display = 'none';
-            // Refresh data if the function exists
-            if (typeof fetchPortfolio === 'function') fetchPortfolio();
-        })
-        .catch(err => {
-            console.error("❌ Transmission Error:", err);
-            alert("Error: Check F12 Console. Ensure Apps Script is deployed as a Web App.");
-        });
-    });
-}
-
         // --- HANDLE TASK FORM SUBMISSION ---
-        const createTaskForm = document.getElementById('createTaskForm');
-        if (createTaskForm) {
-            createTaskForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                // ... (your existing task submission logic)
-            });
-        }
+        // (Full submission logic is handled in the body script block)
     });
 
 // Add this to your existing script block
@@ -287,8 +220,6 @@ window.openCreateProjectModal = function() {
 </script>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <link rel="stylesheet" type="text/css" href="../index.css" />
@@ -303,6 +234,7 @@ window.openCreateProjectModal = function() {
        1. GLOBAL PLATFORM & CORE UTILITY OVERRIDES
        ========================================================================== */
     .content__START, strong.HOW { color: #005AFC !important; }
+    .myTopButton { text-decoration: none !important; }
     .table tbody tr td { color: #212529 !important; font-weight: normal !important; background: #ffffff !important; }
     .insights-card h2, .recent-orders h3 { color: #212529 !important; }
     
@@ -360,7 +292,8 @@ window.openCreateProjectModal = function() {
     .drawer-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.45); display: none; z-index: 1040; backdrop-filter: blur(2px); }
     .detail-drawer { position: fixed; top: 0; right: -420px; width: 100%; max-width: 420px; height: 100%; background: #ffffff; z-index: 1050; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15); overflow-y: auto; padding: 24px; }
     .detail-drawer.open { right: 0; }
-    .custom-viewer-drawer { position: fixed; top: 0; right: -75vw; width: 100%; max-width: 75vw; height: 100%; background: #f8f9fa; z-index: 1050; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -5px 0 20px rgba(0, 0, 0, 0.18); overflow-y: auto; padding: 40px; }
+    .custom-viewer-drawer { position: fixed; top: 0; right: -75vw; width: 100%; max-width: 75vw; height: 100%; background: #f8f9fa; z-index: 1060; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -5px 0 20px rgba(0, 0, 0, 0.18); overflow-y: auto; padding: 40px; }
+    .custom-viewer-drawer.open { right: 0; }
     #createTaskForm { max-height: 65vh; overflow-y: auto; overflow-x: hidden; padding-right: 6px; }
     #createTaskForm::-webkit-scrollbar { width: 6px; }
     #createTaskForm::-webkit-scrollbar-thumb { background-color: #ccc; border-radius: 4px; }
@@ -504,6 +437,28 @@ window.openCreateProjectModal = function() {
     border-bottom-right-radius: 6px;
     font-size: 0.88rem;
 }
+
+/* Phased transitioning */
+.phase-node.active-phase .node-circle {
+    background: #0137FB !important;
+    color: #ffffff !important;
+    border-color: #0137FB !important;
+    box-shadow: 0 0 0 4px rgba(1, 55, 251, 0.15);
+}
+.phase-node.active-phase .node-circle span {
+    color: #ffffff !important;
+}
+.extra-small-badge {
+    font-size: 0.65rem !important;
+    padding: 0.25em 0.6em !important;
+}
+.style-hover-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.style-hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
+}
   </style>
 
 
@@ -511,23 +466,28 @@ window.openCreateProjectModal = function() {
 <body>
 
    
-   <header class="navbar navbar-default wh_header" id="test">
-        <div class="topcontainer w-100">
-            <div class="bg-primary">
-                <nav class="navbar navbar-expand-md fixed-top navbar-dark">
-                    <a class="navbar-brand" href="/"><img src="./Pimages/ictglobe.png" height="40px" alt="ICTGlobe"></a>
-                    <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
-                        <ul class="navbar-nav ml-auto">
-                            <li class="nav-item"><a href="./strategy.html" class="myTopButton">Strategy</a></li>
-                            <li class="nav-item"><a href="../../index.html#devisions" class="myTopButton">Devisions</a></li>
-                            <li class="nav-item"><a href="./resources.html" class="myTopButton" data-project="resources">Resources</a></li>
-                            <li class="nav-item"><a href="./projects_dashboard.html" class="myTopButton">Projects</a></li>
-                            <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a></li>
-                        </ul>
-                    </div>
-                </nav>
+    <header class="navbar navbar-default wh_header" id="mainHeaderNavigation">
+      <div class="topcontainer">
+        <div class="bg-primary">
+          <nav class="navbar navbar-expand-md fixed-top navbar-dark">
+            <div class="container-fluid">
+              <a class="navbar-brand" href="/"><img src="../../images/ictglobe.png" height="40px" alt="ICTGlobe"></a>
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+                <ul class="navbar-nav ms-auto ml-auto">
+                  <li class="nav-item"><a href="./strategy.html" class="myTopButton project-link" data-project="strategy">Strategy</a></li>
+                  <li class="nav-item"><a href="../../index.html#devisions" class="myTopButton">Devisions</a></li>
+                  <li class="nav-item"><a href="./resources.html" class="myTopButton project-link" data-project="resources">Resources</a></li>
+                  <li class="nav-item"><a href="./projects_dashboard.html" class="myTopButton">Projects</a></li>
+                  <li class="nav-item"><a href="#" class="myTopButton" id="logoutBtn" style="color: #0137FB; font-weight: bold;">Logout</a></li>
+                </ul>
+              </div>
             </div>
+          </nav>
         </div>
+      </div>
     </header>
 
   <div class="container-fluid px-4 mt-4 pb-5">
@@ -597,7 +557,7 @@ window.openCreateProjectModal = function() {
 
             
 
-            <div class="row g-4 mb-4">
+<div class="row g-4 mb-4">
     <div class="col-12">
         <div class="chart-box">
             <h5 class="font-weight-bold text-dark m-0">Project Execution Progress Matrix</h5>
@@ -737,7 +697,7 @@ window.openCreateProjectModal = function() {
             <div class="recent-orders" id="registryAnchor">
               <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
                 <div>
-                   <h3 class="font-weight-bold m-0" id="registryTitle">Project Portfolio Registry</h3>
+                   <h3 class="align-items-start align-items-md-left font-weight-bold m-0" id="registryTitle">Project Portfolio Registry</h3>
                    <p class="text-muted small m-0" id="registrySubtitle">Projects managed within the system suite.</p>
                 </div>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -775,165 +735,265 @@ window.openCreateProjectModal = function() {
         </main>
     </div>
 
-    <div id="singleWorkspaceView" class="fade-view" style="display: none; padding-top: 20px;">
-        <button id="closeWorkspaceBtn" class="btn btn-sm btn-outline-secondary mb-3">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard Registry
-        </button>
+<div id="singleWorkspaceView" class="fade-view" style="display: none; padding-top: 30px;">
         
-        <h1 id="wsProjectName">Loading...</h1>
-        <h4 id="wsProjectToken" class="text-muted"></h4>
-        
-        <div class="row mt-4 mb-4">
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm">
-                    <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Sponsor</p>
-                    <h5 id="wsSponsor">---</h5>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm">
-                    <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Classification</p>
-                    <h5 id="wsClassification">---</h5>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card p-3 shadow-sm">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <p class="mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Progress</p>
-                        <span id="wsStatusBadge" class="badge"></span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span id="wsProgressText" class="fw-bold fs-5">0%</span>
-                        <div class="progress w-100" style="height: 8px;">
-                            <div id="wsProgressBar" class="progress-bar bg-primary" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
+    <button id="closeWorkspaceBtn" class="btn btn-sm btn-outline-secondary mb-3">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard Registry
+    </button>
+    
+    <h1 id="wsProjectName" class="content__START font-weight-bold m-0" style="font-size: 2.5rem; letter-spacing: -0.5px;">Loading...</h1>
+    <p class="text-muted mt-1 mb-0" style="font-size: 0.9rem; text-align: left;">
+        <i class="fas fa-tag me-1 text-secondary"></i>
+        Token: <strong id="wsProjectToken" class="text-dark font-monospace">---</strong>
+    </p>
+    <p class="text-muted mt-1 mb-0" style="font-size: 0.9rem; text-align: left;">
+        <i class="fas fa-user-tie me-1 text-secondary"></i>
+        Sponsor: <strong id="wsSponsor" class="text-dark">---</strong>
+    </p>
+
+    <div class="row mt-4 mb-4">
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm border-0 bg-white">
+                <p class="mb-1 fw-bold text-muted text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">Total Tasks</p>
+                <h3 id="wsTotalTasksCount" class="fw-bold m-0 text-primary">0</h3>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card shadow-sm border-0 p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="m-0">Task Board</h4>
-                        <button id="btnAddTask" class="btn btn-sm btn-outline-primary admin-only-action" style="display:none;">
-                            <i class="fas fa-plus"></i> Add Task
-                        </button>
-                    </div>
-                    
-                    <div class="kanban-board">
-                        <div class="kanban-column" id="col-New"><div class="kanban-column-header"><span>New</span> <span class="badge bg-secondary rounded-pill" id="badge-New">0</span></div><div class="task-list" id="list-New"></div></div>
-                        <div class="kanban-column" id="col-InProgress"><div class="kanban-column-header"><span>In Progress</span> <span class="badge bg-info rounded-pill" id="badge-InProgress">0</span></div><div class="task-list" id="list-InProgress"></div></div>
-                        <div class="kanban-column" id="col-UnderReview"><div class="kanban-column-header"><span>Under Review</span> <span class="badge bg-warning text-dark rounded-pill" id="badge-UnderReview">0</span></div><div class="task-list" id="list-UnderReview"></div></div>
-                        <div class="kanban-column" id="col-Done"><div class="kanban-column-header"><span>Done</span> <span class="badge bg-success rounded-pill" id="badge-Done">0</span></div><div class="task-list" id="list-Done"></div></div>
-                        <div class="kanban-column" id="col-Cancelled"><div class="kanban-column-header"><span>Cancelled</span> <span class="badge bg-dark rounded-pill" id="badge-Cancelled">0</span></div><div class="task-list" id="list-Cancelled"></div></div>
-                    </div>
-                </div>
+        <div class="col-md-3" onclick="document.getElementById('wsTeamManagementBlock').scrollIntoView({ behavior: 'smooth' });" style="cursor: pointer;">
+            <div class="card p-3 shadow-sm border-0 bg-white style-hover-card">
+                <p class="mb-1 fw-bold text-muted text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">
+                    Team Members <i class="fas fa-external-link-alt ms-1 text-muted" style="font-size:0.7rem;"></i>
+                </p>
+                <h3 id="wsTeamCount" class="fw-bold m-0 text-primary">0</h3>
             </div>
-            
-            <div class="col-lg-4">
-                <div class="card shadow-sm border-0 p-4">
-                    <h4 class="mb-3">Project Logs</h4>
-                    <div class="update-log-container" id="wsAuditStream">
-                        <p class="text-muted text-center py-4">No activity recorded yet.</p>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm border-0 bg-white">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Classification</p>
+                <h5 id="wsClassification" class="m-0 text-dark" style="font-weight:600;">---</h5>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card p-3 shadow-sm border-0 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <p class="mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Progress</p>
+                    <span id="wsStatusBadge" class="badge"></span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span id="wsProgressText" class="fw-bold fs-5">0%</span>
+                    <div class="progress w-100" style="height: 8px; background-color:#e9ecef;">
+                        <div id="wsProgressBar" class="progress-bar bg-primary" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-  </div>
-
- <div class="custom-modal-overlay" id="customFormOverlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1050;">
-    <div class="custom-modal-window" style="background: #ffffff; border-radius: 12px; width: 100%; max-width: 500px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
-        
-        <div class="d-flex justify-content-between align-items-center border-bottom p-3">
-            <h5 class="font-weight-bold text-primary m-0" style="font-size: 1.15rem;">Deploy New Project</h5>
-            <button type="button" class="btn-close" id="closeFormXBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
-        </div>
-        
-  <form id="createProjectForm" style="display: flex; flex-direction: column; height: 100%; overflow: hidden; margin: 0;">
-            <input type="hidden" id="formActionState" value="create">
-
-            <div class="modal-body-scroll" style="overflow-y: auto; padding: 1.5rem; flex-grow: 1;">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4 bg-white">
+                <h5 class="fw-bold text-dark mb-4"><i class="fas fa-layer-group text-primary me-2"></i> Project Phase Progression Matrix</h5>
                 
-                <div id="editProjectMembersContainer" class="mb-3 border-bottom pb-3" style="display: none;">
-                    <label class="form-label small fw-bold text-secondary mb-1">
-                        <i class="fas fa-shield-alt me-1 text-primary"></i> Modify Workspace Access
-                    </label>
-                    <div id="upProjectMembersDisplay" class="d-flex flex-wrap gap-2 align-items-center mt-2"></div>
-                </div>
-
-                <div class="mb-3">
+                <div class="d-flex justify-content-between align-items-center position-relative px-3 mb-2" style="overflow-x: auto;">
+                    <div class="position-absolute" style="height: 4px; background: #e9ecef; left: 40px; right: 40px; top: 22px; z-index: 1;"></div>
                     
-                  <label class="form-label small fw-bold text-secondary mb-1">Project Name</label>
-                  <input type="text" id="pName" class="form-control form-control-sm" required>
-                </div>
-                
-                <div class="mb-3">
-                  <label class="form-label small fw-bold text-secondary mb-1">Unique Token ID</label>
-                  <input type="text" id="pId" class="form-control form-control-sm" required>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label small fw-bold text-secondary mb-1">Authorized Team Members</label>
-                    <select id="pTeam" class="form-select form-select-sm tall-select" multiple required size="5"></select>
-                    <div class="text-muted extra-small mt-1" style="font-size: 0.75rem;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple resources.</div>
-                </div>
-                
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                      <label class="form-label small fw-bold text-secondary mb-1">Functional Sponsor</label>
-                      <input type="text" id="pSponsor" class="form-control form-control-sm" required>
+                    <div class="phase-node text-center active-phase" id="phaseNode-1" onclick="switchWorkspacePhase('Phase 1: Initiation')" style="z-index: 2; cursor: pointer; min-width: 120px;">
+                        <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
+                            <span class="fw-bold text-muted">1</span>
+                        </div>
+                        <p class="small fw-bold mt-2 mb-0 text-truncate text-dark">Initiation</p>
+                        <span class="badge bg-secondary rounded-pill extra-small-badge" id="phaseCount-1">0 Tasks</span>
                     </div>
-                    <div class="col-6">
-                      <label class="form-label small fw-bold text-secondary mb-1">Classification Group</label>
-                      <select id="pClass" class="form-select form-select-sm">
-                          <option value="Internal">Internal Project</option>
-                          <option value="Enterprise">Enterprise Project</option>
-                          <option value="Special">Special Project</option>
-                          <option value="Client">Client Project</option>
-                      </select>
+
+                    <div class="phase-node text-center" id="phaseNode-2" onclick="switchWorkspacePhase('Phase 2: Planning')" style="z-index: 2; cursor: pointer; min-width: 120px;">
+                        <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
+                            <span class="fw-bold text-muted">2</span>
+                        </div>
+                        <p class="small fw-bold mt-2 mb-0 text-truncate text-muted">Planning</p>
+                        <span class="badge bg-light text-dark rounded-pill extra-small-badge" id="phaseCount-2">0 Tasks</span>
+                    </div>
+
+                    <div class="phase-node text-center" id="phaseNode-3" onclick="switchWorkspacePhase('Phase 3: Execution')" style="z-index: 2; cursor: pointer; min-width: 120px;">
+                        <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
+                            <span class="fw-bold text-muted">3</span>
+                        </div>
+                        <p class="small fw-bold mt-2 mb-0 text-truncate text-muted">Execution</p>
+                        <span class="badge bg-light text-dark rounded-pill extra-small-badge" id="phaseCount-3">0 Tasks</span>
+                    </div>
+
+                    <div class="phase-node text-center" id="phaseNode-4" onclick="switchWorkspacePhase('Phase 4: Monitoring & Onboarding')" style="z-index: 2; cursor: pointer; min-width: 120px;">
+                        <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
+                            <span class="fw-bold text-muted">4</span>
+                        </div>
+                        <p class="small fw-bold mt-2 mb-0 text-truncate text-muted">Monitoring</p>
+                        <span class="badge bg-light text-dark rounded-pill extra-small-badge" id="phaseCount-4">0 Tasks</span>
+                    </div>
+
+                    <div class="phase-node text-center" id="phaseNode-5" onclick="switchWorkspacePhase('Phase 5: Project Closure')" style="z-index: 2; cursor: pointer; min-width: 120px;">
+                        <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
+                            <span class="fw-bold text-muted">5</span>
+                        </div>
+                        <p class="small fw-bold mt-2 mb-0 text-truncate text-muted">Closure</p>
+                        <span class="badge bg-light text-dark rounded-pill extra-small-badge" id="phaseCount-5">0 Tasks</span>
                     </div>
                 </div>
-                
-                <div class="row g-2 mb-3">
-                  <div class="col-6">
-                    <label class="form-label small fw-bold text-secondary mb-1">Current Phase</label>
-                    <select id="pStatus" class="form-select form-select-sm">
-                        <option value="New" selected>New</option> 
-                        <option value="Planning">Planning</option>
-                        <option value="Execution">Execution</option>
-                        <option value="High Risk">High Risk</option>
-                        <option value="Stabilization">Stabilization</option>
-                        <option value="Signed-Off">Signed-Off</option>
-                    </select>
-                  </div>
-                  <div class="col-6">
-                    <label class="form-label small fw-bold text-secondary mb-1">Starting Progress (%)</label>
-                    <input type="number" id="pProgress" class="form-control form-control-sm" min="0" max="100" value="0">
-                  </div>
-                </div>
-            </div> <div class="d-flex justify-content-end gap-2 border-top p-3 bg-light" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
-              <button type="button" class="btn btn-light btn-sm px-3 border" id="cancelFormBtn">Cancel</button>
-              <button type="submit" class="btn btn-primary btn-sm px-3" style="background-color: #005AFC;">Commit to Master Sheet</button>
             </div>
-            
-        </form> </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="m-0 fw-bold text-dark" id="wsActivePhaseTitleDisplay"><i class="fas fa-tasks me-2 text-primary"></i>Phase 1: Initiation Tasks</h4>
+                    <button id="btnAddTask" class="btn btn-sm btn-outline-primary admin-only-action" style="display:none;" onclick="openPhaseTaskCreationOverlay()">
+                        <i class="fas fa-plus"></i> Add Task
+                    </button>
+                </div>
+                
+                <div class="kanban-board">
+                    <div class="kanban-column" id="col-New">
+                        <div class="kanban-column-header"><span>New</span> <span class="badge bg-secondary rounded-pill" id="badge-New">0</span></div>
+                        <div class="task-list" id="list-New"></div>
+                    </div>
+                    <div class="kanban-column" id="col-InProgress">
+                        <div class="kanban-column-header"><span>In Progress</span> <span class="badge bg-info rounded-pill" id="badge-InProgress">0</span></div>
+                        <div class="task-list" id="list-InProgress"></div>
+                    </div>
+                    <div class="kanban-column" id="col-UnderReview">
+                        <div class="kanban-column-header"><span>Under Review</span> <span class="badge bg-warning text-dark rounded-pill" id="badge-UnderReview">0</span></div>
+                        <div class="task-list" id="list-UnderReview"></div>
+                    </div>
+                    <div class="kanban-column" id="col-Done">
+                        <div class="kanban-column-header"><span>Complete</span> <span class="badge bg-success rounded-pill" id="badge-Done">0</span></div>
+                        <div class="task-list" id="list-Done"></div>
+                    </div>
+                    <div class="kanban-column" id="col-Cancelled">
+                        <div class="kanban-column-header"><span>Cancelled</span> <span class="badge bg-dark rounded-pill" id="badge-Cancelled">0</span></div>
+                        <div class="task-list" id="list-Cancelled"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4" id="wsTeamManagementBlock">
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold text-dark m-0"><i class="fas fa-users text-primary me-2"></i> Assigned Project Team</h5>
+                    <span class="badge bg-primary text-white admin-only-action" style="font-size: 0.7rem; display: none;">Admin View</span>
+                </div>
+                <p class="text-muted small mb-3">Allocated resources managing operational workstreams for this workspace.</p>
+
+                <!-- Non-admin view: read-only member pills -->
+                <div id="wsTeamDisplayContainer" class="d-flex flex-wrap gap-2 mb-3"></div>
+
+                <!-- Admin view: editable pill checkboxes -->
+                <div class="admin-only-action border-top pt-3 mt-2" style="display: none;">
+                    <label class="form-label text-dark fw-bold small mb-2">Edit Team Allocation</label>
+                    <div id="wsTeamPillEditor" class="d-flex flex-wrap gap-1 mb-3"></div>
+                    <button class="btn btn-sm btn-primary px-3" type="button" onclick="commitTeamAllocationUpdate()">
+                        <i class="fas fa-save me-1"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0 p-4 bg-white h-100">
+                <h5 class="mb-3 fw-bold text-dark"><i class="fas fa-history text-secondary me-2"></i> Project Operational Logs</h5>
+                <div class="update-log-container" id="wsAuditStream" style="height: 240px; border-radius: 6px;">
+                    <p class="text-muted text-center py-4">No activity recorded yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+  <div class="custom-modal-overlay" id="customFormOverlay">
+    <div class="custom-modal-window">
+        <form id="createProjectForm">
+            <input type="hidden" id="formActionState" value="create">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h5 class="font-weight-bold text-primary m-0">Project Record</h5>
+                <button type="button" class="btn-close" id="closeFormXBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Project Name</label>
+                <input type="text" id="pName" class="form-control form-control-sm" required placeholder="e.g., Network Upgrade Phase 2">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Project ID / Token</label>
+                <input type="text" id="pId" class="form-control form-control-sm" required placeholder="e.g., PRJ-001">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Sponsor</label>
+                <input type="text" id="pSponsor" class="form-control form-control-sm" placeholder="e.g., John Smith">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Classification</label>
+                <select id="pClass" class="form-select form-select-sm">
+                    <option value="Internal Project">Internal Project</option>
+                    <option value="Enterprise Project">Enterprise Project</option>
+                    <option value="Special Project">Special Project</option>
+                    <option value="Client Project">Client Project</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Status</label>
+                <select id="pStatus" class="form-select form-select-sm">
+                    <option value="New">New</option>
+                    <option value="Planning">Planning</option>
+                    <option value="Execution">Execution</option>
+                    <option value="High Risk">High Risk</option>
+                    <option value="Stabilization">Stabilization</option>
+                    <option value="Signed-Off">Signed-Off</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Progress (%)</label>
+                <input type="number" id="pProgress" class="form-control form-control-sm" min="0" max="100" value="0">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Assign Team Members</label>
+                <select id="pTeam" class="form-select form-select-sm tall-select" multiple size="4"></select>
+                <div class="form-text text-muted" style="font-size:0.65rem;">Hold Ctrl (Windows) or Cmd (Mac) to select multiple.</div>
+            </div>
+
+            <div class="mb-3" id="editProjectMembersContainer" style="display:none;">
+                <label class="form-label small fw-bold text-secondary mb-1">Edit Team Members</label>
+                <div id="upProjectMembersDisplay" class="d-flex flex-wrap gap-1 p-2 border rounded bg-light"></div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <button type="button" class="btn btn-light btn-sm px-3 border" id="cancelFormBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm px-3" style="background-color:#005AFC;">Commit to Master Sheet</button>
+            </div>
+        </form>
+    </div>
+  </div>
 
   <div class="custom-modal-overlay" id="taskFormOverlay">
     <div class="custom-modal-window" style="max-width: 550px;">
         <form id="createTaskForm">
             <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
-                <h5 class="font-weight-bold text-primary m-0">Generate Operational Task</h5>
+                <h5 class="font-weight-bold text-primary m-0">Generate Project Task</h5>
                 <button type="button" class="btn-close" id="closeTaskFormBtn" style="cursor:pointer; background-color:transparent; border:none; font-size:1.2rem;">&times;</button>
             </div>
             
             <div class="mb-3">
                 <label class="form-label small fw-bold text-secondary mb-1">Task Title / Instruction</label>
-                <input type="text" id="tTitle" class="form-control form-control-sm" required placeholder="e.g., Run test billing profiles">
+                <input type="text" id="tTitle" class="form-control form-control-sm" required placeholder="e.g., Project Initiation & Planning">
             </div>
 
             <div class="mb-3">
@@ -1056,6 +1116,8 @@ window.openCreateProjectModal = function() {
     </div>
 </div>
 
+
+
   <footer class="navbar navbar-default wh_footer">
       <div class="footer-container mx-auto">
           <div>
@@ -1067,6 +1129,7 @@ window.openCreateProjectModal = function() {
 <script>
 let projectDataset = [];
     let activeClassificationFilter = "all";
+    let activeWorkspacePhase = "Phase 1: Initiation";
     let activePhaseFilter = "all";
     let activeWorkspaceProjectId = null;
     let activeWorkspaceProjectToken = null; 
@@ -1102,9 +1165,19 @@ let projectDataset = [];
         if (taskOverlay) {
             const closeTaskFormBtn = document.getElementById('closeTaskFormBtn');
             if (closeTaskFormBtn) closeTaskFormBtn.addEventListener('click', () => taskOverlay.style.display = 'none');
-            
+
             const cancelTaskBtn = document.getElementById('cancelTaskBtn');
             if (cancelTaskBtn) cancelTaskBtn.addEventListener('click', () => taskOverlay.style.display = 'none');
+        }
+
+        // Reveal admin-only buttons for admin users
+        const isAdminUser = (window.currentUserRole === 'admin') ||
+                            (window.currentUserName && (window.currentUserName.toLowerCase().includes("admin") ||
+                             window.currentUserName.toLowerCase().includes("system")));
+        if (isAdminUser) {
+            document.querySelectorAll('.admin-only-action').forEach(btn => {
+                btn.style.setProperty('display', 'inline-block', 'important');
+            });
         }
 
         // Back to Dashboard Workspace View Control Closer
@@ -1237,12 +1310,7 @@ if (createProjForm) {
                 const projectOverlay = document.getElementById('customFormOverlay');
                 if (projectOverlay) projectOverlay.style.display = 'none';
                 
-                // Call the correct live refresh method for your portfolio view
-                if (typeof fetchPortfolio === 'function') {
-                    fetchPortfolio(); 
-                } else if (typeof fetchMasterSuiteDataset === 'function') {
-                    fetchMasterSuiteDataset();
-                }
+                if (typeof fetchMasterSuiteDataset === 'function') fetchMasterSuiteDataset();
             })
             .catch(err => {
                 console.error("Network communication link dropped:", err);
@@ -1298,7 +1366,8 @@ if (createProjForm) {
                     assignees: assigneesString,
                     status: "New",
                     creator: window.currentUserName || "System Portal",
-                    dueDate: document.getElementById('tDueDate') ? document.getElementById('tDueDate').value : ""
+                    dueDate: document.getElementById('tDueDate') ? document.getElementById('tDueDate').value : "",
+                    phase: activeWorkspacePhase || "Phase 1: Initiation"
                 };
 
                 const submitBtn = taskForm.querySelector('button[type="submit"]');
@@ -1381,7 +1450,7 @@ async function fetchMasterSuiteDataset() {
 
         // 4. SECURITY GATE: Filter raw payload based on user access permissions
         const currentSessionUser = (window.currentUserName || "").trim().toLowerCase();
-        const isMasterAdmin = (window.currentUserRole === 'admin') || currentSessionUser.includes("admin") || currentSessionUser === "estelle";
+        const isMasterAdmin = (window.currentUserRole === 'admin') || currentSessionUser.includes("admin");
 
         const securedData = data.filter(proj => {
             if (isMasterAdmin) return true; // Admins see all
@@ -1504,8 +1573,19 @@ async function fetchMasterSuiteDataset() {
         renderFilteredRegistryAndVisuals();
     }
 
+    function revealAdminButtons() {
+        const isAdmin = (window.currentUserRole === 'admin') ||
+                        (window.currentUserName && window.currentUserName.toLowerCase().includes("admin"));
+        if (isAdmin) {
+            document.querySelectorAll('.admin-only-action').forEach(btn => {
+                btn.style.setProperty('display', 'inline-block', 'important');
+            });
+        }
+    }
+
     function renderFilteredRegistryAndVisuals() {
         generateHighFidelityVisuals(projectDataset);
+        revealAdminButtons();
         let subset = projectDataset;
         if (activeClassificationFilter !== 'all') {
             // 🌟 FIXED FILTER ENGINE: Extracts prefixes cleanly to maintain match stability
@@ -1582,7 +1662,7 @@ async function fetchMasterSuiteDataset() {
                         </div>
                     </div>
                 </td>
-                <td><span class="badge ${badgeClass} px-2.5 py-1.5" style="font-size:0.78rem; border-radius:6px;">${p.status}</span></td>
+                <td><span class="badge ${badgeClass} px-2 py-1" style="font-size:0.78rem; border-radius:6px;">${p.status}</span></td>
                 <td>
                     <div class="d-flex align-items-center">
                         ${workspaceBtnHTML}
@@ -1703,10 +1783,66 @@ async function fetchMasterSuiteDataset() {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
+        revealAdminButtons();
+
         document.getElementById('wsProjectName').innerText = project.projectName || project.name || "Unnamed Project";
-        document.getElementById('wsProjectToken').innerText = `Unique Token ID: ${projectId}`;
+        document.getElementById('wsProjectToken').innerText = projectId;
         document.getElementById('wsSponsor').innerText = project.sponsor || '---';
         document.getElementById('wsClassification').innerText = project.classification || '---';
+
+        // Team members — count + populate both views
+        const teamStr = project.team || project.members || "";
+        const teamArr = teamStr ? teamStr.toString().split(',').map(s => s.trim()).filter(s => s.length > 0) : [];
+        const wsTeamCountEl = document.getElementById('wsTeamCount');
+        if (wsTeamCountEl) wsTeamCountEl.innerText = teamArr.length;
+
+        // Read-only pill badges (all users)
+        const teamDisplay = document.getElementById('wsTeamDisplayContainer');
+        if (teamDisplay) {
+            teamDisplay.innerHTML = "";
+            if (teamArr.length > 0) {
+                teamArr.forEach(name => {
+                    const pill = document.createElement('span');
+                    pill.className = "badge bg-light text-dark border px-3 py-2 text-capitalize fw-medium";
+                    pill.style.borderRadius = "50px";
+                    pill.style.fontSize = "0.78rem";
+                    pill.innerHTML = `<i class="fas fa-user-circle me-1 text-primary"></i>${name}`;
+                    teamDisplay.appendChild(pill);
+                });
+            } else {
+                teamDisplay.innerHTML = `<span class="text-muted small">No team members assigned.</span>`;
+            }
+        }
+
+        // Admin pill editor (checkbox pills like project creation)
+        const pillEditor = document.getElementById('wsTeamPillEditor');
+        if (pillEditor && typeof authorizedUsers !== 'undefined') {
+            pillEditor.innerHTML = "";
+            const currentTeamLower = teamArr.map(s => s.toLowerCase());
+            Object.keys(authorizedUsers).forEach(username => {
+                const isChecked = currentTeamLower.includes(username.toLowerCase());
+                const label = document.createElement('label');
+                label.className = "border px-3 py-2 m-1 d-inline-flex align-items-center gap-1 rounded-pill";
+                label.style.cursor = "pointer";
+                label.style.fontSize = "0.78rem";
+                label.style.backgroundColor = isChecked ? "#e0f2fe" : "#f8f9fa";
+                label.style.color = isChecked ? "#0369a1" : "#6c757d";
+                label.style.fontWeight = isChecked ? "600" : "500";
+                label.style.transition = "all 0.2s";
+                label.innerHTML = `
+                    <input type="checkbox" class="ws-team-pill-checkbox" value="${username}" ${isChecked ? 'checked' : ''} style="display:none;">
+                    ${isChecked ? '<i class="fas fa-check" style="font-size:0.65rem;"></i>' : ''}${username}
+                `;
+                label.onclick = function() {
+                    const cb = this.querySelector('input');
+                    cb.checked = !cb.checked;
+                    this.style.backgroundColor = cb.checked ? "#e0f2fe" : "#f8f9fa";
+                    this.style.color = cb.checked ? "#0369a1" : "#6c757d";
+                    this.style.fontWeight = cb.checked ? "600" : "500";
+                };
+                pillEditor.appendChild(label);
+            });
+        }
         document.getElementById('wsProgressText').innerText = `${project.progress || 0}%`;
         document.getElementById('wsProgressBar').style.width = `${project.progress || 0}%`;
 
@@ -1755,9 +1891,12 @@ async function fetchMasterSuiteDataset() {
         fetch(`${googleWebAppUrl}?action=readTasks&projectId=${encodeURIComponent(projectId)}&ts=${new Date().getTime()}`)
         .then(res => res.json())
         .then(data => {
-            // Save global reference cache of active tasks for future View/Update modifications
             window.activeTasksCache = data.tasks || [];
-            renderWorkspaceTasks(window.activeTasksCache);
+            updatePhaseNodeCounts(window.activeTasksCache);
+            const filtered = window.activeTasksCache.filter(t =>
+                (t.phase || "Phase 1: Initiation").trim().toLowerCase() === activeWorkspacePhase.trim().toLowerCase()
+            );
+            renderWorkspaceTasks(filtered);
         })
         .catch(err => {
             console.error("Failed to fetch project task tracks:", err);
@@ -1844,7 +1983,7 @@ function renderWorkspaceTasks(tasks) {
                 : ``;
 
             let dueByHTML = `<div class="text-danger fw-bold" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
-                                <i class="fas fa-hourglass-half me-1.5" style="width:12px; text-align: left;"></i>Due By: <span>${(task.dueDate && task.dueDate !== "N/A" && task.dueDate !== "undefined") ? task.dueDate : "None Set"}</span>
+                                <i class="fas fa-hourglass-half me-1" style="width:12px; text-align: left;"></i>Due By: <span>${(task.dueDate && task.dueDate !== "N/A" && task.dueDate !== "undefined") ? task.dueDate : "None Set"}</span>
                             </div>`;
 
             card.innerHTML = `
@@ -1859,7 +1998,7 @@ function renderWorkspaceTasks(tasks) {
                 </div>
                 <div class="mt-2 border-top pt-2" style="width: 100% !important; text-align: left !important;">
                     <div class="text-muted" style="font-size:0.68rem; margin-bottom: 4px;">
-                        <i class="far fa-calendar-alt text-secondary me-1.5"></i>Created: <span class="fw-medium">${task.createdAt || 'N/A'}</span>
+                        <i class="far fa-calendar-alt text-secondary me-1"></i>Created: <span class="fw-medium">${task.createdAt || 'N/A'}</span>
                     </div>
                     ${dueByHTML}
                     <div class="d-flex justify-content-between align-items-center mt-2" style="width: 100% !important;">
@@ -1920,9 +2059,6 @@ function renderWorkspaceTasks(tasks) {
         });
     }
 
-// ==========================================================================
-// ========== WORKSPACE DRAWERS MANAGEMENT ENGINE ==========
-// ==========================================================================
 
 // ==========================================================================
 // ========== WORKSPACE DRAWERS MANAGEMENT ENGINE ==========
@@ -1963,12 +2099,12 @@ window.closeDrawer = function() {
     if (bdrop) bdrop.style.display = 'none'; 
 };
 
-window.globalCloseAllDrawers = function() { 
-    closeDrawer(); 
+window.globalCloseAllDrawers = function() {
+    closeDrawer();
     const vDrw = document.getElementById('viewFullDrawer');
-    if (vDrw) vDrw.style.right = "-75vw";
+    if (vDrw) vDrw.classList.remove('open');
     const bdrop = document.getElementById('drawerBackdrop');
-    if (bdrop) bdrop.style.display = 'none'; 
+    if (bdrop) bdrop.style.display = 'none';
 };
 
 // ==========================================
@@ -1982,7 +2118,7 @@ window.openUpdateDrawer = function(taskId) {
     const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
     
     // Unified authentication verification
-    const isAdmin = (window.currentUserRole === 'admin') || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+    const isAdmin = (window.currentUserRole === 'admin') || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system");
     if (isAdmin) {
         document.querySelectorAll('.admin-only-action').forEach(btn => {
             btn.style.setProperty('display', 'inline-block', 'important');
@@ -2099,7 +2235,7 @@ window.openUpdateDrawer = function(taskId) {
             namesArr.forEach(name => {
                 if(!name.trim()) return;
                 const span = document.createElement('span');
-                span.className = "badge bg-light text-secondary border px-3 py-1.5 m-0 text-capitalize fw-medium";
+                span.className = "badge bg-light text-secondary border px-3 py-1 m-0 text-capitalize fw-medium";
                 span.style.borderRadius = "50px";
                 span.style.fontSize = "0.7rem";
                 span.innerText = name.trim();
@@ -2164,174 +2300,150 @@ window.openUpdateDrawer = function(taskId) {
 };
 
 // ==========================================
-// 2. OPEN VIEW DETAILS DRAWER (WITH SCROLL ENGAGED)
+// 2. OPEN VIEW DETAILS DRAWER (ROOT-LEVEL VERSION)
 // ==========================================
 window.openViewDrawer = function(taskId) {
+    console.log("🚀 openViewDrawer invoked for Task ID:", taskId);
+    
     if (!window.activeTasksCache) {
-        console.warn("View Drawer Aborted: window.activeTasksCache is not initialized.");
+        console.warn("❌ View Drawer Aborted: window.activeTasksCache is not initialized.");
         return;
     }
     
-    // Loose equality (==) handles string/number data types from cache effortlessly
     const task = window.activeTasksCache.find(t => (t.taskId == taskId || t.id == taskId));
+    console.log("📦 Task object extracted from cache:", task);
+
     if (!task) {
-        console.warn("View Drawer Aborted: Task details not found in cache for ID:", taskId);
+        console.warn("❌ View Drawer Aborted: Task details not found in cache for ID:", taskId);
         return;
     }
 
-    // --- REQUIREMENT FIX: FORCE SCROLL & LAYOUT CONSTRAINTS ---
+    // Open the drawer
     const viewDrawerEl = document.getElementById('viewFullDrawer');
-    if (viewDrawerEl) {
-        viewDrawerEl.style.position = "fixed";
-        viewDrawerEl.style.top = "0";
-        viewDrawerEl.style.height = "100vh";
-        viewDrawerEl.style.overflowY = "auto";  // Engages independent vertical scrolling
-        viewDrawerEl.style.overflowX = "hidden"; // Prevents unwanted horizontal breaking
-        viewDrawerEl.style.backgroundColor = "#fff"; // Safeguards visibility over background views
-        viewDrawerEl.style.right = "0";          // Triggers slide-out transformation
-    } else {
-        console.error("UI Render Blocked: Element '#viewFullDrawer' layout wrapper missing in DOM.");
-        return;
-    }
+    if (!viewDrawerEl) return;
+    viewDrawerEl.classList.add('open');
 
-    // Safe Execution Wrapper to prevent metadata inconsistencies from hiding static elements
-    try {
-        // 1. Requirement 1: At the very top: Project - (and current project)
-        const parentProjectName = window.currentWorkspaceProject || task.projectName || task.projectId || "Active Scope";
-        const titleEl = document.getElementById('viewDrawerTitle');
-        if (titleEl) {
-            titleEl.innerText = `Project - ${parentProjectName}`;
-        }
-
-        // 2. Requirement 2: Task Name currently viewed
-        // 3. Requirement 3: Task ID
-        const taskName = task.title || "Untitled Task Element";
-        const taskIdentifier = task.taskId || taskId;
-        
-        const badgeIdEl = document.getElementById('viewDrawerBadgeId');
-        if (badgeIdEl) badgeIdEl.innerText = taskIdentifier;
-
-        const bodyEl = document.getElementById('viewDrawerBody');
-        if (bodyEl) {
-            bodyEl.innerHTML = `
-                <div class="mb-3 pb-2 border-bottom">
-                    <h4 class="fw-bold text-dark mb-1">${taskName}</h4>
-                    <span class="badge bg-light text-secondary border px-2 py-1 small fw-normal">ID Reference: ${taskIdentifier}</span>
-                </div>
-                <div class="text-secondary small mb-2" style="font-size: 0.9rem;">
-                    ${task.description || "No descriptive overview provided for this task."}
-                </div>
-            `;
-        }
-        
-        // 4. Requirement 4: Notes, latest updated notes, the user and time it was updated at the bottom of this block
-        const noteTextEl = document.getElementById('viewDrawerNoteText');
-        const noteMetaEl = document.getElementById('viewDrawerNoteMeta');
-        
-        // Maps seamlessly to Apps Script 'note' property from Tasks_Database column 12
-        const rawNoteContent = task.note || ""; 
-        if (rawNoteContent.trim() !== "" && rawNoteContent !== "<p><br></p>") {
-            if (noteTextEl) noteTextEl.innerHTML = rawNoteContent;
-            if (noteMetaEl) {
-                // Read update tokens or fall back safely to system timestamps
-                const updateAuthor = task.updatedBy || task.user || "System Contributor";
-                const updateTimestamp = task.updatedAt || task.createdAt || "Recent Sync";
-                noteMetaEl.innerText = `Logged by: ${updateAuthor} at ${updateTimestamp}`;
-            }
-        } else {
-            if (noteTextEl) noteTextEl.innerHTML = `<span class="text-muted italic small">No recent implementation notes logged.</span>`;
-            if (noteMetaEl) noteMetaEl.innerText = "";
-        }
-
-        // 5 & 6. Requirement 5 & 6: Task Active Action Items & All completed actions, who completed it and when
-        const activeContainer = document.getElementById('viewDrawerChecklistActive');
-        const compContainer = document.getElementById('viewDrawerChecklistCompleted');
-        
-        if (activeContainer) activeContainer.innerHTML = "";
-        if (compContainer) compContainer.innerHTML = "";
-
-        // Check if item collection array exists
-        const checklistArr = task.checklist || [];
-        
-        if (Array.isArray(checklistArr) && checklistArr.length > 0) {
-            checklistArr.forEach(item => {
-                // Determine if item is an explicit structural object or a flat string
-                const isItemObj = (typeof item === 'object' && item !== null);
-                const isDone = isItemObj ? (!!item.completed || item.status === "completed" || item.is_completed === true) : false;
-                const textContent = isItemObj ? (item.text || item.task || item.name) : item.toString().trim();
-                
-                if (isDone) {
-                    // Extract execution metrics safely
-                    const resolvedBy = isItemObj ? (item.completedBy || item.user || "Staff Resource") : "Staff Resource";
-                    const resolvedAt = isItemObj ? (item.completedAt || item.timestamp || "N/A") : "N/A";
-                    
-                    const doneRow = `
-                        <div class="d-flex flex-column mb-2 p-2 bg-light rounded border-start border-success border-2 shadow-3xs">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fas fa-check-square text-success fs-5"></i> 
-                                <span class="text-decoration-line-through text-muted small fw-medium">${textContent}</span>
-                            </div>
-                            <div class="text-muted ps-4 mt-1" style="font-size: 0.72rem; font-style: italic;">
-                                Resolved by ${resolvedBy} on ${resolvedAt}
-                            </div>
-                        </div>`;
-                    if (compContainer) compContainer.insertAdjacentHTML('beforeend', doneRow);
-                } else {
-                    const activeRow = `
-                        <div class="d-flex align-items-center gap-2 my-2 p-2 border-start border-primary border-3 bg-white rounded shadow-3xs">
-                            <i class="far fa-square text-muted fs-5"></i> 
-                            <span class="text-dark fw-medium" style="font-size: 0.92rem;">${textContent}</span>
-                        </div>`;
-                    if (activeContainer) activeContainer.insertAdjacentHTML('beforeend', activeRow);
-                }
-            });
-        } else {
-            if (activeContainer) activeContainer.innerHTML = `<span class="text-muted small italic">No active action items assigned.</span>`;
-            if (compContainer) compContainer.innerHTML = `<span class="text-muted small italic">No completed actions found.</span>`;
-        }
-
-        // 7. Requirement 7: The current team members assigned to the task.
-        const teamEl = document.getElementById('viewDrawerAssignees');
-        if (teamEl) {
-            // Maps cleanly to your backend structure: task.assignees
-            const rawAssignees = task.assignees || "Unassigned";
-            const membersList = rawAssignees.split(',').map(m => m.trim()).filter(m => m !== "");
-            let badgeMarkup = "";
-            
-            membersList.forEach(member => {
-                if(member.toLowerCase() !== "unassigned") {
-                    badgeMarkup += `<span class="badge bg-primary text-white me-1 px-2 py-1 text-capitalize fw-semibold mb-1 d-inline-block"><i class="fas fa-user-circle me-1"></i>${member}</span>`;
-                }
-            });
-            
-            teamEl.innerHTML = badgeMarkup || `<span class="text-muted small italic">Unassigned</span>`;
-        }
-
-        // Status Pill Visual Sync
-        const statusPillContainer = document.getElementById('viewDrawerStatusPill');
-        if (statusPillContainer) {
-            const currentStatus = task.status || "New";
-            let colorClass = "bg-secondary";
-            if (currentStatus === "In Progress" || currentStatus === "Active") colorClass = "bg-primary";
-            if (currentStatus === "Under Review") colorClass = "bg-warning text-dark";
-            if (currentStatus === "Done" || currentStatus === "Completed") colorClass = "bg-success";
-            if (currentStatus === "Cancelled") colorClass = "bg-danger";
-            
-            statusPillContainer.innerHTML = `<span class="badge ${colorClass} px-3 py-2 fs-6 fw-semibold text-white text-uppercase">${currentStatus}</span>`;
-        }
-
-        const createdEl = document.getElementById('viewDrawerCreatedAt');
-        if (createdEl) {
-            createdEl.innerText = task.createdAt || "N/A";
-        }
-
-    } catch (renderError) {
-        console.error("Critical Handshake Warning: Something interrupted the data-injection loop:", renderError);
-    }
-    
-    // 6. Trigger Backdrop Overlay
     const bdrop = document.getElementById('drawerBackdrop');
-    if (bdrop) bdrop.style.display = "block";
+    if (bdrop) { bdrop.style.display = "block"; bdrop.style.zIndex = "1050"; }
+
+    // 1. Header — project name, task ID badge, task title, dates
+    const activeProject = projectDataset.find(p => (p.projectId || p.id) === activeWorkspaceProjectId);
+    const projectLabel = activeProject ? (activeProject.projectName || activeProject.name) : (task.projectId || "");
+    const taskIdentifier = task.taskId || task.id || taskId;
+    const taskName = task.title || "Untitled Task";
+
+    const projectNameEl = document.getElementById('viewDrawerProjectName');
+    if (projectNameEl) projectNameEl.innerText = projectLabel;
+
+    const badgeEl = document.getElementById('viewDrawerBadgeId');
+    if (badgeEl) badgeEl.innerText = taskIdentifier;
+
+    const titleEl = document.getElementById('viewDrawerTitle');
+    if (titleEl) titleEl.innerText = taskName;
+
+    const createdHeaderEl = document.getElementById('viewDrawerCreatedHeader');
+    if (createdHeaderEl) {
+        const created = task.createdAt || task.created || "";
+        createdHeaderEl.innerHTML = created
+            ? `<i class="fas fa-calendar-plus me-1 text-secondary"></i>Created: <strong class="text-dark">${created}</strong>`
+            : "";
+    }
+    const dueHeaderEl = document.getElementById('viewDrawerDueHeader');
+    if (dueHeaderEl) {
+        const due = task.dueDate || task.due || "";
+        const isOverdue = due && due !== "N/A" && due !== "None Set";
+        dueHeaderEl.innerHTML = due && due !== "N/A" && due !== "None Set" && due !== "undefined"
+            ? `<i class="fas fa-hourglass-half me-1 text-danger"></i>Due: <strong class="text-danger">${due}</strong>`
+            : `<i class="fas fa-hourglass-half me-1 text-muted"></i><span class="text-muted">No due date</span>`;
+    }
+
+    // 2. Description (clean — no team mixed in here)
+    const descEl = document.getElementById('viewDrawerDescription');
+    if (descEl) {
+        const text = task.description || task.desc || "";
+        descEl.innerHTML = text
+            ? `<p class="text-dark" style="white-space:pre-wrap; font-size:0.95rem; line-height:1.6;">${text}</p>`
+            : `<span class="text-muted small fst-italic">No description provided for this task.</span>`;
+    }
+
+    // 3. Latest activity note
+    const noteTextEl = document.getElementById('viewDrawerNoteText');
+    const noteMetaEl = document.getElementById('viewDrawerNoteMeta');
+    const rawNote = String(task.note || "").trim();
+    if (rawNote && rawNote !== "<p><br></p>") {
+        if (noteTextEl) noteTextEl.innerHTML = rawNote;
+        if (noteMetaEl) noteMetaEl.innerHTML =
+            `<i class="fas fa-user-edit me-1"></i>Updated by: <strong class="text-dark">${task.updatedBy || "System"}</strong>
+             &nbsp;·&nbsp; <span class="text-muted">${task.updatedAt || ""}</span>`;
+    } else {
+        if (noteTextEl) noteTextEl.innerHTML = `<span class="text-muted fst-italic small">No activity notes logged yet.</span>`;
+        if (noteMetaEl) noteMetaEl.innerText = "";
+    }
+
+    // 4. Checklist
+    const activeContainer = document.getElementById('viewDrawerChecklistActive');
+    const compContainer   = document.getElementById('viewDrawerChecklistCompleted');
+    if (activeContainer) activeContainer.innerHTML = "";
+    if (compContainer)   compContainer.innerHTML   = "";
+
+    let checklistArr = task.checklist || [];
+    if (typeof checklistArr === 'string') {
+        try { checklistArr = JSON.parse(checklistArr); } catch(e) { checklistArr = []; }
+    }
+
+    let activeCount = 0, completedCount = 0;
+    if (Array.isArray(checklistArr)) {
+        checklistArr.forEach(item => {
+            const isObj    = typeof item === 'object' && item !== null;
+            const isDone   = isObj ? !!item.completed : false;
+            const text     = isObj ? (item.text || item.task || item.name || "") : String(item).trim();
+            if (!text) return;
+            if (isDone) {
+                completedCount++;
+                compContainer && compContainer.insertAdjacentHTML('beforeend', `
+                    <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-light rounded border-start border-success border-2">
+                        <i class="fas fa-check-square text-success"></i>
+                        <span class="text-decoration-line-through text-muted small fw-medium">${text}</span>
+                    </div>`);
+            } else {
+                activeCount++;
+                activeContainer && activeContainer.insertAdjacentHTML('beforeend', `
+                    <div class="d-flex align-items-center gap-2 mb-2 p-2 bg-white rounded border-start border-primary border-2">
+                        <i class="far fa-square text-muted"></i>
+                        <span class="text-dark fw-medium" style="font-size:0.92rem;">${text}</span>
+                    </div>`);
+            }
+        });
+    }
+    if (activeCount === 0 && activeContainer)
+        activeContainer.innerHTML = `<span class="text-muted fst-italic small">No active items.</span>`;
+    if (completedCount === 0 && compContainer)
+        compContainer.innerHTML   = `<span class="text-muted fst-italic small">No completed items yet.</span>`;
+
+    // 5. Sidebar — status badge
+    const statusEl = document.getElementById('viewDrawerStatusPill');
+    if (statusEl) {
+        const s = task.status || "New";
+        const cls = s === "In Progress" ? "bg-primary" : s === "Under Review" ? "bg-warning text-dark" :
+                    s === "Done"        ? "bg-success"  : s === "Cancelled"   ? "bg-danger"           : "bg-secondary";
+        statusEl.innerHTML = `<span class="badge ${cls} px-3 py-2 fw-semibold text-uppercase" style="font-size:0.82rem;">${s}</span>`;
+    }
+
+    // 6. Sidebar — assigned resources (correct element this time)
+    const assigneesEl = document.getElementById('viewDrawerAssignees');
+    if (assigneesEl) {
+        const names = (task.assignees || "").split(',').map(n => n.trim()).filter(Boolean);
+        assigneesEl.innerHTML = names.length
+            ? names.map(n => `<span class="badge bg-light text-dark border px-2 py-1 me-1 text-capitalize"
+                                    style="border-radius:50px; font-size:0.75rem;">
+                                  <i class="fas fa-user-circle text-primary me-1"></i>${n}
+                              </span>`).join('')
+            : `<span class="text-muted small fst-italic">Unassigned</span>`;
+    }
+
+    // 7. Sidebar — due date & created
+    const createdEl = document.getElementById('viewDrawerCreatedAt');
+    if (createdEl) createdEl.innerText = task.createdAt || "N/A";
 };
 
 // ==========================================
@@ -2339,9 +2451,7 @@ window.openViewDrawer = function(taskId) {
 // ==========================================
 window.closeReadPanel = function() {
     const viewDrawerEl = document.getElementById('viewFullDrawer');
-    if (viewDrawerEl) {
-        viewDrawerEl.style.right = "-75vw"; // Slides it safely off-screen
-    }
+    if (viewDrawerEl) viewDrawerEl.classList.remove('open');
     const bdrop = document.getElementById('drawerBackdrop');
     if (bdrop) bdrop.style.display = "none";
 };
@@ -2364,7 +2474,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (noItemsFlag) noItemsFlag.remove();
 
             const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
-            const isAdmin = (window.currentUserRole === 'admin') || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+            const isAdmin = (window.currentUserRole === 'admin') || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system");
 
             const currentIndex = chkContainer.querySelectorAll('.ut-matrix-item-row').length;
             const row = document.createElement('div');
@@ -2437,7 +2547,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Capture Selected Assignees if user is an Administrator
             const currentSessionRaw = (window.currentUserName || "").trim().toLowerCase();
-            const isAdmin = (window.currentUserRole === 'admin') || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system") || currentSessionRaw === "estelle";
+            const isAdmin = (window.currentUserRole === 'admin') || currentSessionRaw.includes("admin") || currentSessionRaw.includes("system");
             
             let finalAssignees = null; 
             if (isAdmin) {
@@ -2467,16 +2577,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { "Content-Type": "text/plain;charset=utf-8" },
                 body: JSON.stringify(payload)
             })
-            .then(() => {
-                setTimeout(() => {
-                    globalCloseAllDrawers();
-                    if (document.getElementById('utNote')) document.getElementById('utNote').value = ""; 
-                    if (typeof utQuillEditorInstance !== 'undefined' && utQuillEditorInstance) utQuillEditorInstance.setText('');
-                    if (typeof activeWorkspaceProjectId !== 'undefined' && activeWorkspaceProjectId) {
-                        fetchProjectTasks(activeWorkspaceProjectId);
-                    }
-                }, 400);
-            })
+.then(() => {
+    setTimeout(() => {
+        globalCloseAllDrawers();
+        if (document.getElementById('utNote')) document.getElementById('utNote').value = "";
+        if (typeof utQuillEditorInstance !== 'undefined' && utQuillEditorInstance) utQuillEditorInstance.setText('');
+
+        if (typeof activeWorkspaceProjectId !== 'undefined' && activeWorkspaceProjectId) {
+            fetchProjectTasks(activeWorkspaceProjectId);
+        }
+    }, 400);
+})
             .catch(err => {
                 console.error("Network Error Handshake Trace:", err);
                 alert("Sync error.");
@@ -2487,6 +2598,88 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+function updatePhaseNodeCounts(allTasks) {
+    for (let i = 1; i <= 5; i++) {
+        const phaseNames = [
+            "Phase 1: Initiation",
+            "Phase 2: Planning",
+            "Phase 3: Execution",
+            "Phase 4: Monitoring & Onboarding",
+            "Phase 5: Project Closure"
+        ];
+        const count = allTasks.filter(t =>
+            (t.phase || "Phase 1: Initiation").trim().toLowerCase() === phaseNames[i - 1].toLowerCase()
+        ).length;
+        const badge = document.getElementById(`phaseCount-${i}`);
+        if (badge) badge.innerText = `${count} Task${count !== 1 ? 's' : ''}`;
+    }
+    // Update total task count card
+    const totalEl = document.getElementById('wsTotalTasksCount');
+    if (totalEl) totalEl.innerText = allTasks.length;
+}
+
+window.switchWorkspacePhase = function(phaseName) {
+    activeWorkspacePhase = phaseName;
+
+    // Update active node highlight
+    document.querySelectorAll('.phase-node').forEach(node => node.classList.remove('active-phase'));
+    const phaseIndex = phaseName.match(/\d+/);
+    if (phaseIndex) {
+        const activeNode = document.getElementById(`phaseNode-${phaseIndex[0]}`);
+        if (activeNode) activeNode.classList.add('active-phase');
+    }
+
+    // Update board title
+    const titleDisplay = document.getElementById('wsActivePhaseTitleDisplay');
+    if (titleDisplay) titleDisplay.innerHTML = `<i class="fas fa-tasks me-2 text-primary"></i>${phaseName} Tasks`;
+
+    // Filter cached tasks by selected phase and re-render board
+    if (window.activeTasksCache) {
+        const filtered = window.activeTasksCache.filter(t =>
+            (t.phase || "Phase 1: Initiation").trim().toLowerCase() === phaseName.trim().toLowerCase()
+        );
+        renderWorkspaceTasks(filtered);
+    }
+};
+
+window.openPhaseTaskCreationOverlay = function() {
+    const overlay = document.getElementById('taskFormOverlay');
+    if (overlay) overlay.style.display = 'flex';
+};
+
+window.commitTeamAllocationUpdate = function() {
+    if (!activeWorkspaceProjectId) { alert("No active project selected."); return; }
+
+    const checked = document.querySelectorAll('.ws-team-pill-checkbox:checked');
+    const selectedNames = Array.from(checked).map(cb => cb.value);
+    if (selectedNames.length === 0) { alert("Please select at least one team member."); return; }
+
+    const newTeam = selectedNames.join(', ');
+    const payload = {
+        action: "updateProjectMembers",
+        projectId: activeWorkspaceProjectId,
+        team: newTeam,
+        user: window.currentUserName || "System"
+    };
+
+    fetch(googleWebAppUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(() => {
+        alert("Team updated successfully.");
+        // Refresh local dataset so the count and pills reflect the change
+        const proj = projectDataset.find(p => (p.projectId || p.id) === activeWorkspaceProjectId);
+        if (proj) proj.team = newTeam;
+        // Re-launch workspace UI to refresh count + pills
+        launchWorkspaceHub(activeWorkspaceProjectId);
+        fetchMasterSuiteDataset();
+    })
+    .catch(err => { console.error("Team update error:", err); alert("Error saving team update."); });
+};
 
 window.removeChecklistItemElement = function(buttonEl) {
     const row = buttonEl.closest('.ut-matrix-item-row');
@@ -2501,43 +2694,7 @@ window.removeChecklistItemElement = function(buttonEl) {
 
 
 </script>
-<div id="taskFormOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; align-items:center; justify-content:center;">
-    <div class="card" style="width: 500px; max-width: 90%; margin: 20px;">
-        <div class="card-header bg-primary text-white">Create New Task</div>
-        <div class="card-body">
-            <form id="createTaskForm">
-                <div class="mb-3">
-                    <label class="form-label">Title</label>
-                    <input type="text" id="tTitle" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Description</label>
-                    <textarea id="tDesc" class="form-control" rows="3"></textarea>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Assign To</label>
-                    <select id="tAssignee" class="form-control"></select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Initial Status</label>
-                    <select id="tStatus" class="form-control">
-                        <option value="New">New</option>
-                        <option value="InProgress">In Progress</option>
-                        <option value="UnderReview">Under Review</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Initial Note</label>
-                    <textarea id="tNote" class="form-control" rows="2"></textarea>
-                </div>
-                <div class="d-flex justify-content-end gap-2">
-                    <button type="button" id="cancelTaskBtn" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Task</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+
 
 <div class="drawer-backdrop" id="drawerBackdrop" onclick="globalCloseAllDrawers()"></div>
 
@@ -2565,14 +2722,88 @@ window.removeChecklistItemElement = function(buttonEl) {
         
     <div class="mb-4">
     <label class="form-label small fw-bold text-secondary mb-1">Append Activity Note</label>
-    <div id="utQuillEditorContainer" style="height: 120px; background: #ffffff; border-radius: 6px;" class="border"></div>
-    <input type="hidden" id="utNote">
+    <div id="utQuillEditorContainerDrawer" style="height: 120px; background: #ffffff; border-radius: 6px;" class="border"></div>
+    <input type="hidden" id="utNoteDrawer">
 </div>
+
+        <button type="submit" class="btn btn-primary btn-sm w-100 mt-2 py-2 fw-bold shadow-sm">
+            <i class="fas fa-save me-1"></i> Commit Status Update
+        </button>
+    </form>
+</div>
+
+<div class="custom-viewer-drawer" id="viewFullDrawer">
+    <div class="d-flex justify-content-between align-items-start mb-4 border-bottom pb-3">
+        <div>
+            <p class="text-muted mb-1" style="font-size: 0.82rem;">
+                <i class="fas fa-folder-open me-1 text-secondary"></i>
+                Project: <strong class="text-dark" id="viewDrawerProjectName"></strong>
+            </p>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                <span class="badge bg-light text-secondary border font-monospace" id="viewDrawerBadgeId" style="font-size: 0.75rem;"></span>
+                <span class="fw-bold text-dark" id="viewDrawerTitle" style="font-size: 1.15rem; line-height: 1.4;"></span>
+            </div>
+            <div class="d-flex gap-3 flex-wrap mt-1">
+                <span class="small text-muted" id="viewDrawerCreatedHeader"></span>
+                <span class="small text-muted" id="viewDrawerDueHeader"></span>
+            </div>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary px-3 py-2 fw-bold ms-3" onclick="closeReadPanel()">
+            <i class="fas fa-times me-1"></i> Close
+        </button>
+    </div>
+    
+    <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
+        <div style="flex: 1 1 60%; min-width: 280px;">
+            <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2">
+                    <i class="fas fa-align-left me-2"></i>Task Description
+                </h5>
+                <div id="viewDrawerDescription" class="text-dark lh-base" style="white-space: pre-wrap; font-size: 0.95rem;"></div>
+            </div>
+
+            <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fas fa-sticky-note me-2"></i>Latest Activity Note</h5>
+                <div id="viewDrawerNotes">
+                    <p id="viewDrawerNoteText" class="text-dark small"></p>
+                    <p id="viewDrawerNoteMeta" class="text-muted small italic"></p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm p-4 bg-white">
+                <h5 class="fw-bold mb-3 text-primary border-bottom pb-2"><i class="fas fa-tasks me-2"></i>Active Action Items</h5>
+                <div id="viewDrawerChecklistActive" class="ps-2 mb-4"></div>
+                <h5 class="fw-bold mb-3 text-success border-bottom pb-2"><i class="fas fa-check-circle me-2"></i>Completed Items</h5>
+                <div id="viewDrawerChecklistCompleted" class="ps-2"></div>
+            </div>
+        </div>
+
+        <div style="flex: 0 0 260px; min-width: 220px;">
+            <div class="card border-0 shadow-sm p-4 mb-3 bg-white">
+                <div class="mb-3">
+                    <span class="small text-muted d-block text-uppercase fw-bold mb-1">Current Status</span>
+                    <div id="viewDrawerStatusPill"></div>
+                </div>
+                <hr class="my-3 opacity-25">
+                <div class="mb-3">
+                    <span class="small text-muted d-block text-uppercase fw-bold mb-1"><i class="fas fa-users me-1"></i> Assigned Resources</span>
+                    <p id="viewDrawerAssignees" class="fw-bold text-primary m-0 text-capitalize"></p>
+                </div>
+                <hr class="my-3 opacity-25">
+                <div>
+                    <span class="small text-muted d-block text-uppercase fw-bold mb-1"><i class="fas fa-clock me-1"></i> Logged Timestamp</span>
+                    <p id="viewDrawerCreatedAt" class="text-dark small fw-bold m-0"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
 (function() {
     // Target your task update overlay wrapper
-    const targetOverlay = document.getElementById('updateTaskOverlay');
+    const targetOverlay = document.getElementById('updateDrawer');
     if (!targetOverlay) return;
 
     let previousDisplayState = 'none';
@@ -2587,20 +2818,17 @@ window.removeChecklistItemElement = function(buttonEl) {
                     previousDisplayState = 'flex';
                     
                     setTimeout(() => {
-                        const quillElement = document.getElementById('utQuillEditorContainer');
+                        const quillElement = document.getElementById('utQuillEditorContainerDrawer');
                         if (quillElement && typeof Quill !== 'undefined') {
                             const parentElement = quillElement.parentElement;
-                            
-                            // ISSUE #3 FIXED: Wipe legacy toolbar artifacts before creating a new canvas
+
                             const legacyToolbars = parentElement.querySelectorAll('.ql-toolbar');
                             legacyToolbars.forEach(toolbar => toolbar.remove());
-                            
-                            // Clear container internals safely
-                            quillElement.className = "border rounded bg-white";
-                            quillElement.innerHTML = ""; 
 
-                            // Initialize clean single editor instance
-                            window.utQuillEditorInstance = new Quill('#utQuillEditorContainer', {
+                            quillElement.className = "border rounded bg-white";
+                            quillElement.innerHTML = "";
+
+                            window.utQuillEditorInstance = new Quill('#utQuillEditorContainerDrawer', {
                                 theme: 'snow',
                                 placeholder: 'Specify integration status updates or operational blocks here...',
                                 modules: {
@@ -2611,13 +2839,11 @@ window.removeChecklistItemElement = function(buttonEl) {
                                 }
                             });
 
-                            // Pull historical description text from backend row safely without changing card look
-                            const nativeInput = document.getElementById('utNote');
+                            const nativeInput = document.getElementById('utNoteDrawer');
                             if (nativeInput && nativeInput.value) {
                                 window.utQuillEditorInstance.root.innerHTML = nativeInput.value;
                             }
 
-                            // Keep text field in sync as you type
                             window.utQuillEditorInstance.on('text-change', function() {
                                 if (nativeInput) {
                                     nativeInput.value = window.utQuillEditorInstance.root.innerHTML;
@@ -2638,68 +2864,6 @@ window.removeChecklistItemElement = function(buttonEl) {
 
 
 
-
-        <button type="submit" class="btn btn-primary btn-sm w-100 mt-2 py-2 fw-bold shadow-sm">
-            <i class="fas fa-save me-1"></i> Commit Status Update
-        </button>
-    </form>
-</div>
-
-<div class="custom-viewer-drawer" id="viewFullDrawer">
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-        <div>
-            <span class="badge bg-light text-secondary border mb-1 fs-6" id="viewDrawerBadgeId"></span>
-            <h2 class="m-0 fw-bold text-dark" id="viewDrawerTitle"></h2>
-        </div>
-        <button class="btn btn-sm btn-outline-secondary px-3 py-2 fw-bold" onclick="closeReadPanel()">
-            <i class="fas fa-times me-1"></i> Close
-        </button>
-    </div>
-    
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
-                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fas fa-align-left me-2"></i>Task Description</h5>
-                <p id="viewDrawerBody" class="text-dark lh-base" style="white-space: pre-wrap; font-size: 0.95rem;"></p>
-            </div>
-
-            <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
-                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2"><i class="fas fa-sticky-note me-2"></i>Latest Activity Note</h5>
-                <div id="viewDrawerNotes">
-                    <p id="viewDrawerNoteText" class="text-dark small"></p>
-                    <p id="viewDrawerNoteMeta" class="text-muted small italic"></p>
-                </div>
-            </div>
-
-            <div class="card border-0 shadow-sm p-4 bg-white">
-                <h5 class="fw-bold mb-3 text-primary border-bottom pb-2"><i class="fas fa-tasks me-2"></i>Active Action Items</h5>
-                <div id="viewDrawerChecklistActive" class="ps-2 mb-4"></div>
-                
-                <h5 class="fw-bold mb-3 text-success border-bottom pb-2"><i class="fas fa-check-circle me-2"></i>Completed Items</h5>
-                <div id="viewDrawerChecklistCompleted" class="ps-2"></div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm p-4 mb-3 bg-white">
-                <div class="mb-3">
-                    <span class="small text-muted d-block text-uppercase fw-bold mb-1">Current Status</span>
-                    <div id="viewDrawerStatusPill"></div>
-                </div>
-                <hr class="my-3 opacity-25">
-                <div class="mb-3">
-                    <span class="small text-muted d-block text-uppercase fw-bold mb-1"><i class="fas fa-users me-1"></i> Assigned Resources</span>
-                    <p id="viewDrawerAssignees" class="fw-bold text-primary m-0 text-capitalize"></p>
-                </div>
-                <hr class="my-3 opacity-25">
-                <div>
-                    <span class="small text-muted d-block text-uppercase fw-bold mb-1"><i class="fas fa-clock me-1"></i> Logged Timestamp</span>
-                    <p id="viewDrawerCreatedAt" class="text-dark small fw-bold m-0"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
 </body>
 </html>
