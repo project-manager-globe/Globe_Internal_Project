@@ -640,14 +640,13 @@ body {
         </div>
     </footer>
 
-<script src="/index.e9a59d41.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>(function() {
     const GAS_WORKSPACE_API = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
     // Pull values and clean up formatting
     const currentUser = (sessionStorage.getItem('currentUser_ICT') || 'guest').toLowerCase();
     // FAILSAFE: If the role is missing but the user is explicitly estelle, force admin clearance
-    let userRole = (sessionStorage.getItem('userRole_ICT') || '').toLowerCase();
+    let userRole = (sessionStorage.getItem('currentUserRole_ICT') || '').toLowerCase();
     if (currentUser === 'estelle' && (!userRole || userRole === 'null')) userRole = 'admin';
     console.log("EXCO Failsafe Active - User:", currentUser, "| Resolved Role:", userRole);
     const divisionOwnership = {

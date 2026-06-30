@@ -486,7 +486,6 @@
         </div>
     </footer>
 
-<script src="../../credentials.js"></script>
 <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
     (function() {
@@ -496,7 +495,7 @@
         const currentUser = (sessionStorage.getItem('currentUser_ICT') || 'guest').toLowerCase();
         
         // FAILSAFE: If the role is missing but the user is explicitly estelle, force admin clearance
-        let userRole = (sessionStorage.getItem('userRole_ICT') || '').toLowerCase();
+        let userRole = (sessionStorage.getItem('currentUserRole_ICT') || '').toLowerCase();
         if (currentUser === 'estelle' && (!userRole || userRole === 'null')) {
             userRole = 'admin';
         }

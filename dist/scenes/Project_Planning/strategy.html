@@ -3,26 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <title>ICTGlobe Internal Updates</title>
-<script src="/index.e9a59d41.js"></script>
-<script>// 1. Safe Session Authentication Check (Delayed until DOM is fully ready)
-if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
-    // Deep link save-state: Remembers exactly where you wanted to go
+<script>if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
     sessionStorage.setItem('redirect_target', window.location.href);
     window.location.replace("../../index.html");
-} else // Execute role-guards if authenticated
-window.addEventListener('DOMContentLoaded', ()=>{
-    const currentUser = sessionStorage.getItem('currentUser_ICT');
-    if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
-        const userData = authorizedUsers[currentUser];
-        const allowedProjects = userData.projects;
-        const role = userData.role;
-        // Match this tag identifier against your specific credentials array folder name
-        const currentProjectFolder = "strategy";
-        if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
-            alert("Access Denied: You do not hold credentials for this project panel.");
-            window.location.replace("../../index.html");
-        }
-    } else if (typeof authorizedUsers === 'undefined') console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+} else window.addEventListener('DOMContentLoaded', ()=>{
+    const role = sessionStorage.getItem('currentUserRole_ICT') || 'user';
+    const allowedProjects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
+    const currentProjectFolder = "strategy";
+    if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+        alert("Access Denied: You do not hold credentials for this project panel.");
+        window.location.replace("../../index.html");
+    }
 });
 // Active Logout Trigger
 window.addEventListener('DOMContentLoaded', ()=>{

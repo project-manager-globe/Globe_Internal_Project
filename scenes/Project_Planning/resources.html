@@ -3,33 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>ICTGlobe Internal Updates</title>
-<script src="../../credentials.js"></script>
 <script>
   window.addEventListener('DOMContentLoaded', () => {
-      // 1. Safe Session Authentication Check
       if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
           sessionStorage.setItem('redirect_target', window.location.href);
-          window.location.replace("../../index.html"); 
-          return; 
+          window.location.replace("../../index.html");
+          return;
       }
-
-      // 2. Project Role-Guard Check
-      const currentUser = sessionStorage.getItem('currentUser_ICT');
-      
-      if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
-          const userData = authorizedUsers[currentUser];
-          const allowedProjects = userData.projects;
-          const role = userData.role;
-
-          // CHANGE THIS LINE HERE:
-          const currentProjectFolder = "resources"; 
-
-          if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
-              alert("Access Denied: You do not hold credentials for this project panel.");
-              window.location.replace("../../index.html");
-          }
-      } else if (typeof authorizedUsers === 'undefined') {
-          console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+      const role = sessionStorage.getItem('currentUserRole_ICT') || 'user';
+      const allowedProjects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
+      const currentProjectFolder = "resources";
+      if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+          alert("Access Denied: You do not hold credentials for this project panel.");
+          window.location.replace("../../index.html");
       }
   });
 
@@ -74,8 +60,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>  
   
 <script src="https://kit.fontawesome.com/268d442577.js" crossorigin="anonymous"></script>
-
-<script src="../../credentials.js"></script>
 
 </head>
 

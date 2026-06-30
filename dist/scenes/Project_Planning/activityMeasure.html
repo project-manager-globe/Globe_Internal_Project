@@ -515,7 +515,6 @@ body {
         </div>
     </footer>
 
-    <script src="/index.e9a59d41.js"></script>
     <script>const API_URL = "https://script.google.com/macros/s/AKfycbzdrGbkVUTBZ8QA9JICOUbYFJI2xbHlP8omJidJtaOvRl1KrkzLIfynXiutPsPurP-5-w/exec";
 var masterClientRegistry = {};
 var summaryCategoryRegistry = {
@@ -568,22 +567,12 @@ window.addEventListener('DOMContentLoaded', ()=>{
         window.location.replace("../../index.html");
         return;
     }
-    // 2. Project Role-Guard Check (Resolving to Centralized Array Source)
-    const currentUser = sessionStorage.getItem('currentUser_ICT');
-    const usersSource = typeof authorizedUsers !== 'undefined' ? authorizedUsers : window.authorizedUsers || null;
-    if (usersSource && usersSource[currentUser]) {
-        const userData = usersSource[currentUser];
-        const allowedProjects = userData.projects;
-        const role = userData.role;
-        const currentProjectFolder = "activityMeasures";
-        // Redirect if standard user lacks explicit clearance for this panel
-        if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
-            alert("Access Denied: You do not hold credentials for this project panel.");
-            window.location.replace("../../index.html");
-            return;
-        }
-    } else {
-        alert("Session error or access verification missing. Please log in again.");
+    // 2. Project Role-Guard Check
+    const role = sessionStorage.getItem('currentUserRole_ICT') || 'user';
+    const allowedProjects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
+    const currentProjectFolder = "activityMeasures";
+    if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+        alert("Access Denied: You do not hold credentials for this project panel.");
         window.location.replace("../../index.html");
         return;
     }

@@ -26,8 +26,6 @@ supportsCssVars() || alert("Please view this demo in a modern browser that suppo
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>  
    
    
-    <script src="/index.e9a59d41.js"></script>
-
     <style>#loginOverlay {
   z-index: 10000;
   color: #fff;
@@ -359,33 +357,7 @@ supportsCssVars() || alert("Please view this demo in a modern browser that suppo
             eyeIcon.innerHTML = openEyePath;
         });
     }
-    // Dynamic Credentials Matrix
-    function getAuthorizedUsers() {
-        // Look globally first
-        if (window.authorizedUsers) return window.authorizedUsers;
-        if (typeof authorizedUsers !== 'undefined') return authorizedUsers;
-        // =========================================================================
-        // PRODUCTION FAILSAFE DATABASE
-        // If Parcel isolates your credentials file, this hardcoded dictionary takes over.
-        // Feel free to append your team names and exact cleartext passwords here:
-        // =========================================================================
-        return {
-            "estelle": {
-                password: "Estelle2026!",
-                role: "admin",
-                projects: [
-                    "all"
-                ]
-            },
-            "carmin": {
-                password: "coGlobe004",
-                role: "admin",
-                projects: [
-                    "all"
-                ]
-            }
-        };
-    }
+    const googleWebAppUrl = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
     const sessionChannel = new BroadcastChannel('ictglobe_session_sync');
     sessionChannel.onmessage = (event)=>{
         if (event.data.type === 'REQUEST_SESSION_STATE') {
@@ -405,48 +377,66 @@ supportsCssVars() || alert("Please view this demo in a modern browser that suppo
         }
     };
     function verifyLinkAccess(e) {
-        const targetLink = e.currentTarget;
-        const targetProject = targetLink.getAttribute('data-project');
+        const targetProject = e.currentTarget.getAttribute('data-project');
         const currentUser = sessionStorage.getItem('currentUser_ICT');
-        const users = getAuthorizedUsers();
-        if (!currentUser || !users || !users[currentUser]) {
+        const role = sessionStorage.getItem('currentUserRole_ICT') || 'user';
+        const projects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
+        if (!currentUser) {
             e.preventDefault();
             alert("Session error. Please log in again.");
             return;
         }
-        const userData = users[currentUser];
-        if (userData.role !== 'admin' && !userData.projects.includes(targetProject) && !userData.projects.includes('all')) {
+        const targetLower = (targetProject || '').toLowerCase().trim();
+        const projectsLower = projects.map(function(p) {
+            return p.toLowerCase().trim();
+        });
+        if (role !== 'admin' && !projectsLower.includes(targetLower) && !projectsLower.includes('all')) {
             e.preventDefault();
             alert("You are not authorized to view this content, for access please contact project management \uD83D\uDCE7");
         }
     }
-    function checkPassword() {
+    async function checkPassword() {
         const u = nameInput.value.trim().toLowerCase();
         const p = passInput.value.trim();
-        const users = getAuthorizedUsers();
-        if (users && users[u] && users[u].password === p) {
-            sessionStorage.setItem('isLoggedIn_ICT', 'true');
-            sessionStorage.setItem('currentUser_ICT', u);
-            const savedRedirectTarget = sessionStorage.getItem('redirect_target');
-            if (savedRedirectTarget) {
-                sessionStorage.removeItem('redirect_target');
-                window.location.replace(savedRedirectTarget);
-                return;
+        if (!u || !p) return;
+        // Hash the password client-side before sending
+        const encoder = new TextEncoder();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(p));
+        const hash = Array.from(new Uint8Array(hashBuffer)).map((b)=>b.toString(16).padStart(2, '0')).join('');
+        try {
+            const url = googleWebAppUrl + '?action=validateLogin&username=' + encodeURIComponent(u) + '&hash=' + encodeURIComponent(hash);
+            const response = await fetch(url);
+            const result = await response.json();
+            if (result.success) {
+                sessionStorage.setItem('isLoggedIn_ICT', 'true');
+                sessionStorage.setItem('currentUser_ICT', result.user.username);
+                sessionStorage.setItem('currentUserRole_ICT', result.user.role);
+                sessionStorage.setItem('currentUserProjects_ICT', JSON.stringify(result.user.projects));
+                const savedRedirectTarget = sessionStorage.getItem('redirect_target');
+                if (savedRedirectTarget) {
+                    sessionStorage.removeItem('redirect_target');
+                    window.location.replace(savedRedirectTarget);
+                    return;
+                }
+                initializeSecureUI();
+                fetch(securityMetricsUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Status: "\u26A0\uFE0F Access Logged",
+                        AuthorizedUser: u,
+                        Message: `User ${u} has successfully authorized the ICTGlobe Internal portal.`
+                    })
+                }).catch((err)=>console.error('Metrics push drop:', err));
+            } else {
+                document.getElementById('errMsg').style.display = 'block';
+                passInput.value = '';
             }
-            initializeSecureUI();
-            fetch(securityMetricsUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    Status: "\u26A0\uFE0F Access Logged",
-                    AuthorizedUser: u,
-                    Message: `User ${u} has successfully authorized the ICTGlobe Internal portal.`
-                })
-            }).catch((err)=>console.error('Metrics push drop:', err));
-        } else {
+        } catch (err) {
+            console.error('Login validation error:', err);
             document.getElementById('errMsg').style.display = 'block';
             passInput.value = '';
         }
@@ -491,6 +481,8 @@ supportsCssVars() || alert("Please view this demo in a modern browser that suppo
             e.preventDefault();
             sessionStorage.removeItem('isLoggedIn_ICT');
             sessionStorage.removeItem('currentUser_ICT');
+            sessionStorage.removeItem('currentUserRole_ICT');
+            sessionStorage.removeItem('currentUserProjects_ICT');
             sessionStorage.removeItem('redirect_target');
             window.location.reload();
         });

@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>ICTGlobe Project Management Hub</title>
   
-  <script src="../../credentials.js"></script>
 <script>
+    window.teamUserList = [];
     if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
         sessionStorage.setItem('redirect_target', window.location.href);
         window.location.replace("../../index.html"); 

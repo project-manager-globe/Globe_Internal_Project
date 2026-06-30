@@ -4,34 +4,19 @@
   <meta charset="UTF-8">
   <title>ICTGlobe Internal Updates</title>
 
-<script src="../../credentials.js"></script>
 <script>
   window.addEventListener('DOMContentLoaded', () => {
-      // 1. Safe Session Authentication Check (Delayed until DOM is fully ready)
       if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
-          // Deep link save-state: Remembers exactly where you wanted to go
           sessionStorage.setItem('redirect_target', window.location.href);
-          window.location.replace("../../index.html"); 
-          return; // Stop any further execution
+          window.location.replace("../../index.html");
+          return;
       }
-
-      // 2. Project Role-Guard Check
-      const currentUser = sessionStorage.getItem('currentUser_ICT');
-      
-      if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
-          const userData = authorizedUsers[currentUser];
-          const allowedProjects = userData.projects;
-          const role = userData.role;
-
-          // Match this tag identifier against your specific credentials array folder name
-          const currentProjectFolder = "nowtech"; 
-
-          if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
-              alert("Access Denied: You do not hold credentials for this project panel.");
-              window.location.replace("../../index.html");
-          }
-      } else if (typeof authorizedUsers === 'undefined') {
-          console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+      const role = sessionStorage.getItem('currentUserRole_ICT') || 'user';
+      const allowedProjects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
+      const currentProjectFolder = "nowtech";
+      if (role !== 'admin' && !allowedProjects.includes(currentProjectFolder) && !allowedProjects.includes('all')) {
+          alert("Access Denied: You do not hold credentials for this project panel.");
+          window.location.replace("../../index.html");
       }
   });
 

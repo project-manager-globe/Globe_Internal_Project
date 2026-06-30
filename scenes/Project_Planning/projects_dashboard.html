@@ -4,8 +4,10 @@
   <meta charset="UTF-8">
   <title>ICTGlobe Project Management Hub</title>
   
-<script src="../../credentials.js"></script>
 <script>
+    // Team user list populated from AppScript (replaces credentials.js)
+    window.teamUserList = [];
+
     // 1. Immediate Session Guard Redirect
     if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
         sessionStorage.setItem('redirect_target', window.location.href);
@@ -36,6 +38,8 @@ window.openEditProjectModal = function(projectId) {
     document.getElementById("pSponsor").value = project.sponsor || "";
     document.getElementById("pStatus").value = project.status || "";
     document.getElementById("pProgress").value = project.progress || 0;
+    // Populate dropdowns then pre-select the saved values
+    populateRoleDropdowns(project.projectManager || project.manager || "", project.teamLead || project.lead || "");
 
     // 3. Toggle Views
     document.getElementById('pTeam').parentElement.style.display = 'none';
@@ -43,13 +47,13 @@ window.openEditProjectModal = function(projectId) {
 
     // 4. GENERATE TEAM MEMBER PILLS (The "Tasks" style logic)
     const membersDisplay = document.getElementById('upProjectMembersDisplay');
-    if (membersDisplay && typeof authorizedUsers !== 'undefined') {
+    if (membersDisplay && window.teamUserList.length > 0) {
         membersDisplay.innerHTML = ""; // Clear existing
-        
+
         // Get existing team as an array
         const currentTeam = (project.team || "").toString().split(',').map(s => s.trim().toLowerCase());
 
-        Object.keys(authorizedUsers).forEach(username => {
+        window.teamUserList.forEach(username => {
             const isChecked = currentTeam.includes(username.toLowerCase());
             
             // Create the wrapper
@@ -88,15 +92,8 @@ window.openEditProjectModal = function(projectId) {
         const currentUser = sessionStorage.getItem('currentUser_ICT') || "";
         
         // --- Setup Roles ---
-        let role = "user";
-        let allowedProjects = [];
-        if (typeof authorizedUsers !== 'undefined') {
-            const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === currentUser.toLowerCase());
-            if (matchedKey) {
-                role = authorizedUsers[matchedKey].role || "user";
-                allowedProjects = authorizedUsers[matchedKey].projects || [];
-            }
-        }
+        const role = sessionStorage.getItem('currentUserRole_ICT') || "user";
+        const allowedProjects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
         window.currentUserRole = role;
         window.currentUserName = currentUser;
 
@@ -112,13 +109,7 @@ window.checkWorkspaceAccess = function(projectToken) {
     let liveRole = window.currentUserRole || "user";
     let liveAllowedProjects = [];
 
-    // Re-fetch project list for the current user
-    if (typeof authorizedUsers !== 'undefined' && authorizedUsers) {
-        const matchedKey = Object.keys(authorizedUsers).find(k => k.toLowerCase() === liveUser);
-        if (matchedKey) {
-            liveAllowedProjects = authorizedUsers[matchedKey].projects || [];
-        }
-    }
+    liveAllowedProjects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
 
     // 🛡️ VECTOR 1: Master Admin / All-Access
     if (liveRole === 'admin' || 
@@ -170,7 +161,10 @@ window.checkWorkspaceAccess = function(projectToken) {
             logBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 sessionStorage.removeItem('isLoggedIn_ICT');
-                window.location.replace("../../index.html"); 
+                sessionStorage.removeItem('currentUser_ICT');
+                sessionStorage.removeItem('currentUserRole_ICT');
+                sessionStorage.removeItem('currentUserProjects_ICT');
+                window.location.replace("../../index.html");
             });
         }
 
@@ -214,9 +208,33 @@ window.openCreateProjectModal = function() {
     const editContainer = document.getElementById('editProjectMembersContainer');
     if(editContainer) editContainer.style.display = 'none';
 
-    // 5. Open the modal
+    // 5. Populate role dropdowns from authorised users list
+    populateRoleDropdowns("", "");
+
+    // 6. Open the modal
     if(modalOverlay) modalOverlay.style.display = "flex";
 };
+
+function populateRoleDropdowns(selectedManager, selectedLead) {
+    const managerSelect = document.getElementById('pProjectManager');
+    const leadSelect    = document.getElementById('pTeamLead');
+    if (!managerSelect || !leadSelect) return;
+
+    managerSelect.innerHTML = '<option value="">— Select Coordinator —</option>';
+    leadSelect.innerHTML    = '<option value="">— Select Team Lead —</option>';
+
+    window.teamUserList.forEach(function(username) {
+        var o1 = document.createElement('option');
+        o1.value = username; o1.textContent = username;
+        if (selectedManager && username.toLowerCase() === selectedManager.toLowerCase()) o1.selected = true;
+        managerSelect.appendChild(o1);
+
+        var o2 = document.createElement('option');
+        o2.value = username; o2.textContent = username;
+        if (selectedLead && username.toLowerCase() === selectedLead.toLowerCase()) o2.selected = true;
+        leadSelect.appendChild(o2);
+    });
+}
 </script>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -231,10 +249,28 @@ window.openCreateProjectModal = function() {
   <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
   <style>
     /* ==========================================================================
+       0. STICKY FOOTER — body flex column, footer pushed to bottom
+       ========================================================================== */
+    html { height: 100%; }
+    body {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: 100vh !important;
+    }
+    footer.wh_footer { margin-top: auto; }
+
+    /* ==========================================================================
        1. GLOBAL PLATFORM & CORE UTILITY OVERRIDES
        ========================================================================== */
     .content__START, strong.HOW { color: #005AFC !important; }
     .myTopButton { text-decoration: none !important; }
+
+    /* Force left-align inside modals and drawers — overrides body { text-align: center } from styles.css */
+    .custom-modal-window *, .custom-viewer-drawer *, .modal-scroll-body * { text-align: left !important; }
+    /* Allow flex/grid alignment helpers to still work */
+    .custom-modal-window .justify-content-end,
+    .custom-modal-window .justify-content-between,
+    .custom-modal-window .justify-content-center { justify-content: revert; }
     .table tbody tr td { color: #212529 !important; font-weight: normal !important; background: #ffffff !important; }
     .insights-card h2, .recent-orders h3 { color: #212529 !important; }
     
@@ -260,7 +296,7 @@ window.openCreateProjectModal = function() {
        2. CREATION TASKS MODAL (ORIGINAL 520px MAX-WIDTH PROFILE)
        ========================================================================== */
     .custom-modal-overlay { position: fixed !important; top: 0 !important; left: 0 !important; width: 100vw !important; height: 100vh !important; background: rgba(0, 0, 0, 0.6) !important; z-index: 99999 !important; display: none; align-items: center !important; justify-content: center !important; }
-    .custom-modal-window { background: #ffffff !important; width: 100% !important; max-width: 520px !important; min-height: auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important; padding: 28px !important; box-sizing: border-box !important; animation: modalFadeIn 0.2s ease-out; }
+    .custom-modal-window { background: #ffffff !important; width: 100% !important; max-width: 520px !important; min-height: auto !important; max-height: 90vh !important; overflow-y: auto !important; border-radius: 12px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important; padding: 28px !important; box-sizing: border-box !important; animation: modalFadeIn 0.2s ease-out; text-align: left !important; }
     .custom-modal-window input, .custom-modal-window select, .custom-modal-window textarea { width: 100% !important; display: block !important; margin-top: 4px !important; }
     @keyframes modalFadeIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
@@ -292,7 +328,7 @@ window.openCreateProjectModal = function() {
     .drawer-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.45); display: none; z-index: 1040; backdrop-filter: blur(2px); }
     .detail-drawer { position: fixed; top: 0; right: -420px; width: 100%; max-width: 420px; height: 100%; background: #ffffff; z-index: 1050; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15); overflow-y: auto; padding: 24px; }
     .detail-drawer.open { right: 0; }
-    .custom-viewer-drawer { position: fixed; top: 0; right: -75vw; width: 100%; max-width: 75vw; height: 100%; background: #f8f9fa; z-index: 1060; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -5px 0 20px rgba(0, 0, 0, 0.18); overflow-y: auto; padding: 40px; }
+    .custom-viewer-drawer { position: fixed; top: 0; right: -75vw; width: 100%; max-width: 75vw; height: 100%; background: #f8f9fa; z-index: 1060; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); box-shadow: -5px 0 20px rgba(0, 0, 0, 0.18); overflow-y: auto; padding: 40px; text-align: left; }
     .custom-viewer-drawer.open { right: 0; }
     #createTaskForm { max-height: 65vh; overflow-y: auto; overflow-x: hidden; padding-right: 6px; }
     #createTaskForm::-webkit-scrollbar { width: 6px; }
@@ -319,6 +355,7 @@ window.openCreateProjectModal = function() {
     #updateTaskForm, .modal-scroll-body {
         max-width: 100% !important;
         overflow-x: hidden !important;
+        text-align: left !important;
         box-sizing: border-box !important;
     }
 
@@ -722,7 +759,7 @@ window.openCreateProjectModal = function() {
                   <thead class="table-light">
                     <tr>
                       <th>Project System Identifier</th>
-                      <th>Sponsor & Classification</th>
+                      <th>Sponsor & Leadership</th>
                       <th>Overall Progress Target</th>
                       <th>Current Project Phase</th>
                       <th>Action</th>
@@ -750,48 +787,110 @@ window.openCreateProjectModal = function() {
         <i class="fas fa-user-tie me-1 text-secondary"></i>
         Sponsor: <strong id="wsSponsor" class="text-dark">---</strong>
     </p>
+    <div class="d-flex gap-4 mt-1 flex-wrap">
+        <p class="text-muted mb-0" style="font-size: 0.9rem; text-align: left;">
+            <i class="fas fa-user-shield me-1 text-secondary"></i>
+            Team Lead: <strong id="wsTeamLead" class="text-dark">---</strong>
+        </p>
+        <p class="text-muted mb-0" style="font-size: 0.9rem; text-align: left;">
+            <i class="fas fa-briefcase me-1 text-secondary"></i>
+            Project Coordinator: <strong id="wsProjectManager" class="text-dark">---</strong>
+        </p>
+    </div>
 
-    <div class="row mt-4 mb-4">
-        <div class="col-md-3">
-            <div class="card p-3 shadow-sm border-0 bg-white">
-                <p class="mb-1 fw-bold text-muted text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">Total Tasks</p>
-                <h3 id="wsTotalTasksCount" class="fw-bold m-0 text-primary">0</h3>
-            </div>
-        </div>
+    <!-- Workspace shortcut cards — one row (equal-width auto columns) -->
+    <div class="row mt-4 mb-4 g-3">
 
-        <div class="col-md-3" onclick="document.getElementById('wsTeamManagementBlock').scrollIntoView({ behavior: 'smooth' });" style="cursor: pointer;">
-            <div class="card p-3 shadow-sm border-0 bg-white style-hover-card">
-                <p class="mb-1 fw-bold text-muted text-uppercase small" style="letter-spacing: 0.5px; font-size: 0.8rem;">
-                    Team Members <i class="fas fa-external-link-alt ms-1 text-muted" style="font-size:0.7rem;"></i>
+        <!-- Classification — static info -->
+        <div class="col-6 col-md-4 col-lg">
+            <div class="card p-3 shadow-sm border-0 bg-white h-100">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                    <i class="fas fa-tag me-1 text-secondary"></i>Classification
                 </p>
-                <h3 id="wsTeamCount" class="fw-bold m-0 text-primary">0</h3>
+                <h5 id="wsClassification" class="m-0 text-dark fw-bold" style="font-size:1rem;">---</h5>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card p-3 shadow-sm border-0 bg-white">
-                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Classification</p>
-                <h5 id="wsClassification" class="m-0 text-dark" style="font-weight:600;">---</h5>
+        <!-- Team Members → scroll to team block -->
+        <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsTeamManagementBlock').scrollIntoView({behavior:'smooth'});" style="cursor:pointer;">
+            <div class="card p-3 shadow-sm border-0 bg-white style-hover-card h-100">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                    <i class="fas fa-users me-1 text-primary"></i>Team Members <i class="fas fa-external-link-alt ms-1" style="font-size:0.58rem;"></i>
+                </p>
+                <h3 id="wsTeamCount" class="fw-bold m-0 text-primary" style="font-size:1.6rem;">0</h3>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card p-3 shadow-sm border-0 bg-white">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <p class="mb-0 fw-bold text-muted text-uppercase" style="font-size: 0.8rem;">Progress</p>
-                    <span id="wsStatusBadge" class="badge"></span>
-                </div>
+        <!-- Total Tasks → scroll to Phase Progression -->
+        <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsPhaseProgressionCard').scrollIntoView({behavior:'smooth'});" style="cursor:pointer;">
+            <div class="card p-3 shadow-sm border-0 bg-white style-hover-card h-100">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                    <i class="fas fa-tasks me-1 text-primary"></i>Total Tasks <i class="fas fa-external-link-alt ms-1" style="font-size:0.58rem;"></i>
+                </p>
+                <h3 id="wsTotalTasksCount" class="fw-bold m-0 text-primary" style="font-size:1.6rem;">0</h3>
+            </div>
+        </div>
+
+        <!-- Total Risks → scroll to Risk Register -->
+        <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsRiskSection').scrollIntoView({behavior:'smooth'});" style="cursor:pointer;">
+            <div class="card p-3 shadow-sm border-0 bg-white style-hover-card h-100">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                    <i class="fas fa-shield-alt me-1 text-danger"></i>Total Risks <i class="fas fa-external-link-alt ms-1" style="font-size:0.58rem;"></i>
+                </p>
+                <h3 id="wsRiskTotal" class="fw-bold m-0 text-danger" style="font-size:1.6rem;">0</h3>
+            </div>
+        </div>
+
+        <!-- Gantt Chart → scroll to Gantt section -->
+        <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsGanttSection').scrollIntoView({behavior:'smooth'});" style="cursor:pointer;">
+            <div class="card p-3 shadow-sm border-0 style-hover-card h-100" style="background:#f0f7ff;">
+                <p class="mb-1 fw-bold text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px; color:#1d4ed8;">
+                    <i class="fas fa-calendar-alt me-1"></i>Gantt Chart <i class="fas fa-external-link-alt ms-1" style="font-size:0.58rem;"></i>
+                </p>
+                <h3 id="wsGanttTaskCount" class="fw-bold m-0" style="font-size:1.6rem; color:#1d4ed8;">0</h3>
+            </div>
+        </div>
+
+        <!-- Teams Chat → scroll to chat section -->
+        <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsTeamsChatSection').scrollIntoView({behavior:'smooth'});" style="cursor:pointer;">
+            <div class="card p-3 shadow-sm border-0 style-hover-card h-100" style="background:#faf5ff;">
+                <p class="mb-1 fw-bold text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px; color:#7c3aed;">
+                    <i class="fas fa-comments me-1"></i>Teams Chat <i class="fas fa-external-link-alt ms-1" style="font-size:0.58rem;"></i>
+                </p>
+                <h3 id="wsTeamsChatCount" class="fw-bold m-0" style="font-size:1.6rem; color:#7c3aed;">0</h3>
+            </div>
+        </div>
+
+        <!-- Resources → scroll to resources section -->
+        <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsResourcesSection').scrollIntoView({behavior:'smooth'});" style="cursor:pointer;">
+            <div class="card p-3 shadow-sm border-0 style-hover-card h-100" style="background:#f0fdf4;">
+                <p class="mb-1 fw-bold text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px; color:#16a34a;">
+                    <i class="fas fa-folder-open me-1"></i>Resources <i class="fas fa-external-link-alt ms-1" style="font-size:0.58rem;"></i>
+                </p>
+                <h3 id="wsResourceCount" class="fw-bold m-0" style="font-size:1.6rem; color:#16a34a;">0</h3>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="col-12 col-md-4 col-lg">
+            <div class="card p-3 shadow-sm border-0 bg-white h-100">
+                <p class="mb-2 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                    <i class="fas fa-chart-line me-1 text-primary"></i>Progress
+                </p>
                 <div class="d-flex align-items-center gap-2">
-                    <span id="wsProgressText" class="fw-bold fs-5">0%</span>
-                    <div class="progress w-100" style="height: 8px; background-color:#e9ecef;">
-                        <div id="wsProgressBar" class="progress-bar bg-primary" style="width: 0%"></div>
+                    <span id="wsProgressText" class="fw-bold" style="font-size:1.3rem; white-space:nowrap;">0%</span>
+                    <div class="progress w-100" style="height:8px; background-color:#e9ecef;">
+                        <div id="wsProgressBar" class="progress-bar bg-primary" style="width:0%;"></div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div class="row mb-4">
+    </div>
+    <!-- Hidden status badge kept for JS compatibility -->
+    <span id="wsStatusBadge" class="d-none"></span>
+
+    <div class="row mb-4" id="wsPhaseProgressionCard">
         <div class="col-12">
             <div class="card shadow-sm border-0 p-4 bg-white">
                 <h5 class="fw-bold text-dark mb-4"><i class="fas fa-layer-group text-primary me-2"></i> Project Phase Progression Matrix</h5>
@@ -852,7 +951,13 @@ window.openCreateProjectModal = function() {
                         <i class="fas fa-plus"></i> Add Task
                     </button>
                 </div>
-                
+                <!-- Due date alert summary strip -->
+                <div id="wsAlertStrip" style="display:none; margin-bottom:0.75rem; padding:0.5rem 0.9rem; border-radius:8px; background:#f1f5f9; border:1px solid #e2e8f0; font-size:0.8rem; color:#475569; display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap;">
+                    <span style="font-weight:600;"><i class="fas fa-bell me-1 text-warning"></i>Due Date Alerts</span>
+                    <span id="wsAlertOverdue" style="display:none;"><span style="background:#fee2e2; color:#b91c1c; border-radius:4px; padding:2px 8px; font-weight:600;"></span></span>
+                    <span id="wsAlertToday" style="display:none;"><span style="background:#fff3cd; color:#92400e; border-radius:4px; padding:2px 8px; font-weight:600;"></span></span>
+                    <span id="wsAlertSoon" style="display:none;"><span style="background:#dbeafe; color:#1e40af; border-radius:4px; padding:2px 8px; font-weight:600;"></span></span>
+                </div>
                 <div class="kanban-board">
                     <div class="kanban-column" id="col-New">
                         <div class="kanban-column-header"><span>New</span> <span class="badge bg-secondary rounded-pill" id="badge-New">0</span></div>
@@ -874,6 +979,81 @@ window.openCreateProjectModal = function() {
                         <div class="kanban-column-header"><span>Cancelled</span> <span class="badge bg-dark rounded-pill" id="badge-Cancelled">0</span></div>
                         <div class="task-list" id="list-Cancelled"></div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== RISK REGISTER — workspace-level section ===== -->
+    <div class="row mb-4" id="wsRiskSection">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="m-0 fw-bold text-dark">
+                        <i class="fas fa-shield-alt me-2 text-danger"></i>Risk Register
+                        <span id="riskBadgeCount" class="badge bg-danger ms-2" style="display:none; font-size:0.7rem; vertical-align:middle;"></span>
+                    </h4>
+                    <button id="btnAddRisk" class="btn btn-sm btn-outline-danger" style="display:none;" onclick="openRiskModal()">
+                        <i class="fas fa-plus me-1"></i>Add Risk
+                    </button>
+                </div>
+
+                <!-- Severity summary badges -->
+                <div class="d-flex gap-2 mb-4 flex-wrap">
+                    <span class="badge px-3 py-2" id="riskSumCritical" style="background:#fef2f2; color:#b91c1c; border:1px solid #fca5a5; font-size:0.75rem;">0 Critical</span>
+                    <span class="badge px-3 py-2" id="riskSumHigh"     style="background:#fff7ed; color:#c2410c; border:1px solid #fdba74; font-size:0.75rem;">0 High</span>
+                    <span class="badge px-3 py-2" id="riskSumMedium"   style="background:#fffbeb; color:#b45309; border:1px solid #fcd34d; font-size:0.75rem;">0 Medium</span>
+                    <span class="badge px-3 py-2" id="riskSumLow"      style="background:#f0fdf4; color:#15803d; border:1px solid #86efac; font-size:0.75rem;">0 Low</span>
+                </div>
+
+                <!-- Risk Matrix — prominent -->
+                <div class="mb-4 pb-4 border-bottom">
+                    <div style="display:flex; align-items:flex-start; gap:32px; flex-wrap:wrap;">
+                        <!-- Matrix grid with axis labels -->
+                        <div>
+                            <p class="fw-bold text-secondary mb-2 text-uppercase" style="font-size:0.72rem; letter-spacing:0.5px;">
+                                <i class="fas fa-th me-1"></i>Risk Matrix
+                            </p>
+                            <div style="display:flex; align-items:stretch; gap:10px;">
+                                <!-- Y-axis label (Likelihood) -->
+                                <div style="display:flex; align-items:center; justify-content:center; width:18px;">
+                                    <span style="writing-mode:vertical-rl; transform:rotate(180deg); font-size:0.65rem; font-weight:700; color:#64748b; letter-spacing:1.5px; text-transform:uppercase;">Likelihood</span>
+                                </div>
+                                <div>
+                                    <!-- Impact column headers -->
+                                    <div style="display:grid; grid-template-columns:60px repeat(3,90px); gap:6px; margin-bottom:4px;">
+                                        <div></div>
+                                        <div style="text-align:center; font-size:0.68rem; color:#64748b; font-weight:700;">Low</div>
+                                        <div style="text-align:center; font-size:0.68rem; color:#64748b; font-weight:700;">Medium</div>
+                                        <div style="text-align:center; font-size:0.68rem; color:#64748b; font-weight:700;">High</div>
+                                    </div>
+                                    <!-- Matrix cells (rendered by JS) -->
+                                    <div id="wsRiskMatrix" style="display:grid; grid-template-columns:60px repeat(3,90px); grid-template-rows:repeat(3,72px); gap:6px;"></div>
+                                </div>
+                            </div>
+                            <!-- X-axis label (Impact) -->
+                            <div style="text-align:center; padding-left:88px; margin-top:6px;">
+                                <span style="font-size:0.65rem; font-weight:700; color:#64748b; letter-spacing:1.5px; text-transform:uppercase;">Impact</span>
+                            </div>
+                        </div>
+                        <!-- Legend -->
+                        <div style="padding-top:4px;">
+                            <p style="font-size:0.68rem; font-weight:700; color:#475569; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;">Legend</p>
+                            <div style="display:flex; flex-direction:column; gap:7px;">
+                                <div style="display:flex; align-items:center; gap:9px;"><span style="width:18px; height:18px; border-radius:4px; background:#fca5a5; flex-shrink:0;"></span><span style="font-size:0.78rem; color:#475569; font-weight:600;">Critical</span></div>
+                                <div style="display:flex; align-items:center; gap:9px;"><span style="width:18px; height:18px; border-radius:4px; background:#fdba74; flex-shrink:0;"></span><span style="font-size:0.78rem; color:#475569; font-weight:600;">High</span></div>
+                                <div style="display:flex; align-items:center; gap:9px;"><span style="width:18px; height:18px; border-radius:4px; background:#fcd34d; flex-shrink:0;"></span><span style="font-size:0.78rem; color:#475569; font-weight:600;">Medium</span></div>
+                                <div style="display:flex; align-items:center; gap:9px;"><span style="width:18px; height:18px; border-radius:4px; background:#bbf7d0; flex-shrink:0;"></span><span style="font-size:0.78rem; color:#475569; font-weight:600;">Low</span></div>
+                            </div>
+                            <p style="font-size:0.65rem; color:#94a3b8; margin-top:10px; margin-bottom:0;"><i class="fas fa-info-circle me-1"></i>Numbers = open risks in that cell</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk details table -->
+                <div id="wsRiskTableContainer">
+                    <p class="text-muted fst-italic small text-center py-4"><i class="fas fa-shield-alt me-2 opacity-25"></i>No risks registered for this project.</p>
                 </div>
             </div>
         </div>
@@ -911,6 +1091,264 @@ window.openCreateProjectModal = function() {
             </div>
         </div>
     </div>
+
+    <!-- ===== GANTT CHART SECTION ===== -->
+    <div class="row mb-4 mt-4" id="wsGanttSection">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="m-0 fw-bold text-dark">
+                        <i class="fas fa-calendar-alt me-2 text-primary"></i>Gantt Chart
+                    </h4>
+                    <span class="text-muted" style="font-size:0.72rem;"><i class="fas fa-info-circle me-1"></i>Bars span task created date → due date &nbsp;|&nbsp; <span style="color:#ef4444; font-weight:600;">Red line = Today</span></span>
+                </div>
+                <div id="wsGanttContainer">
+                    <p class="text-muted fst-italic small text-center py-4"><i class="fas fa-calendar-alt me-2 opacity-25"></i>No tasks with due dates found for this project.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TEAMS CHAT SECTION ===== -->
+    <div class="row mb-4" id="wsTeamsChatSection">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4" style="background:#fefeff;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="m-0 fw-bold text-dark">
+                        <i class="fas fa-comments me-2" style="color:#7c3aed;"></i>Teams Chat
+                        <span id="chatCommentCount" class="badge ms-2" style="background:#f3e8ff; color:#7c3aed; border:1px solid #ddd6fe; font-size:0.7rem; vertical-align:middle;">0 messages</span>
+                    </h4>
+                </div>
+
+                <!-- Category filter tabs -->
+                <div class="d-flex gap-2 mb-4 pb-3 border-bottom flex-wrap">
+                    <button class="btn btn-sm" id="chatFilterAll" style="background:#7c3aed; color:#fff;" onclick="switchChatFilter('All')">
+                        <i class="fas fa-th-list me-1"></i>All
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="chatFilterTaskSuggestion" onclick="switchChatFilter('Task Suggestion')">
+                        <i class="fas fa-tasks me-1"></i>Task Suggestions
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="chatFilterRiskAwareness" onclick="switchChatFilter('Risk Awareness')">
+                        <i class="fas fa-shield-alt me-1"></i>Risk Awareness
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="chatFilterGeneral" onclick="switchChatFilter('General')">
+                        <i class="fas fa-comment me-1"></i>General
+                    </button>
+                </div>
+
+                <!-- Comment thread -->
+                <div id="wsTeamsChatThread" style="max-height:420px; overflow-y:auto; margin-bottom:1.25rem; min-height:60px; padding-right:4px;"></div>
+
+                <!-- Post form -->
+                <div class="border-top pt-3">
+                    <div class="d-flex gap-2 mb-2 align-items-center flex-wrap">
+                        <label class="form-label small fw-bold text-muted mb-0 me-1" style="white-space:nowrap;">Category:</label>
+                        <select id="chatNewCategory" class="form-select form-select-sm" style="max-width:200px;">
+                            <option value="General">💬 General</option>
+                            <option value="Task Suggestion">✅ Task Suggestion</option>
+                            <option value="Risk Awareness">⚠️ Risk Awareness</option>
+                        </select>
+                    </div>
+                    <div class="d-flex gap-2 align-items-start">
+                        <textarea id="chatNewMessage" class="form-control form-control-sm" rows="2"
+                            placeholder="Share a message, suggest a task, or flag a risk concern..."
+                            style="resize:none; font-size:0.85rem;"
+                            onkeydown="if(event.ctrlKey && event.key==='Enter') postProjectComment();"></textarea>
+                        <button class="btn btn-sm px-3" style="background:#7c3aed; color:#fff; white-space:nowrap;" onclick="postProjectComment()">
+                            <i class="fas fa-paper-plane me-1"></i>Post
+                        </button>
+                    </div>
+                    <p class="text-muted mb-0 mt-1" style="font-size:0.65rem;"><i class="fas fa-keyboard me-1"></i>Ctrl + Enter to post</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── PROJECT RESOURCES SECTION ───────────────────────────────────── -->
+    <div class="row mb-4" id="wsResourcesSection">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4 bg-white">
+
+                <!-- Header -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-folder-open text-success me-2"></i> Project Resources
+                        <span id="wsResourcesBadge" class="badge rounded-pill ms-2" style="background:#dcfce7; color:#16a34a; font-size:0.7rem;">0 files</span>
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm" style="background:#16a34a; color:#fff; border-radius:8px;" onclick="toggleResourcePanel('file')">
+                            <i class="fas fa-upload me-1"></i> Upload File
+                        </button>
+                        <button class="btn btn-sm btn-outline-primary" style="border-radius:8px;" onclick="toggleResourcePanel('link')">
+                            <i class="fas fa-link me-1"></i> Add Link
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upload / Link Panel -->
+                <div id="wsResourcePanel" style="display:none;" class="mb-4 p-3 rounded-3 border bg-light">
+
+                    <!-- File Upload Form -->
+                    <div id="wsResourceFileForm">
+                        <p class="fw-semibold mb-2" style="font-size:0.85rem;"><i class="fas fa-upload me-1 text-success"></i> Upload a File</p>
+                        <div class="mb-2">
+                            <input type="file" id="resourceFileInput" class="form-control form-control-sm"
+                                   accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.mp4,.mp3"
+                                   onchange="handleResourceFileSelect(this)">
+                            <p class="text-muted mt-1 mb-0" style="font-size:0.7rem;">
+                                <i class="fas fa-info-circle me-1"></i>Accepted: PDF, Images (jpg/png/gif), MP4, MP3 &middot; Max 20MB
+                            </p>
+                        </div>
+                        <div id="resourceFileSizeWarning" class="alert alert-warning py-1 px-2 mb-2" style="font-size:0.75rem; display:none;">
+                            <i class="fas fa-exclamation-triangle me-1"></i> File exceeds 20MB. For large videos, upload directly to Google Drive and use <strong>Add Link</strong> instead.
+                        </div>
+                        <textarea id="resourceFileDesc" class="form-control form-control-sm mb-2" rows="2" placeholder="Description (optional)"></textarea>
+                        <div class="d-flex gap-2 align-items-center">
+                            <button class="btn btn-sm" style="background:#16a34a; color:#fff;" id="resourceUploadBtn" onclick="submitResourceUpload()">
+                                <i class="fas fa-cloud-upload-alt me-1"></i> Upload
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="closeResourcePanel()">Cancel</button>
+                            <div id="resourceUploadProgress" style="display:none;" class="d-flex align-items-center gap-2 ms-1">
+                                <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+                                <span style="font-size:0.78rem;" class="text-muted">Uploading to Drive…</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Link Form -->
+                    <div id="wsResourceLinkForm" style="display:none;">
+                        <p class="fw-semibold mb-2" style="font-size:0.85rem;"><i class="fas fa-link me-1 text-primary"></i> Add a Link</p>
+                        <input type="text" id="resourceLinkTitle" class="form-control form-control-sm mb-2" placeholder="Title (e.g. Budget Tracker, Site Survey Sheet)">
+                        <input type="url" id="resourceLinkUrl" class="form-control form-control-sm mb-2" placeholder="https://...">
+                        <textarea id="resourceLinkDesc" class="form-control form-control-sm mb-2" rows="2" placeholder="Description (optional)"></textarea>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-primary" onclick="submitResourceLink()">
+                                <i class="fas fa-save me-1"></i> Save Link
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="closeResourcePanel()">Cancel</button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Gallery Grid -->
+                <div id="wsResourcesGallery" class="row g-3">
+                    <div class="col-12 text-center text-muted py-5">
+                        <i class="fas fa-folder-open" style="font-size:2.5rem; opacity:0.2;"></i>
+                        <p class="mt-2 mb-0" style="font-size:0.85rem;">No resources uploaded yet.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== ADD / EDIT RISK MODAL ===== -->
+<div class="custom-modal-overlay" id="riskFormOverlay" style="display:none;">
+    <div class="custom-modal-window" style="max-width:580px; max-height:90vh; overflow-y:auto;">
+        <form id="riskFormEl" onsubmit="return false;">
+            <input type="hidden" id="riskFormId" value="">
+            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                <h5 class="fw-bold text-danger m-0"><i class="fas fa-shield-alt me-2"></i><span id="riskFormTitle">Add Risk</span></h5>
+                <button type="button" style="cursor:pointer; background:transparent; border:none; font-size:1.3rem; line-height:1; color:#64748b;" onclick="document.getElementById('riskFormOverlay').style.display='none';">&times;</button>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Risk Description <span class="text-danger">*</span></label>
+                <textarea id="riskDescription" class="form-control form-control-sm" rows="2" placeholder="Describe the risk event or condition..."></textarea>
+            </div>
+            <div class="d-flex gap-2 mb-3">
+                <div style="flex:1;">
+                    <label class="form-label small fw-bold text-secondary mb-1">Likelihood</label>
+                    <select id="riskLikelihood" class="form-select form-select-sm" onchange="updateRiskSeverityPreview()">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label class="form-label small fw-bold text-secondary mb-1">Impact</label>
+                    <select id="riskImpact" class="form-select form-select-sm" onchange="updateRiskSeverityPreview()">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div style="flex:0 0 100px;">
+                    <label class="form-label small fw-bold text-secondary mb-1">Severity</label>
+                    <div id="riskSeverityPreview" style="padding:5px 8px; border-radius:6px; font-size:0.8rem; font-weight:700; text-align:center; background:#f0fdf4; color:#15803d; border:1px solid #86efac; min-height:31px; display:flex; align-items:center; justify-content:center;">Low</div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Strategy</label>
+                <select id="riskStrategy" class="form-select form-select-sm">
+                    <option value="Avoidance">Avoidance — eliminate the risk</option>
+                    <option value="Reduction">Reduction — reduce likelihood / impact</option>
+                    <option value="Transference">Transference — shift risk to third party</option>
+                    <option value="Acceptance" selected>Acceptance — acknowledge and monitor</option>
+                    <option value="Contingency">Contingency — plan for if it occurs</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Related Phase</label>
+                <select id="riskPhase" class="form-select form-select-sm">
+                    <option value="General">General / Whole Project</option>
+                    <option value="Phase 1: Initiation">Phase 1: Initiation</option>
+                    <option value="Phase 2: Planning">Phase 2: Planning</option>
+                    <option value="Phase 3: Execution">Phase 3: Execution</option>
+                    <option value="Phase 4: Monitoring & Onboarding">Phase 4: Monitoring &amp; Onboarding</option>
+                    <option value="Phase 5: Project Closure">Phase 5: Project Closure</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Owner</label>
+                <select id="riskOwner" class="form-select form-select-sm">
+                    <option value="">— Select Owner —</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Mitigating Action</label>
+                <textarea id="riskMitigatingAction" class="form-control form-control-sm" rows="2" placeholder="What action will be taken to address this risk..."></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-secondary mb-1">Notes</label>
+                <textarea id="riskNotes" class="form-control form-control-sm" rows="2" placeholder="Additional context or observations..."></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="form-label small fw-bold text-secondary mb-1">Status</label>
+                <select id="riskStatus" class="form-select form-select-sm">
+                    <option value="Open">Open</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Mitigated">Mitigated</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('riskFormOverlay').style.display='none';">Cancel</button>
+                <button type="button" id="riskSubmitBtn" class="btn btn-sm btn-danger px-4" onclick="submitRiskForm()">
+                    <i class="fas fa-save me-1"></i>Save Risk
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ===== RISK NOTE EDITOR ===== -->
+<div class="custom-modal-overlay" id="riskNoteOverlay" style="display:none;">
+    <div class="custom-modal-window" style="max-width:420px;">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h5 class="fw-bold text-secondary m-0"><i class="fas fa-pencil-alt me-2"></i>Edit Risk Note</h5>
+            <button type="button" style="cursor:pointer; background:transparent; border:none; font-size:1.3rem; line-height:1; color:#64748b;" onclick="document.getElementById('riskNoteOverlay').style.display='none';">&times;</button>
+        </div>
+        <textarea id="riskNoteTextarea" class="form-control form-control-sm mb-3" rows="4" placeholder="Add your notes here..."></textarea>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('riskNoteOverlay').style.display='none';">Cancel</button>
+            <button type="button" id="riskNoteSubmitBtn" class="btn btn-sm btn-primary px-4" onclick="submitRiskNote()">
+                <i class="fas fa-save me-1"></i>Save Note
+            </button>
+        </div>
+    </div>
 </div>
 
   <div class="custom-modal-overlay" id="customFormOverlay">
@@ -935,6 +1373,25 @@ window.openCreateProjectModal = function() {
             <div class="mb-3">
                 <label class="form-label small fw-bold text-secondary mb-1">Sponsor</label>
                 <input type="text" id="pSponsor" class="form-control form-control-sm" placeholder="e.g., John Smith">
+            </div>
+
+            <div class="d-flex gap-2 mb-3">
+                <div style="flex:1;">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                        <i class="fas fa-briefcase me-1 text-muted"></i>Project Coordinator
+                    </label>
+                    <select id="pProjectManager" class="form-select form-select-sm">
+                        <option value="">— Select Coordinator —</option>
+                    </select>
+                </div>
+                <div style="flex:1;">
+                    <label class="form-label small fw-bold text-secondary mb-1">
+                        <i class="fas fa-user-shield me-1 text-muted"></i>Team Lead
+                    </label>
+                    <select id="pTeamLead" class="form-select form-select-sm">
+                        <option value="">— Select Team Lead —</option>
+                    </select>
+                </div>
             </div>
 
             <div class="mb-3">
@@ -1047,6 +1504,21 @@ window.openCreateProjectModal = function() {
                     <p class="m-0 fw-bold text-dark" id="utTaskTitleDisplay" style="font-size:1.1rem; line-height:1.3;"></p>
                 </div>
 
+                <div class="d-flex gap-3 mb-3">
+                    <div style="flex:1;">
+                        <label class="form-label small fw-bold text-secondary mb-1">
+                            <i class="fas fa-calendar-plus me-1 text-muted"></i>Created At
+                        </label>
+                        <div id="utCreatedAtDisplay" class="form-control form-control-sm bg-light text-muted" style="height:36px; line-height:22px; font-size:0.85rem; cursor:default;">—</div>
+                    </div>
+                    <div style="flex:1;">
+                        <label class="form-label small fw-bold text-secondary mb-1">
+                            <i class="fas fa-calendar-alt me-1 text-danger"></i>Due Date
+                        </label>
+                        <input type="date" id="utDueDate" class="form-control form-control-sm" style="height:36px;">
+                    </div>
+                </div>
+
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-secondary mb-1">Description</label>
                     <div id="utTaskDescriptionDisplay" class="p-2.5 border rounded text-secondary" style="font-size:0.88rem; max-height:90px; overflow-y:auto; white-space:pre-wrap; background-color:#ffffff; line-height:1.4;"></div>
@@ -1135,18 +1607,29 @@ let projectDataset = [];
     let activeWorkspaceProjectToken = null; 
     const googleWebAppUrl = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
 
+    function fetchTeamUsers() {
+        fetch(googleWebAppUrl + '?action=readUsers')
+            .then(r => r.json())
+            .then(data => {
+                if (data.users) {
+                    window.teamUserList = data.users.map(u => u.username);
+                    // Populate pTeam dropdown once user list is ready
+                    const teamSel = document.getElementById('pTeam');
+                    if (teamSel) {
+                        window.teamUserList.forEach(username => {
+                            const opt = document.createElement('option');
+                            opt.value = username;
+                            opt.textContent = username;
+                            teamSel.appendChild(opt);
+                        });
+                    }
+                }
+            })
+            .catch(err => console.warn('Could not load team user list:', err));
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        
-        // Populate deployment form dropdown from credentials mapping
-        const teamSelect = document.getElementById('pTeam');
-        if (typeof authorizedUsers !== 'undefined' && teamSelect) {
-            Object.keys(authorizedUsers).forEach(username => {
-                const opt = document.createElement('option');
-                opt.value = username;
-                opt.textContent = username;
-                teamSelect.appendChild(opt);
-            });
-        }
+        fetchTeamUsers();
 
         // Overlay Modals management hooks
         const projectOverlay = document.getElementById('customFormOverlay');
@@ -1265,14 +1748,16 @@ if (createProjForm) {
 
             // 2. Build the exact payload expected by your Google App Script Backend
             const payload = {
-                action: mode === "edit" ? "updateProjectMembers" : "appendProject",
+                action: mode === "edit" ? "updateProject" : "appendProject",
                 projectId: idEl ? idEl.value.trim() : "",
-                projectName: nameEl ? nameEl.value.trim() : "Unnamed Project", // Kept exact key name
+                projectName: nameEl ? nameEl.value.trim() : "Unnamed Project",
                 sponsor: sponsorEl ? sponsorEl.value.trim() : "N/A",
                 progress: progressEl ? (parseInt(progressEl.value) || 0) : 0,
                 status: statusEl ? statusEl.value : "New",
                 classification: classEl ? classEl.value.split(' ')[0] : "Internal",
                 team: selectedTeam,
+                projectManager: document.getElementById('pProjectManager') ? document.getElementById('pProjectManager').value : "",
+                teamLead: document.getElementById('pTeamLead') ? document.getElementById('pTeamLead').value : "",
                 user: window.currentUserName || "System UI"
             };
 
@@ -1409,9 +1894,9 @@ if (createProjForm) {
         if (addTaskBtn) {
             addTaskBtn.addEventListener('click', () => {
                 const assigneeSelect = document.getElementById('tAssignee');
-                if (typeof authorizedUsers !== 'undefined' && assigneeSelect) {
+                if (window.teamUserList.length > 0 && assigneeSelect) {
                     assigneeSelect.innerHTML = '';
-                    Object.keys(authorizedUsers).forEach(username => {
+                    window.teamUserList.forEach(username => {
                         const opt = document.createElement('option');
                         opt.value = username;
                         opt.textContent = username;
@@ -1652,7 +2137,9 @@ async function fetchMasterSuiteDataset() {
                 </td>
                 <td>
                     <span class="text-dark d-block" style="font-weight:500;">${p.sponsor || 'N/A'}</span>
-                    <span class="badge bg-light text-secondary border px-2 py-1 mt-1" style="font-size:0.7rem;">${displayClassification}</span>
+                    <span class="badge bg-light text-secondary border px-2 py-1 mt-1 me-1" style="font-size:0.7rem;">${displayClassification}</span>
+                    ${p.teamLead || p.lead ? `<span class="d-block mt-1" style="font-size:0.75rem; color:#0369a1;"><i class="fas fa-user-shield me-1"></i>${p.teamLead || p.lead}</span>` : ''}
+                    ${p.projectManager || p.manager ? `<span class="d-block" style="font-size:0.75rem; color:#6b7280;"><i class="fas fa-briefcase me-1"></i>${p.projectManager || p.manager}</span>` : ''}
                 </td>
                 <td>
                     <div class="d-flex align-items-center gap-2" style="max-width: 180px;">
@@ -1728,6 +2215,8 @@ async function fetchMasterSuiteDataset() {
             id: document.getElementById('pId').value,
             name: document.getElementById('pName').value,
             sponsor: document.getElementById('pSponsor').value,
+            teamLead: document.getElementById('pTeamLead').value || "",
+            projectManager: document.getElementById('pProjectManager').value || "",
             classification: document.getElementById('pClass').value,
             status: document.getElementById('pStatus').value,
             progress: parseInt(document.getElementById('pProgress').value) || 0,
@@ -1770,7 +2259,11 @@ async function fetchMasterSuiteDataset() {
         if (!project) return;
 
         activeWorkspaceProjectId = projectId;
-        
+        window.activeWorkspaceProjectId = projectId;
+        fetchProjectRisks(projectId);
+        fetchProjectComments(projectId);
+        fetchProjectResources(projectId);
+
         document.querySelectorAll('main, .row, .recent-orders').forEach(el => {
             if (el.id !== 'singleWorkspaceView' && !el.closest('#singleWorkspaceView')) {
                 el.style.display = "none";
@@ -1785,9 +2278,31 @@ async function fetchMasterSuiteDataset() {
 
         revealAdminButtons();
 
+        // Determine if the current user is the Team Lead for this project
+        const currentUserLower = (window.currentUserName || "").trim().toLowerCase();
+        const teamLeadLower = (project.teamLead || project.lead || "").trim().toLowerCase();
+        window.isProjectTeamLead = (currentUserLower !== "" && currentUserLower === teamLeadLower);
+
+        // Team leads get the same workspace controls as admin (add task, edit team)
+        if (window.isProjectTeamLead) {
+            const tlTargets = ['btnAddTask'];
+            tlTargets.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.setProperty('display', 'inline-block', 'important');
+            });
+            // Reveal the Edit Team Allocation section
+            document.querySelectorAll('.admin-only-action').forEach(el => {
+                if (el.closest('#singleWorkspaceView')) {
+                    el.style.setProperty('display', 'inline-block', 'important');
+                }
+            });
+        }
+
         document.getElementById('wsProjectName').innerText = project.projectName || project.name || "Unnamed Project";
         document.getElementById('wsProjectToken').innerText = projectId;
         document.getElementById('wsSponsor').innerText = project.sponsor || '---';
+        document.getElementById('wsTeamLead').innerText = project.teamLead || project.lead || '---';
+        document.getElementById('wsProjectManager').innerText = project.projectManager || project.manager || '---';
         document.getElementById('wsClassification').innerText = project.classification || '---';
 
         // Team members — count + populate both views
@@ -1816,10 +2331,10 @@ async function fetchMasterSuiteDataset() {
 
         // Admin pill editor (checkbox pills like project creation)
         const pillEditor = document.getElementById('wsTeamPillEditor');
-        if (pillEditor && typeof authorizedUsers !== 'undefined') {
+        if (pillEditor && window.teamUserList.length > 0) {
             pillEditor.innerHTML = "";
             const currentTeamLower = teamArr.map(s => s.toLowerCase());
-            Object.keys(authorizedUsers).forEach(username => {
+            window.teamUserList.forEach(username => {
                 const isChecked = currentTeamLower.includes(username.toLowerCase());
                 const label = document.createElement('label');
                 label.className = "border px-3 py-2 m-1 d-inline-flex align-items-center gap-1 rounded-pill";
@@ -1893,6 +2408,7 @@ async function fetchMasterSuiteDataset() {
         .then(data => {
             window.activeTasksCache = data.tasks || [];
             updatePhaseNodeCounts(window.activeTasksCache);
+            renderGanttChart(window.activeTasksCache);
             const filtered = window.activeTasksCache.filter(t =>
                 (t.phase || "Phase 1: Initiation").trim().toLowerCase() === activeWorkspacePhase.trim().toLowerCase()
             );
@@ -1982,9 +2498,41 @@ function renderWorkspaceTasks(tasks) {
                    </button>`
                 : ``;
 
-            let dueByHTML = `<div class="text-danger fw-bold" style="font-size:0.68rem; text-align: left !important; margin: 0; padding: 0; display: block !important;">
-                                <i class="fas fa-hourglass-half me-1" style="width:12px; text-align: left;"></i>Due By: <span>${(task.dueDate && task.dueDate !== "N/A" && task.dueDate !== "undefined") ? task.dueDate : "None Set"}</span>
-                            </div>`;
+            let dueByHTML = '';
+            const rawDue = (task.dueDate && task.dueDate !== "N/A" && task.dueDate !== "undefined") ? task.dueDate : "";
+            if (rawDue) {
+                const today    = new Date(); today.setHours(0,0,0,0);
+                const dueDate  = new Date(rawDue); dueDate.setHours(0,0,0,0);
+                const diffDays = Math.round((dueDate - today) / (1000 * 60 * 60 * 24));
+                let dueColor, dueIcon, dueBg;
+                if (diffDays < 0)       { dueColor="#b91c1c"; dueBg="#fee2e2"; dueIcon="fa-exclamation-circle"; }
+                else if (diffDays === 0){ dueColor="#92400e"; dueBg="#fff3cd"; dueIcon="fa-hourglass-end"; }
+                else if (diffDays <= 3) { dueColor="#1e40af"; dueBg="#dbeafe"; dueIcon="fa-hourglass-half"; }
+                else                    { dueColor="#15803d"; dueBg="#dcfce7"; dueIcon="fa-calendar-check"; }
+                const dueNote = diffDays < 0 ? Math.abs(diffDays) + 'd overdue' : diffDays === 0 ? 'Due today' : diffDays <= 3 ? diffDays + 'd left' : '';
+                dueByHTML = `<div style="font-size:0.68rem; text-align:left !important; margin:2px 0 0; padding:3px 7px; border-radius:4px; background:${dueBg}; color:${dueColor}; font-weight:600; display:inline-block; line-height:1.5;">
+                                <div><i class="fas ${dueIcon} me-1"></i>Due: ${rawDue}</div>
+                                ${dueNote ? `<div style="font-size:0.63rem; opacity:0.9;">${dueNote}</div>` : ''}
+                             </div>`;
+            }
+
+            // Checklist progress
+            let clArr = task.checklist || [];
+            if (typeof clArr === 'string') { try { clArr = JSON.parse(clArr); } catch(e) { clArr = []; } }
+            const clTotal = Array.isArray(clArr) ? clArr.length : 0;
+            const clDone  = Array.isArray(clArr) ? clArr.filter(i => typeof i === 'object' && i !== null && !!i.completed).length : 0;
+            const clPct   = clTotal > 0 ? Math.round((clDone / clTotal) * 100) : 0;
+            const clColor = clPct === 100 ? "#22c55e" : clPct >= 60 ? "#3b82f6" : clPct >= 30 ? "#f59e0b" : "#94a3b8";
+            const progressBarHTML = clTotal > 0 ? `
+                <div style="width:100%; margin: 6px 0 2px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                        <span style="font-size:0.62rem; color:#64748b;"><i class="fas fa-list-check me-1"></i>${clDone}/${clTotal} steps</span>
+                        <span style="font-size:0.62rem; font-weight:700; color:${clColor};">${clPct}%</span>
+                    </div>
+                    <div style="height:4px; background:#e2e8f0; border-radius:2px; overflow:hidden;">
+                        <div style="height:100%; width:${clPct}%; background:${clColor}; border-radius:2px;"></div>
+                    </div>
+                </div>` : ``;
 
             card.innerHTML = `
                 <div style="text-align: left !important; display: flex !important; flex-direction: column !important; align-items: flex-start !important; width: 100% !important;">
@@ -2001,6 +2549,7 @@ function renderWorkspaceTasks(tasks) {
                         <i class="far fa-calendar-alt text-secondary me-1"></i>Created: <span class="fw-medium">${task.createdAt || 'N/A'}</span>
                     </div>
                     ${dueByHTML}
+                    ${progressBarHTML}
                     <div class="d-flex justify-content-between align-items-center mt-2" style="width: 100% !important;">
                         <div>
                             <button class="btn btn-xs btn-outline-secondary border-0 opacity-75" style="font-size: 0.68rem; padding: 3px 6px;" onclick="event.stopPropagation(); openViewDrawer('${displayId}')">
@@ -2024,6 +2573,30 @@ function renderWorkspaceTasks(tasks) {
             targetList.innerHTML = `<div class="text-center text-muted py-3 px-2 border rounded bg-light opacity-75" style="font-size:0.72rem; border-style:dashed !important;">No Tasks</div>`;
         }
     });
+
+    // Due date summary strip
+    const today = new Date(); today.setHours(0,0,0,0);
+    let countOverdue = 0, countToday = 0, countSoon = 0;
+    tasks.forEach(t => {
+        const raw = (t.dueDate && t.dueDate !== "N/A" && t.dueDate !== "undefined") ? t.dueDate : "";
+        if (!raw || t.status === "Done" || t.status === "Cancelled") return;
+        const d = new Date(raw); d.setHours(0,0,0,0);
+        const diff = Math.round((d - today) / (1000 * 60 * 60 * 24));
+        if (diff < 0)        countOverdue++;
+        else if (diff === 0) countToday++;
+        else if (diff <= 3)  countSoon++;
+    });
+    const strip        = document.getElementById('wsAlertStrip');
+    const elOverdue    = document.getElementById('wsAlertOverdue');
+    const elToday      = document.getElementById('wsAlertToday');
+    const elSoon       = document.getElementById('wsAlertSoon');
+    if (strip) {
+        const hasAlerts = countOverdue > 0 || countToday > 0 || countSoon > 0;
+        strip.style.display = hasAlerts ? 'flex' : 'none';
+        if (elOverdue) { elOverdue.style.display = countOverdue > 0 ? 'inline' : 'none'; if (countOverdue > 0) elOverdue.querySelector('span').textContent = `⚠ ${countOverdue} overdue`; }
+        if (elToday)   { elToday.style.display   = countToday   > 0 ? 'inline' : 'none'; if (countToday   > 0) elToday.querySelector('span').textContent   = `⏰ ${countToday} due today`; }
+        if (elSoon)    { elSoon.style.display     = countSoon    > 0 ? 'inline' : 'none'; if (countSoon    > 0) elSoon.querySelector('span').textContent    = `📅 ${countSoon} due in 3 days`; }
+    }
 
     if (typeof populateAuditTrailLogStream === 'function') populateAuditTrailLogStream(tasks);
 }
@@ -2067,14 +2640,19 @@ let utQuillEditorInstance = null;
 
 function initUpdateTaskQuill(isReadOnly = false) {
     const container = document.getElementById('utQuillEditorContainer');
-    if (!container) return; 
-    
+    if (!container) return;
+
+    // Remove any toolbar Quill left outside the container from a previous init
+    const parent = container.parentElement;
+    parent.querySelectorAll('.ql-toolbar').forEach(t => t.remove());
+    // Reset the container so Quill can re-init cleanly
+    container.className = "border rounded bg-white";
+    container.innerHTML = "";
+
     const toolbarOptions = isReadOnly ? false : [
         ['bold', 'italic'],
         [{ 'list': 'ordered'}, { 'list': 'bullet' }]
     ];
-
-    container.innerHTML = "";
 
     if (typeof Quill !== 'undefined') {
         utQuillEditorInstance = new Quill('#utQuillEditorContainer', {
@@ -2133,12 +2711,22 @@ window.openUpdateDrawer = function(taskId) {
         assignedResources = [task.assignee.toString().trim().toLowerCase()];
     }
 
-    let hasEditPrivileges = isAdmin || assignedResources.includes(currentSessionRaw);
+    let hasEditPrivileges = isAdmin || window.isProjectTeamLead || assignedResources.includes(currentSessionRaw);
 
     // Populate Update Form Fields
     document.getElementById('utTaskId').value = task.taskId;
     document.getElementById('utTaskTitleDisplay').innerText = task.title;
     document.getElementById('utTaskDescriptionDisplay').innerText = task.description || "No description logged at creation.";
+
+    const createdDisplay = document.getElementById('utCreatedAtDisplay');
+    if (createdDisplay) createdDisplay.innerText = task.createdAt || "—";
+
+    const dueDateInput = document.getElementById('utDueDate');
+    if (dueDateInput) {
+        const raw = task.dueDate || "";
+        dueDateInput.value = (raw && raw !== "N/A" && raw !== "None Set" && raw !== "undefined") ? raw : "";
+        dueDateInput.disabled = !hasEditPrivileges;
+    }
     
     const utNoteField = document.getElementById('utNote');
     if (utNoteField) {
@@ -2181,53 +2769,61 @@ window.openUpdateDrawer = function(taskId) {
         let originalNames = task.assignees || task.assignee || "";
         let assignedArr = originalNames.toString().split(',').map(name => name.trim().toLowerCase());
 
-        if (isAdmin && typeof authorizedUsers !== 'undefined') {
-            Object.keys(authorizedUsers).forEach(username => {
+        if (isAdmin && window.teamUserList.length > 0) {
+            window.teamUserList.forEach(username => {
                 const lowerUser = username.trim().toLowerCase();
                 if (lowerUser.includes('admin') || lowerUser.includes('system') || lowerUser === 'test') return;
 
                 const isChecked = assignedArr.includes(lowerUser);
                 const label = document.createElement('label');
                 
-                label.className = `border px-3 py-1 m-0 text-capitalize d-flex align-items-center gap-2 select-token-pill`;
+                label.className = `border px-2 py-1 m-0 text-capitalize d-inline-flex align-items-center gap-1 select-token-pill`;
                 label.style.fontSize = "0.72rem";
                 label.style.cursor = "pointer";
-                label.style.borderRadius = "50px";
+                label.style.borderRadius = "6px";
                 label.style.userSelect = "none";
-                label.style.transition = "all 0.2s ease-in-out";
-                
+                label.style.transition = "all 0.15s ease-in-out";
+                label.style.flexShrink = "0";
+                label.style.whiteSpace = "nowrap";
+                label.style.minWidth = "58px";
+                label.style.justifyContent = "center";
+
                 if (isChecked) {
-                    label.style.backgroundColor = "#e0f2fe"; 
-                    label.style.color = "#0369a1";
-                    label.style.borderColor = "#bae6fd";
+                    label.style.backgroundColor = "#dbeafe";
+                    label.style.color = "#1d4ed8";
+                    label.style.borderColor = "#93c5fd";
                     label.style.fontWeight = "600";
                 } else {
-                    label.style.backgroundColor = "#f8f9fa"; 
-                    label.style.color = "#6c757d";
-                    label.style.borderColor = "#dee2e6";
-                    label.style.fontWeight = "500";
+                    label.style.backgroundColor = "#f1f5f9";
+                    label.style.color = "#64748b";
+                    label.style.borderColor = "#cbd5e1";
+                    label.style.fontWeight = "400";
                 }
-                
+
                 label.innerHTML = `
-                    <input type="checkbox" class="ut-assignee-matrix-checkbox form-check-input m-0" value="${username.trim()}" ${isChecked ? 'checked' : ''} 
-                        style="width: 13px; height: 13px; cursor: pointer; border-color: inherit; filter: none;" 
-                        onchange="
-                            const lbl = this.closest('label');
-                            if (this.checked) {
-                                lbl.style.backgroundColor = '#e0f2fe';
-                                lbl.style.color = '#0369a1';
-                                lbl.style.borderColor = '#bae6fd';
-                                lbl.style.fontWeight = '600';
-                            } else {
-                                lbl.style.backgroundColor = '#f8f9fa';
-                                lbl.style.color = '#6c757d';
-                                lbl.style.borderColor = '#dee2e6';
-                                lbl.style.fontWeight = '500';
-                            }
-                        "
-                    >
+                    <input type="checkbox" class="ut-assignee-matrix-checkbox" value="${username.trim()}" ${isChecked ? 'checked' : ''} style="display:none;">
+                    <i class="fas fa-check" style="font-size:0.58rem; ${isChecked ? '' : 'visibility:hidden;'} flex-shrink:0;"></i>
                     <span>${username.trim()}</span>
                 `;
+
+                label.onclick = function() {
+                    const cb = this.querySelector('input');
+                    const icon = this.querySelector('i');
+                    cb.checked = !cb.checked;
+                    if (cb.checked) {
+                        this.style.backgroundColor = "#dbeafe";
+                        this.style.color = "#1d4ed8";
+                        this.style.borderColor = "#93c5fd";
+                        this.style.fontWeight = "600";
+                        icon.style.visibility = "visible";
+                    } else {
+                        this.style.backgroundColor = "#f1f5f9";
+                        this.style.color = "#64748b";
+                        this.style.borderColor = "#cbd5e1";
+                        this.style.fontWeight = "400";
+                        icon.style.visibility = "hidden";
+                    }
+                };
                 membersDisplay.appendChild(label);
             });
         } else {
@@ -2420,6 +3016,23 @@ window.openViewDrawer = function(taskId) {
     if (completedCount === 0 && compContainer)
         compContainer.innerHTML   = `<span class="text-muted fst-italic small">No completed items yet.</span>`;
 
+    // 4b. Sidebar — checklist progress bar
+    const progressEl = document.getElementById('viewDrawerProgressBar');
+    if (progressEl) {
+        const total = activeCount + completedCount;
+        const pct   = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+        const color = pct === 100 ? "#22c55e" : pct >= 60 ? "#3b82f6" : pct >= 30 ? "#f59e0b" : "#94a3b8";
+        progressEl.innerHTML = total > 0
+            ? `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                   <span class="small text-muted">${completedCount} of ${total} steps done</span>
+                   <span class="fw-bold" style="font-size:0.9rem; color:${color};">${pct}%</span>
+               </div>
+               <div style="height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
+                   <div style="height:100%; width:${pct}%; background:${color}; border-radius:4px; transition:width 0.4s ease;"></div>
+               </div>`
+            : `<span class="text-muted small fst-italic">No checklist items yet.</span>`;
+    }
+
     // 5. Sidebar — status badge
     const statusEl = document.getElementById('viewDrawerStatusPill');
     if (statusEl) {
@@ -2444,6 +3057,40 @@ window.openViewDrawer = function(taskId) {
     // 7. Sidebar — due date & created
     const createdEl = document.getElementById('viewDrawerCreatedAt');
     if (createdEl) createdEl.innerText = task.createdAt || "N/A";
+
+    // 8. Comments thread
+    const commentThread  = document.getElementById('viewDrawerCommentThread');
+    const commentInput   = document.getElementById('viewDrawerCommentInput');
+    const commentCountEl = document.getElementById('viewDrawerCommentCount');
+    const comments = Array.isArray(task.comments) ? task.comments : [];
+
+    if (commentCountEl) commentCountEl.textContent = comments.length > 0 ? comments.length : '';
+
+    if (commentThread) {
+        commentThread.innerHTML = comments.length
+            ? comments.map(c => `
+                <div style="border-left:3px solid #e2e8f0; padding:6px 10px; margin-bottom:10px; background:#f8fafc; border-radius:0 6px 6px 0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                        <span style="font-size:0.75rem; font-weight:600; color:#0369a1; text-transform:capitalize;">
+                            <i class="fas fa-user-circle me-1"></i>${c.user || 'Unknown'}
+                        </span>
+                        <span style="font-size:0.7rem; color:#94a3b8;">${c.timestamp || ''}</span>
+                    </div>
+                    <p style="margin:0; font-size:0.82rem; color:#334155; line-height:1.5;">${c.text || ''}</p>
+                </div>`).join('')
+            : `<p class="text-muted small fst-italic">No comments yet. Be the first to add one.</p>`;
+        commentThread.scrollTop = commentThread.scrollHeight;
+    }
+
+    // Show the post input only for admins, team lead, or assigned members
+    const curUser    = (window.currentUserName || "").trim().toLowerCase();
+    const isAdminVw  = window.currentUserRole === 'admin' || curUser.includes("admin");
+    const assignedVw = (task.assignees || "").split(',').map(n => n.trim().toLowerCase());
+    const canComment = isAdminVw || window.isProjectTeamLead || assignedVw.includes(curUser);
+    if (commentInput) commentInput.style.display = canComment ? 'block' : 'none';
+
+    // Store task ID for the post function
+    window.viewDrawerActiveTaskId = task.taskId;
 };
 
 // ==========================================
@@ -2454,6 +3101,76 @@ window.closeReadPanel = function() {
     if (viewDrawerEl) viewDrawerEl.classList.remove('open');
     const bdrop = document.getElementById('drawerBackdrop');
     if (bdrop) bdrop.style.display = "none";
+};
+
+window.postViewDrawerComment = function() {
+    const textArea = document.getElementById('viewDrawerCommentText');
+    const text = (textArea ? textArea.value : "").trim();
+    if (!text) return;
+
+    const taskId = window.viewDrawerActiveTaskId;
+    const user   = window.currentUserName || "Anonymous";
+    const postBtn = document.querySelector('#viewDrawerCommentInput button');
+
+    if (postBtn) { postBtn.disabled = true; postBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
+
+    const payload = {
+        action:  "addTaskComment",
+        taskId:  taskId,
+        comment: text,
+        user:    user
+    };
+
+    const targetUrl = document.querySelector('form#createProjectForm') ?
+        (window._scriptUrl || "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec") :
+        "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+
+    fetch(targetUrl, {
+        method:  'POST',
+        mode:    'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload)
+    })
+    .then(() => {
+        // Optimistically render the new comment without closing the drawer
+        const thread = document.getElementById('viewDrawerCommentThread');
+        const noMsg  = thread ? thread.querySelector('.fst-italic') : null;
+        if (noMsg) noMsg.remove();
+
+        const timestamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
+        const bubble = document.createElement('div');
+        bubble.style.cssText = "border-left:3px solid #bfdbfe; padding:6px 10px; margin-bottom:10px; background:#eff6ff; border-radius:0 6px 6px 0;";
+        bubble.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+                <span style="font-size:0.75rem; font-weight:600; color:#0369a1; text-transform:capitalize;">
+                    <i class="fas fa-user-circle me-1"></i>${user}
+                </span>
+                <span style="font-size:0.7rem; color:#94a3b8;">${timestamp}</span>
+            </div>
+            <p style="margin:0; font-size:0.82rem; color:#334155; line-height:1.5;">${text}</p>`;
+
+        if (thread) { thread.appendChild(bubble); thread.scrollTop = thread.scrollHeight; }
+
+        // Update the count badge
+        const countEl = document.getElementById('viewDrawerCommentCount');
+        if (countEl) countEl.textContent = (parseInt(countEl.textContent) || 0) + 1;
+
+        // Clear the textarea
+        if (textArea) textArea.value = '';
+
+        // Update the local cache so reopening the drawer shows the comment immediately
+        if (window.activeTasksCache) {
+            const cached = window.activeTasksCache.find(t => t.taskId === taskId);
+            if (cached) {
+                if (!Array.isArray(cached.comments)) cached.comments = [];
+                cached.comments.push({ user: user, timestamp: timestamp, text: text });
+            }
+        }
+    })
+    .catch(err => console.error("Comment post failed:", err))
+    .finally(() => {
+        if (postBtn) { postBtn.disabled = false; postBtn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Post'; }
+    });
 };
 
 // ==========================================
@@ -2556,12 +3273,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 finalAssignees = checkedNames.length > 0 ? checkedNames.join(', ') : "Unassigned";
             }
 
+            const rawDueVal = document.getElementById('utDueDate') ? document.getElementById('utDueDate').value : "";
             const payload = {
-                action: "updateTaskStatus", 
+                action: "updateTaskStatus",
                 taskId: document.getElementById('utTaskId').value,
-                status: sheetFormattedStatus, 
+                status: sheetFormattedStatus,
                 note: progressNoteHTML,
                 checklist: dynamicChecklistPayload,
+                dueDate: rawDueVal || "",
                 user: window.currentUserName || "System"
             };
 
@@ -2776,6 +3495,22 @@ window.removeChecklistItemElement = function(buttonEl) {
                 <h5 class="fw-bold mb-3 text-success border-bottom pb-2"><i class="fas fa-check-circle me-2"></i>Completed Items</h5>
                 <div id="viewDrawerChecklistCompleted" class="ps-2"></div>
             </div>
+
+            <div class="card border-0 shadow-sm p-4 mt-4 bg-white">
+                <h5 class="fw-bold mb-3 text-secondary border-bottom pb-2">
+                    <i class="fas fa-comments me-2"></i>Comments
+                    <span id="viewDrawerCommentCount" class="badge bg-light text-secondary border ms-2" style="font-size:0.72rem;"></span>
+                </h5>
+                <div id="viewDrawerCommentThread" style="max-height:320px; overflow-y:auto; margin-bottom:1rem;"></div>
+                <div id="viewDrawerCommentInput" style="display:none;">
+                    <div class="d-flex gap-2 align-items-start">
+                        <textarea id="viewDrawerCommentText" class="form-control form-control-sm" rows="2" placeholder="Add a comment..." style="resize:none; font-size:0.85rem;"></textarea>
+                        <button onclick="postViewDrawerComment()" class="btn btn-sm btn-primary px-3" style="white-space:nowrap;">
+                            <i class="fas fa-paper-plane me-1"></i>Post
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div style="flex: 0 0 260px; min-width: 220px;">
@@ -2783,6 +3518,11 @@ window.removeChecklistItemElement = function(buttonEl) {
                 <div class="mb-3">
                     <span class="small text-muted d-block text-uppercase fw-bold mb-1">Current Status</span>
                     <div id="viewDrawerStatusPill"></div>
+                </div>
+                <hr class="my-3 opacity-25">
+                <div class="mb-3">
+                    <span class="small text-muted d-block text-uppercase fw-bold mb-2"><i class="fas fa-chart-line me-1"></i> Checklist Progress</span>
+                    <div id="viewDrawerProgressBar"></div>
                 </div>
                 <hr class="my-3 opacity-25">
                 <div class="mb-3">
@@ -2860,6 +3600,900 @@ window.removeChecklistItemElement = function(buttonEl) {
 
     layoutObserver.observe(targetOverlay, { attributes: true, attributeFilter: ['style'] });
 })();
+
+/* =====================================================================
+   GANTT CHART
+   ===================================================================== */
+
+function renderGanttChart(tasks) {
+    var container = document.getElementById('wsGanttContainer');
+    if (!container) return;
+
+    var tasksWithDates = (tasks || []).filter(function(t) {
+        return t.dueDate && t.dueDate !== 'N/A' && t.dueDate !== 'undefined' && t.dueDate !== '';
+    });
+
+    // Update shortcut card count
+    var ganttCountEl = document.getElementById('wsGanttTaskCount');
+    if (ganttCountEl) ganttCountEl.textContent = tasksWithDates.length;
+
+    if (!tasksWithDates.length) {
+        container.innerHTML = '<p class="text-muted fst-italic small text-center py-4"><i class="fas fa-calendar-alt me-2 opacity-25"></i>No tasks with due dates found. Add due dates to tasks to see them here.</p>';
+        return;
+    }
+
+    var today = new Date(); today.setHours(0,0,0,0);
+    var minDate = new Date(today);
+    var maxDate = new Date(today);
+
+    tasksWithDates.forEach(function(t) {
+        var due = new Date(t.dueDate);
+        var start = (t.createdDate && t.createdDate !== 'N/A' && t.createdDate !== '') ? new Date(t.createdDate) : today;
+        if (start < minDate) minDate = new Date(start);
+        if (due > maxDate)   maxDate = new Date(due);
+    });
+
+    minDate.setDate(minDate.getDate() - 3);
+    maxDate.setDate(maxDate.getDate() + 7);
+    var totalMs = maxDate - minDate;
+
+    function pct(date) {
+        return Math.max(0, Math.min(100, ((date - minDate) / totalMs) * 100));
+    }
+
+    var statusBg   = { 'New':'#bfdbfe', 'In Progress':'#6ee7b7', 'Under Review':'#fde68a', 'Done':'#86efac', 'Cancelled':'#e2e8f0' };
+    var statusFg   = { 'New':'#1e40af', 'In Progress':'#065f46', 'Under Review':'#92400e', 'Done':'#15803d', 'Cancelled':'#94a3b8' };
+    var phaseOrder = ['Phase 1: Initiation','Phase 2: Planning','Phase 3: Execution','Phase 4: Monitoring & Onboarding','Phase 5: Project Closure'];
+    var phaseShort = { 'Phase 1: Initiation':'Ph.1 Initiation','Phase 2: Planning':'Ph.2 Planning','Phase 3: Execution':'Ph.3 Execution','Phase 4: Monitoring & Onboarding':'Ph.4 Monitoring','Phase 5: Project Closure':'Ph.5 Closure' };
+    var phaseColor = ['#3b82f6','#8b5cf6','#10b981','#f59e0b','#ef4444'];
+
+    // Month header cells
+    var months = [];
+    var cur = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+    while (cur <= maxDate) {
+        var pLeft = pct(cur);
+        var nextM = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+        var pWidth = pct(nextM) - pLeft;
+        months.push({ label: cur.toLocaleDateString('en-ZA', {month:'short', year:'2-digit'}), left: pLeft, width: pWidth });
+        cur = nextM;
+    }
+    var monthHtml = months.map(function(m) {
+        return '<div style="position:absolute; left:' + m.left + '%; width:' + m.width + '%; padding:3px 6px; font-size:0.62rem; font-weight:700; color:#64748b; text-transform:uppercase; border-left:1px solid #e2e8f0; box-sizing:border-box; overflow:hidden; white-space:nowrap;">' + m.label + '</div>';
+    }).join('');
+
+    // Today marker (shared across all rows)
+    var todayPct  = pct(today);
+    var todayLine = (todayPct >= 0 && todayPct <= 100)
+        ? '<div style="position:absolute; left:' + todayPct + '%; top:0; bottom:0; width:2px; background:rgba(239,68,68,0.6); z-index:3; pointer-events:none;"></div>'
+        : '';
+
+    // Group tasks by phase
+    var grouped = {};
+    phaseOrder.forEach(function(p) { grouped[p] = []; });
+    tasksWithDates.forEach(function(t) {
+        var ph = t.phase || t.projectPhase || 'Phase 1: Initiation';
+        if (grouped[ph]) grouped[ph].push(t);
+        else grouped['Phase 1: Initiation'].push(t);
+    });
+
+    var rowsHtml = '';
+    phaseOrder.forEach(function(phase, phIdx) {
+        var pTasks = grouped[phase];
+        if (!pTasks.length) return;
+        var phClr = phaseColor[phIdx] || '#3b82f6';
+
+        // Phase header row
+        rowsHtml += '<div style="display:flex; border-bottom:1px solid #e2e8f0;">' +
+            '<div style="flex:0 0 190px; min-width:190px; padding:5px 10px; background:#f8fafc; font-size:0.68rem; font-weight:800; color:' + phClr + '; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; border-right:1px solid #e2e8f0;">' +
+                '<i class="fas fa-layer-group me-2" style="font-size:0.62rem;"></i>' + (phaseShort[phase] || phase) +
+            '</div>' +
+            '<div style="flex:1; background:#f8fafc; position:relative; min-height:26px;">' + todayLine + '</div>' +
+        '</div>';
+
+        // Task rows
+        pTasks.forEach(function(t) {
+            var startD = (t.createdDate && t.createdDate !== 'N/A' && t.createdDate !== '') ? new Date(t.createdDate) : today;
+            var endD   = new Date(t.dueDate);
+            var sPct   = pct(startD);
+            var ePct   = pct(endD);
+            var wPct   = Math.max(0.8, ePct - sPct);
+            var bg     = statusBg[t.status] || '#bfdbfe';
+            var fg     = statusFg[t.status] || '#1e40af';
+            var overdue = (endD < today && t.status !== 'Done' && t.status !== 'Cancelled');
+            var barBorder = overdue ? 'box-shadow:0 0 0 2px #ef4444;' : '';
+            var label  = t.taskName || 'Unnamed Task';
+            var tooltip = label + ' | ' + (t.status || '') + ' | ' + startD.toLocaleDateString('en-ZA') + ' → ' + endD.toLocaleDateString('en-ZA') + (t.assignedTo ? ' | ' + t.assignedTo : '');
+
+            rowsHtml += '<div style="display:flex; align-items:center; border-bottom:1px solid #f1f5f9; min-height:34px;">' +
+                '<div style="flex:0 0 190px; min-width:190px; padding:4px 10px; font-size:0.73rem; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-right:1px solid #e2e8f0;" title="' + label + '">' + label + '</div>' +
+                '<div style="flex:1; position:relative; min-height:34px;">' +
+                    todayLine +
+                    '<div style="position:absolute; left:' + sPct + '%; width:' + wPct + '%; top:50%; transform:translateY(-50%); height:22px; background:' + bg + '; border-radius:5px; ' + barBorder + ' display:flex; align-items:center; padding:0 7px; overflow:hidden; cursor:default;" title="' + tooltip + '">' +
+                        '<span style="font-size:0.6rem; font-weight:700; color:' + fg + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + label + '</span>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+        });
+    });
+
+    // Legend
+    var legendHtml = Object.keys(statusBg).map(function(s) {
+        return '<span style="display:inline-flex; align-items:center; gap:5px; font-size:0.68rem; color:#475569;">' +
+            '<span style="width:13px; height:13px; border-radius:3px; background:' + statusBg[s] + '; flex-shrink:0;"></span>' + s + '</span>';
+    }).join('');
+
+    container.innerHTML =
+        '<div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; align-items:center;">' +
+            legendHtml +
+        '</div>' +
+        '<div style="overflow-x:auto;">' +
+            '<div style="min-width:640px;">' +
+                '<div style="display:flex; border-bottom:2px solid #e2e8f0; margin-bottom:0;">' +
+                    '<div style="flex:0 0 190px; min-width:190px; border-right:1px solid #e2e8f0;"></div>' +
+                    '<div style="flex:1; position:relative; height:26px;">' + monthHtml + '</div>' +
+                '</div>' +
+                rowsHtml +
+            '</div>' +
+        '</div>';
+}
+
+/* =====================================================================
+   TEAMS CHAT
+   ===================================================================== */
+
+window.activeChatFilter   = 'All';
+window.projectCommentsCache = [];
+
+function fetchProjectComments(projectId) {
+    fetch(googleWebAppUrl + '?action=readProjectComments&projectId=' + encodeURIComponent(projectId) + '&ts=' + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(comments) {
+            window.projectCommentsCache = Array.isArray(comments) ? comments : [];
+            renderProjectComments(window.projectCommentsCache);
+        })
+        .catch(function(err) {
+            console.error('Teams Chat fetch failed:', err);
+            var thread = document.getElementById('wsTeamsChatThread');
+            if (thread) thread.innerHTML = '<p class="text-muted small fst-italic text-center py-3">Could not load messages.</p>';
+        });
+}
+
+function renderProjectComments(comments) {
+    var thread = document.getElementById('wsTeamsChatThread');
+    if (!thread) return;
+
+    var filter   = window.activeChatFilter || 'All';
+    var filtered = filter === 'All' ? comments : comments.filter(function(c) {
+        return (c.category || c.Category || 'General') === filter;
+    });
+
+    // Update count badge + shortcut card
+    var total = comments.length;
+    var countEl = document.getElementById('chatCommentCount');
+    if (countEl) countEl.textContent = total + (total === 1 ? ' message' : ' messages');
+    var cardEl = document.getElementById('wsTeamsChatCount');
+    if (cardEl) cardEl.textContent = total;
+
+    if (!filtered.length) {
+        thread.innerHTML = '<p class="text-muted fst-italic small text-center py-4">' +
+            (filter === 'All' ? '<i class="fas fa-comments me-2 opacity-25"></i>No messages yet — be the first to post!' : 'No ' + filter + ' messages yet.') + '</p>';
+        return;
+    }
+
+    var catStyle = {
+        'Task Suggestion': { bg:'#eff6ff', border:'#bfdbfe', text:'#1e40af', icon:'fa-tasks' },
+        'Risk Awareness':  { bg:'#fef2f2', border:'#fca5a5', text:'#b91c1c', icon:'fa-shield-alt' },
+        'General':         { bg:'#f5f3ff', border:'#ddd6fe', text:'#7c3aed', icon:'fa-comment' }
+    };
+
+    var curUser  = (window.currentUserName || '').trim().toLowerCase();
+    var isAdm    = window.currentUserRole === 'admin' || curUser.includes('admin');
+    var canAction = isAdm || window.isProjectTeamLead;
+
+    thread.innerHTML = filtered.map(function(c) {
+        var displayUser = c.user || c.username || c.author || c.postedBy || 'Unknown';
+        var displayCat  = c.category || c.Category || 'General';
+        var cat         = catStyle[displayCat] || catStyle['General'];
+        var isOwn       = displayUser.trim().toLowerCase() === curUser;
+        var isActioned  = c.status === 'Actioned';
+        var initials    = displayUser.split(' ').map(function(w) { return w[0] || ''; }).join('').toUpperCase().slice(0,2) || 'U';
+
+        return '<div style="display:flex; gap:10px; margin-bottom:14px; ' + (isOwn ? 'flex-direction:row-reverse;' : '') + '">' +
+            '<div style="flex:0 0 34px; width:34px; height:34px; border-radius:50%; background:' + cat.bg + '; border:2px solid ' + cat.border + '; display:flex; align-items:center; justify-content:center; font-size:0.68rem; font-weight:800; color:' + cat.text + '; flex-shrink:0;">' + initials + '</div>' +
+            '<div style="flex:1; max-width:82%;">' +
+                '<div style="background:' + (isOwn ? '#f0f7ff' : '#f8fafc') + '; border:1px solid ' + (isOwn ? '#bfdbfe' : '#e2e8f0') + '; border-radius:' + (isOwn ? '12px 4px 12px 12px' : '4px 12px 12px 12px') + '; padding:10px 14px;">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap:wrap; gap:6px;">' +
+                        '<span style="font-size:0.78rem; font-weight:700; color:#334155;">' + displayUser + '</span>' +
+                        '<div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap;">' +
+                            '<span style="background:' + cat.bg + '; color:' + cat.text + '; border:1px solid ' + cat.border + '; border-radius:4px; padding:1px 7px; font-size:0.6rem; font-weight:700;">' +
+                                '<i class="fas ' + cat.icon + ' me-1"></i>' + displayCat + '</span>' +
+                            (isActioned ? '<span style="background:#f0fdf4; color:#15803d; border:1px solid #86efac; border-radius:4px; padding:1px 7px; font-size:0.6rem; font-weight:700;"><i class="fas fa-check me-1"></i>Actioned</span>' : '') +
+                        '</div>' +
+                    '</div>' +
+                    '<p style="margin:0 0 6px; font-size:0.83rem; color:#334155; line-height:1.55;">' + (c.message || '') + '</p>' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                        '<span style="font-size:0.62rem; color:#94a3b8;">' + (c.timestamp || '') + '</span>' +
+                        (canAction && !isActioned ? '<button class="btn btn-link btn-sm p-0" style="font-size:0.65rem; color:#15803d;" onclick="actionProjectComment(\'' + c.commentId + '\')"><i class="fas fa-check-circle me-1"></i>Mark Actioned</button>' : '') +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+
+    thread.scrollTop = thread.scrollHeight;
+}
+
+function switchChatFilter(filter) {
+    window.activeChatFilter = filter;
+    var filterMap = { 'All':'All', 'Task Suggestion':'TaskSuggestion', 'Risk Awareness':'RiskAwareness', 'General':'General' };
+    Object.keys(filterMap).forEach(function(f) {
+        var btn = document.getElementById('chatFilter' + filterMap[f]);
+        if (!btn) return;
+        if (f === filter) {
+            btn.style.background = '#7c3aed'; btn.style.color = '#fff'; btn.style.border = 'none';
+        } else {
+            btn.style.background = ''; btn.style.color = ''; btn.style.border = '';
+            btn.className = 'btn btn-sm btn-outline-secondary';
+        }
+    });
+    renderProjectComments(window.projectCommentsCache || []);
+}
+
+function postProjectComment() {
+    var msg = ((document.getElementById('chatNewMessage') || {}).value || '').trim();
+    var cat = (document.getElementById('chatNewCategory') || {}).value || 'General';
+    if (!msg) { document.getElementById('chatNewMessage') && document.getElementById('chatNewMessage').focus(); return; }
+
+    var payload = {
+        action:    'addProjectComment',
+        projectId: window.activeWorkspaceProjectId || '',
+        user:      window.currentUserName || 'System',
+        category:  cat,
+        message:   msg
+    };
+
+    var btn = document.querySelector('#wsTeamsChatSection button[onclick="postProjectComment()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Posting...'; }
+
+    fetch(googleWebAppUrl, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function() {
+        if (document.getElementById('chatNewMessage')) document.getElementById('chatNewMessage').value = '';
+        var newComment = {
+            commentId: 'temp-' + Date.now(),
+            projectId: payload.projectId,
+            timestamp: new Date().toLocaleString('en-ZA'),
+            user:      payload.user,
+            category:  payload.category,
+            message:   payload.message,
+            status:    'Open'
+        };
+        window.projectCommentsCache = (window.projectCommentsCache || []).concat([newComment]);
+        renderProjectComments(window.projectCommentsCache);
+    })
+    .catch(function(err) { console.error(err); alert('Failed to post message.'); })
+    .finally(function() { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Post'; } });
+}
+
+function actionProjectComment(commentId) {
+    var payload = { action: 'updateCommentStatus', commentId: commentId, status: 'Actioned', user: window.currentUserName || 'System' };
+    fetch(googleWebAppUrl, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function() {
+        window.projectCommentsCache = (window.projectCommentsCache || []).map(function(c) {
+            return c.commentId === commentId ? Object.assign({}, c, { status: 'Actioned' }) : c;
+        });
+        renderProjectComments(window.projectCommentsCache);
+    })
+    .catch(function(err) { console.error(err); });
+}
+
+/* =====================================================================
+   PROJECT RESOURCES — fetch, render, upload, link, delete
+   ===================================================================== */
+
+window.activeResourcesCache = [];
+window.resourcePanelMode = 'file';
+
+function fetchProjectResources(projectId) {
+    fetch(googleWebAppUrl + '?action=readResources&projectId=' + encodeURIComponent(projectId))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            window.activeResourcesCache = data.resources || [];
+            renderResourcesGallery(window.activeResourcesCache);
+        })
+        .catch(function(err) { console.warn('Resources fetch failed:', err); });
+}
+
+function renderResourcesGallery(resources) {
+    var gallery  = document.getElementById('wsResourcesGallery');
+    var badge    = document.getElementById('wsResourcesBadge');
+    var countEl  = document.getElementById('wsResourceCount');
+    if (!gallery) return;
+
+    if (badge)   badge.textContent   = resources.length + ' file' + (resources.length !== 1 ? 's' : '');
+    if (countEl) countEl.textContent = resources.length;
+
+    if (!resources.length) {
+        gallery.innerHTML = '<div class="col-12 text-center text-muted py-5">' +
+            '<i class="fas fa-folder-open" style="font-size:2.5rem; opacity:0.2;"></i>' +
+            '<p class="mt-2 mb-0" style="font-size:0.85rem;">No resources uploaded yet.</p></div>';
+        return;
+    }
+
+    var typeConfig = {
+        pdf:   { icon: 'fa-file-pdf',   bg: '#fee2e2', color: '#dc2626', label: 'PDF',   btnLabel: 'Open'  },
+        image: { icon: 'fa-file-image', bg: '#dcfce7', color: '#16a34a', label: 'Image', btnLabel: 'View'  },
+        video: { icon: 'fa-file-video', bg: '#0f172a', color: '#e2e8f0', label: 'Video', btnLabel: 'Watch' },
+        audio: { icon: 'fa-file-audio', bg: '#f3e8ff', color: '#7c3aed', label: 'Audio', btnLabel: 'Play'  },
+        link:  { icon: 'fa-link',       bg: '#dbeafe', color: '#1d4ed8', label: 'Link',  btnLabel: 'Open'  },
+        file:  { icon: 'fa-file-alt',   bg: '#f1f5f9', color: '#475569', label: 'File',  btnLabel: 'Open'  }
+    };
+
+    var currentUser = (sessionStorage.getItem('currentUser_ICT') || '').toLowerCase();
+    var isAdmin     = window.currentUserRole === 'admin';
+    var isTeamLead  = window.isProjectTeamLead === true;
+
+    gallery.innerHTML = resources.map(function(r) {
+        var cfg = typeConfig[r.type] || typeConfig.file;
+        var canDelete = isAdmin || isTeamLead || currentUser === (r.uploadedBy || '').toLowerCase();
+
+        var sizeStr = '';
+        if (r.fileSize && r.fileSize > 0) {
+            sizeStr = r.fileSize > 1048576
+                ? (r.fileSize / 1048576).toFixed(1) + ' MB'
+                : Math.round(r.fileSize / 1024) + ' KB';
+        }
+
+        var thumbHtml = (r.type === 'image' && r.driveFileId)
+            ? '<div style="height:80px; overflow:hidden; border-radius:10px 10px 0 0; background:#f1f5f9;">' +
+              '<img src="https://drive.google.com/thumbnail?id=' + r.driveFileId + '&sz=w300" ' +
+              'style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display=\'none\'"></div>'
+            : '';
+
+        var audioHtml = (r.type === 'audio')
+            ? '<audio controls class="w-100 mt-2" style="height:28px; border-radius:6px;">' +
+              '<source src="' + r.url + '" type="audio/mpeg"></audio>'
+            : '';
+
+        var deleteBtn = canDelete
+            ? '<button class="btn btn-sm ms-1" style="font-size:0.7rem; padding:3px 7px; background:#fee2e2; color:#dc2626; border-radius:6px;" ' +
+              'onclick="deleteResource(\'' + r.resourceId + '\',\'' + (r.uploadedBy||'').replace(/'/g,"\\'"  ) + '\')" title="Delete">' +
+              '<i class="fas fa-trash-alt"></i></button>'
+            : '';
+
+        var titleDisplay = r.title.length > 38 ? r.title.substring(0, 38) + '…' : r.title;
+
+        return '<div class="col-12 col-sm-6 col-md-4 col-xl-3">' +
+            '<div class="card h-100 border-0 shadow-sm" style="border-radius:12px; overflow:hidden;">' +
+            thumbHtml +
+            '<div class="px-3 pt-2 pb-1 d-flex align-items-center gap-2" style="background:' + cfg.bg + ';">' +
+            '<i class="fas ' + cfg.icon + '" style="color:' + cfg.color + '; font-size:1rem;"></i>' +
+            '<span style="font-size:0.63rem; font-weight:700; color:' + cfg.color + '; text-transform:uppercase; letter-spacing:0.5px;">' + cfg.label + '</span>' +
+            (sizeStr ? '<span class="ms-auto" style="font-size:0.6rem; color:' + cfg.color + '; opacity:0.65;">' + sizeStr + '</span>' : '') +
+            '</div>' +
+            '<div class="card-body px-3 py-2">' +
+            '<p class="fw-semibold mb-1" style="font-size:0.82rem; word-break:break-word;" title="' + r.title + '">' + titleDisplay + '</p>' +
+            (r.description ? '<p class="text-muted mb-1" style="font-size:0.72rem;">' + r.description + '</p>' : '') +
+            audioHtml +
+            '</div>' +
+            '<div class="card-footer bg-transparent border-top px-3 py-2 d-flex justify-content-between align-items-center">' +
+            '<span style="font-size:0.62rem; color:#6c757d; line-height:1.6;">' +
+            '<i class="fas fa-user me-1" style="opacity:0.45;"></i>' + r.uploadedBy + '<br>' +
+            '<i class="fas fa-calendar me-1" style="opacity:0.45;"></i>' + r.uploadDate +
+            '</span>' +
+            '<div class="d-flex align-items-center">' +
+            '<a href="' + r.url + '" target="_blank" class="btn btn-sm" style="font-size:0.7rem; padding:3px 8px; background:' + cfg.bg + '; color:' + cfg.color + '; border-radius:6px;">' +
+            '<i class="fas fa-external-link-alt me-1" style="font-size:0.58rem;"></i>' + cfg.btnLabel + '</a>' +
+            deleteBtn +
+            '</div>' +
+            '</div>' +
+            '</div></div>';
+    }).join('');
+}
+
+function toggleResourcePanel(mode) {
+    var panel    = document.getElementById('wsResourcePanel');
+    var fileForm = document.getElementById('wsResourceFileForm');
+    var linkForm = document.getElementById('wsResourceLinkForm');
+    if (!panel) return;
+    if (window.resourcePanelMode === mode && panel.style.display !== 'none') {
+        closeResourcePanel(); return;
+    }
+    window.resourcePanelMode = mode;
+    panel.style.display      = 'block';
+    fileForm.style.display   = mode === 'file' ? 'block' : 'none';
+    linkForm.style.display   = mode === 'link' ? 'block' : 'none';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeResourcePanel() {
+    var panel = document.getElementById('wsResourcePanel');
+    if (panel) panel.style.display = 'none';
+    var fi = document.getElementById('resourceFileInput');
+    if (fi) fi.value = '';
+    var warn = document.getElementById('resourceFileSizeWarning');
+    if (warn) warn.style.display = 'none';
+}
+
+function handleResourceFileSelect(input) {
+    var warn = document.getElementById('resourceFileSizeWarning');
+    if (!input.files || !input.files[0] || !warn) return;
+    warn.style.display = input.files[0].size > 20 * 1024 * 1024 ? 'block' : 'none';
+}
+
+function postResource(payload) {
+    // text/plain is a CORS simple request — no preflight needed, response is readable
+    return fetch(googleWebAppUrl, {
+        method:  'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify(payload)
+    }).then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error('AppScript ' + r.status + ': ' + t); });
+        return r.text();
+    });
+}
+
+async function submitResourceUpload() {
+    var fileInput = document.getElementById('resourceFileInput');
+    var descInput = document.getElementById('resourceFileDesc');
+    var btn       = document.getElementById('resourceUploadBtn');
+    var progress  = document.getElementById('resourceUploadProgress');
+    var progSpan  = progress ? progress.querySelector('span') : null;
+
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        alert('Please select a file to upload.'); return;
+    }
+    var file = fileInput.files[0];
+    if (file.size > 20 * 1024 * 1024) {
+        alert('File is too large (max 20MB). For large videos, upload to Google Drive and use Add Link.'); return;
+    }
+
+    btn.disabled = true;
+    if (progress) progress.style.display = 'flex';
+    if (progSpan) progSpan.textContent = 'Uploading to Drive…';
+
+    try {
+        var base64 = await new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload  = function(e) { resolve(e.target.result.split(',')[1]); };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+
+        if (progSpan) progSpan.textContent = 'Saving to Drive…';
+
+        await postResource({
+            action: 'saveResource', resourceType: 'file',
+            projectId:   window.activeWorkspaceProjectId,
+            fileName:    file.name,
+            mimeType:    file.type,
+            fileData:    base64,
+            fileSize:    file.size,
+            description: descInput ? descInput.value.trim() : '',
+            uploadedBy:  sessionStorage.getItem('currentUser_ICT') || 'System'
+        });
+
+        // POST succeeded — refresh gallery from sheet
+        if (progSpan) progSpan.textContent = 'Done! Refreshing…';
+        await fetchProjectResourcesAsync(window.activeWorkspaceProjectId);
+        closeResourcePanel();
+        if (descInput) descInput.value = '';
+
+    } catch(err) {
+        console.error('[Upload error]', err);
+        alert('Upload failed: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        if (progress) progress.style.display = 'none';
+    }
+}
+
+async function submitResourceLink() {
+    var titleEl = document.getElementById('resourceLinkTitle');
+    var urlEl   = document.getElementById('resourceLinkUrl');
+    var descEl  = document.getElementById('resourceLinkDesc');
+    var title   = titleEl ? titleEl.value.trim() : '';
+    var url     = urlEl   ? urlEl.value.trim()   : '';
+    var desc    = descEl  ? descEl.value.trim()  : '';
+
+    if (!title)                          { alert('Please enter a title for the link.'); return; }
+    if (!url || !url.startsWith('http')) { alert('Please enter a valid URL starting with http.'); return; }
+
+    try {
+        await postResource({
+            action: 'saveResource', resourceType: 'link',
+            projectId:   window.activeWorkspaceProjectId,
+            title:       title,
+            url:         url,
+            description: desc,
+            uploadedBy:  sessionStorage.getItem('currentUser_ICT') || 'System'
+        });
+        closeResourcePanel();
+        if (titleEl) titleEl.value = '';
+        if (urlEl)   urlEl.value   = '';
+        if (descEl)  descEl.value  = '';
+        await fetchProjectResourcesAsync(window.activeWorkspaceProjectId);
+    } catch(err) {
+        console.error('[Link error]', err);
+        alert('Failed to save link: ' + err.message);
+    }
+}
+
+async function deleteResource(resourceId, uploadedBy) {
+    if (!confirm('Delete this resource? Files will be removed from Google Drive.')) return;
+
+    // Optimistic: remove card immediately
+    window.activeResourcesCache = (window.activeResourcesCache || []).filter(function(r) {
+        return r.resourceId !== resourceId;
+    });
+    renderResourcesGallery(window.activeResourcesCache);
+
+    try {
+        await postResource({
+            action:     'deleteResource',
+            resourceId: resourceId,
+            uploadedBy: sessionStorage.getItem('currentUser_ICT') || 'System'
+        });
+        await fetchProjectResourcesAsync(window.activeWorkspaceProjectId);
+    } catch(err) {
+        console.error('[Delete error]', err);
+        fetchProjectResources(window.activeWorkspaceProjectId); // restore on failure
+    }
+}
+
+function fetchProjectResourcesAsync(projectId) {
+    return fetch(googleWebAppUrl + '?action=readResources&projectId=' + encodeURIComponent(projectId || ''))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            window.activeResourcesCache = data.resources || [];
+            renderResourcesGallery(window.activeResourcesCache);
+        });
+}
+
+/* =====================================================================
+   RISK REGISTER — view toggle, fetch, render, matrix, add/edit/note
+   ===================================================================== */
+
+function switchWorkspaceView(view) {
+    const boardView = document.getElementById('wsBoardView');
+    const riskView  = document.getElementById('wsRiskView');
+    const btnBoard  = document.getElementById('btnViewBoard');
+    const btnRisks  = document.getElementById('btnViewRisks');
+
+    if (view === 'risks') {
+        if (boardView) boardView.style.display = 'none';
+        if (riskView)  riskView.style.display  = 'block';
+        if (btnBoard)  { btnBoard.classList.remove('btn-primary'); btnBoard.classList.add('btn-outline-secondary'); }
+        if (btnRisks)  { btnRisks.classList.remove('btn-outline-secondary'); btnRisks.classList.add('btn-primary'); }
+        if (window.activeWorkspaceProjectId) fetchProjectRisks(window.activeWorkspaceProjectId);
+    } else {
+        if (boardView) boardView.style.display = 'block';
+        if (riskView)  riskView.style.display  = 'none';
+        if (btnBoard)  { btnBoard.classList.add('btn-primary'); btnBoard.classList.remove('btn-outline-secondary'); }
+        if (btnRisks)  { btnRisks.classList.remove('btn-primary'); btnRisks.classList.add('btn-outline-secondary'); }
+    }
+}
+
+function fetchProjectRisks(projectId) {
+    const container = document.getElementById('wsRiskTableContainer');
+    if (container) container.innerHTML = '<p class="text-muted fst-italic small text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Loading risks...</p>';
+
+    fetch(googleWebAppUrl + '?action=readRisks&projectId=' + encodeURIComponent(projectId) + '&ts=' + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(risks) {
+            window.activeRisksCache = Array.isArray(risks) ? risks : [];
+            renderRiskRegister(window.activeRisksCache);
+
+            // Show Add Risk button for admin / team lead
+            const btn = document.getElementById('btnAddRisk');
+            const curUser = (window.currentUserName || '').trim().toLowerCase();
+            const isAdm = window.currentUserRole === 'admin' || curUser.includes('admin');
+            if (btn && (isAdm || window.isProjectTeamLead)) {
+                btn.style.setProperty('display', 'inline-block', 'important');
+            }
+        })
+        .catch(function(err) {
+            console.error('Risk fetch failed:', err);
+            if (container) container.innerHTML = '<p class="text-danger small text-center py-4"><i class="fas fa-exclamation-triangle me-1"></i>Failed to load risks.</p>';
+        });
+}
+
+function renderRiskRegister(risks) {
+    const sevColor = { Critical: '#b91c1c', High: '#c2410c', Medium: '#b45309', Low: '#15803d' };
+    const sevBg    = { Critical: '#fef2f2', High: '#fff7ed', Medium: '#fffbeb', Low: '#f0fdf4' };
+    const sevBorder= { Critical: '#fca5a5', High: '#fdba74', Medium: '#fcd34d', Low: '#86efac' };
+    const stratIcon= { Avoidance: 'fa-ban', Reduction: 'fa-compress-alt', Transference: 'fa-exchange-alt', Acceptance: 'fa-check-circle', Contingency: 'fa-life-ring' };
+    const statCls  = { Open: 'bg-danger', 'In Progress': 'bg-warning text-dark', Mitigated: 'bg-info text-dark', Closed: 'bg-success' };
+
+    // Summary counts — normalise case so "low"/"LOW" still match
+    const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+    risks.forEach(function(r) {
+        var raw = r.severity || r.Severity || r.riskSeverity || '';
+        var key = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+        if (counts[key] !== undefined) counts[key]++;
+    });
+    console.log('[Risks] sample row:', risks[0], '| counts:', counts);
+
+    // Update in-section severity badges
+    ['Critical','High','Medium','Low'].forEach(function(s) {
+        const el = document.getElementById('riskSum' + s);
+        if (el) el.textContent = counts[s] + ' ' + s;
+    });
+
+    // Update top shortcut cards
+    const total = counts.Critical + counts.High + counts.Medium + counts.Low;
+    var totalEl    = document.getElementById('wsRiskTotal');
+    var critEl     = document.getElementById('wsRiskCriticalCount');
+    var highEl     = document.getElementById('wsRiskHighCount');
+    var medEl      = document.getElementById('wsRiskMediumCount');
+    var lowEl      = document.getElementById('wsRiskLowCount');
+    if (totalEl) totalEl.textContent = total;
+    if (critEl)  critEl.textContent  = counts.Critical;
+    if (highEl)  highEl.textContent  = counts.High;
+    if (medEl)   medEl.textContent   = counts.Medium;
+    if (lowEl)   lowEl.textContent   = counts.Low;
+
+    // Badge on risk register header
+    const badge = document.getElementById('riskBadgeCount');
+    const urgent = counts.Critical + counts.High;
+    if (badge) { badge.textContent = urgent; badge.style.display = urgent > 0 ? 'inline' : 'none'; }
+
+    const container = document.getElementById('wsRiskTableContainer');
+    if (!container) return;
+
+    if (!risks.length) {
+        container.innerHTML = '<p class="text-muted fst-italic small text-center py-4"><i class="fas fa-shield-alt me-2"></i>No risks registered for this project.</p>';
+        renderRiskMatrix([]);
+        return;
+    }
+
+    const curUser = (window.currentUserName || '').trim().toLowerCase();
+    const isAdm   = window.currentUserRole === 'admin' || curUser.includes('admin');
+    const canEdit = isAdm || window.isProjectTeamLead;
+
+    const phaseShort = {
+        'General': 'General', 'Phase 1: Initiation': 'Ph.1 Initiation',
+        'Phase 2: Planning': 'Ph.2 Planning', 'Phase 3: Execution': 'Ph.3 Execution',
+        'Phase 4: Monitoring & Onboarding': 'Ph.4 Monitoring', 'Phase 5: Project Closure': 'Ph.5 Closure'
+    };
+
+    const rows = risks.map(function(r) {
+        const isOwner     = r.owner && r.owner.toLowerCase() === curUser;
+        const canEditNote = canEdit || isOwner;
+        const rawSev      = r.severity || r.Severity || r.riskSeverity || 'Low';
+        const sev         = rawSev.charAt(0).toUpperCase() + rawSev.slice(1).toLowerCase();
+        const sta         = r.status || r.Status || 'Open';
+        const phLabel     = phaseShort[r.phase] || (r.phase || 'General');
+
+        return '<tr style="border-bottom:1px solid #f1f5f9;">' +
+            '<td style="padding:8px 10px; font-size:0.72rem; color:#64748b; white-space:nowrap;">' + (r.dateRaised || 'N/A') + '</td>' +
+            '<td style="padding:8px 10px; max-width:200px;">' +
+                '<div class="fw-semibold" style="font-size:0.82rem;">' + (r.description || '') + '</div>' +
+                (r.mitigatingAction ? '<div class="text-muted" style="font-size:0.7rem; margin-top:2px;"><i class="fas fa-wrench me-1"></i>' + r.mitigatingAction + '</div>' : '') +
+            '</td>' +
+            '<td style="padding:8px 8px; text-align:center; white-space:nowrap;"><span style="font-size:0.7rem; background:#f1f5f9; color:#475569; border-radius:4px; padding:2px 7px;">' + phLabel + '</span></td>' +
+            '<td style="padding:8px 6px; text-align:center;"><span style="font-size:0.72rem; font-weight:600; color:' + (sevColor[r.likelihood] || '#64748b') + ';">' + (r.likelihood || '-') + '</span></td>' +
+            '<td style="padding:8px 6px; text-align:center;"><span style="font-size:0.72rem; font-weight:600; color:' + (sevColor[r.impact] || '#64748b') + ';">' + (r.impact || '-') + '</span></td>' +
+            '<td style="padding:8px 6px; text-align:center;"><span style="background:' + (sevBg[sev] || '#f8fafc') + '; color:' + (sevColor[sev] || '#64748b') + '; border:1px solid ' + (sevBorder[sev] || '#e2e8f0') + '; border-radius:4px; padding:2px 7px; font-size:0.7rem; font-weight:700;">' + sev + '</span></td>' +
+            '<td style="padding:8px 10px; font-size:0.75rem; white-space:nowrap;"><i class="fas ' + (stratIcon[r.strategy] || 'fa-question') + ' me-1 text-secondary"></i>' + (r.strategy || '-') + '</td>' +
+            '<td style="padding:8px 10px; font-size:0.75rem;">' + (r.owner || '<span class="text-muted">—</span>') + '</td>' +
+            '<td style="padding:8px 10px; max-width:180px;">' +
+                '<div style="font-size:0.72rem; color:#334155;">' + (r.notes || '<span class="text-muted fst-italic">No notes</span>') + '</div>' +
+                (canEditNote ? '<button class="btn btn-link btn-sm p-0 mt-1" style="font-size:0.65rem;" onclick="openRiskNoteEditor(\'' + r.riskId + '\', `' + (r.notes || '').replace(/`/g, "'") + '`)"><i class="fas fa-pencil-alt me-1"></i>Edit note</button>' : '') +
+            '</td>' +
+            '<td style="padding:8px 6px;"><span class="badge ' + (statCls[sta] || 'bg-secondary') + '" style="font-size:0.65rem;">' + sta + '</span></td>' +
+            '<td style="padding:8px 4px;">' +
+                (canEdit ? '<button class="btn btn-link btn-sm p-0" style="font-size:0.7rem; color:#0369a1; white-space:nowrap;" onclick="openRiskModal(\'' + r.riskId + '\')"><i class="fas fa-edit me-1"></i>Edit</button>' : '') +
+            '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+        '<div style="overflow-x:auto;">' +
+        '<table style="width:100%; border-collapse:collapse; min-width:860px;">' +
+            '<thead><tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase; white-space:nowrap;">Date</th>' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Risk Description</th>' +
+                '<th style="padding:8px 8px; font-size:0.68rem; color:#64748b; text-transform:uppercase; text-align:center; white-space:nowrap;">Phase</th>' +
+                '<th style="padding:8px 6px; font-size:0.68rem; color:#64748b; text-transform:uppercase; text-align:center;">Likelihood</th>' +
+                '<th style="padding:8px 6px; font-size:0.68rem; color:#64748b; text-transform:uppercase; text-align:center;">Impact</th>' +
+                '<th style="padding:8px 6px; font-size:0.68rem; color:#64748b; text-transform:uppercase; text-align:center;">Severity</th>' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Strategy</th>' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Owner</th>' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Notes</th>' +
+                '<th style="padding:8px 6px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Status</th>' +
+                '<th style="padding:8px 4px;"></th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+        '</table></div>';
+
+    renderRiskMatrix(risks);
+}
+
+function renderRiskMatrix(risks) {
+    const el = document.getElementById('wsRiskMatrix');
+    if (!el) return;
+
+    const likelihoods = ['High', 'Medium', 'Low'];
+    const impacts     = ['Low',  'Medium',  'High'];
+    const sevMap = {
+        'High-Low':'Medium',   'High-Medium':'High',     'High-High':'Critical',
+        'Medium-Low':'Low',    'Medium-Medium':'Medium',  'Medium-High':'High',
+        'Low-Low':'Low',       'Low-Medium':'Low',        'Low-High':'Medium'
+    };
+    const cellBg     = { Critical:'#fca5a5', High:'#fdba74', Medium:'#fcd34d', Low:'#bbf7d0' };
+    const cellColor  = { Critical:'#7f1d1d', High:'#7c2d12', Medium:'#713f12', Low:'#14532d' };
+
+    let html = '';
+    likelihoods.forEach(function(l) {
+        // Row label (likelihood)
+        html += '<div style="display:flex; align-items:center; justify-content:flex-end; padding-right:8px; font-size:0.68rem; color:#64748b; font-weight:700;">' + l + '</div>';
+        impacts.forEach(function(i) {
+            const sev   = sevMap[l + '-' + i];
+            const bg    = cellBg[sev]   || '#e2e8f0';
+            const clr   = cellColor[sev]|| '#334155';
+            const count = risks.filter(function(r) {
+                return r.likelihood === l && r.impact === i && r.status !== 'Closed' && r.status !== 'Mitigated';
+            }).length;
+            html += '<div style="background:' + bg + '; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:default;" title="' + l + ' Likelihood / ' + i + ' Impact → ' + sev + '">' +
+                '<span style="font-size:0.62rem; font-weight:700; color:' + clr + '; text-transform:uppercase; letter-spacing:0.5px; opacity:0.75;">' + sev + '</span>' +
+                (count > 0 ? '<span style="font-size:1.4rem; font-weight:800; color:' + clr + '; line-height:1;">' + count + '</span>' : '<span style="font-size:0.75rem; color:' + clr + '; opacity:0.3;">—</span>') +
+            '</div>';
+        });
+    });
+
+    el.innerHTML = html;
+}
+
+function openRiskModal(riskId) {
+    // Populate owner dropdown
+    const ownerSel = document.getElementById('riskOwner');
+    if (ownerSel) {
+        ownerSel.innerHTML = '<option value="">— Select Owner —</option>';
+        window.teamUserList.forEach(function(u) {
+            var opt = document.createElement('option');
+            opt.value = u; opt.textContent = u;
+            ownerSel.appendChild(opt);
+        });
+    }
+
+    const overlay     = document.getElementById('riskFormOverlay');
+    const titleEl     = document.getElementById('riskFormTitle');
+    const riskIdInput = document.getElementById('riskFormId');
+
+    if (riskId) {
+        var risk = (window.activeRisksCache || []).find(function(r) { return r.riskId === riskId; });
+        if (!risk) return;
+        if (titleEl)     titleEl.textContent = 'Edit Risk';
+        if (riskIdInput) riskIdInput.value   = riskId;
+        document.getElementById('riskDescription').value      = risk.description      || '';
+        document.getElementById('riskLikelihood').value       = risk.likelihood       || 'Low';
+        document.getElementById('riskImpact').value           = risk.impact           || 'Low';
+        document.getElementById('riskStrategy').value         = risk.strategy         || 'Acceptance';
+        document.getElementById('riskPhase').value            = risk.phase            || 'General';
+        document.getElementById('riskMitigatingAction').value = risk.mitigatingAction || '';
+        document.getElementById('riskNotes').value            = risk.notes            || '';
+        document.getElementById('riskStatus').value           = risk.status           || 'Open';
+        if (ownerSel) ownerSel.value = risk.owner || '';
+    } else {
+        if (titleEl)     titleEl.textContent = 'Add Risk';
+        if (riskIdInput) riskIdInput.value   = '';
+        document.getElementById('riskFormEl').reset();
+        if (ownerSel) {
+            ownerSel.innerHTML = '<option value="">— Select Owner —</option>';
+            window.teamUserList.forEach(function(u) {
+                var opt = document.createElement('option'); opt.value = u; opt.textContent = u;
+                ownerSel.appendChild(opt);
+            });
+        }
+    }
+
+    updateRiskSeverityPreview();
+    if (overlay) overlay.style.display = 'flex';
+}
+
+function updateRiskSeverityPreview() {
+    var l = (document.getElementById('riskLikelihood') || {}).value || 'Low';
+    var i = (document.getElementById('riskImpact')     || {}).value || 'Low';
+    var matrix = {
+        'Low-Low':'Low','Low-Medium':'Low','Low-High':'Medium',
+        'Medium-Low':'Low','Medium-Medium':'Medium','Medium-High':'High',
+        'High-Low':'Medium','High-Medium':'High','High-High':'Critical'
+    };
+    var sev = matrix[l + '-' + i] || 'Low';
+    var clr = { Critical:'#b91c1c', High:'#c2410c', Medium:'#b45309', Low:'#15803d' };
+    var bgs = { Critical:'#fef2f2', High:'#fff7ed', Medium:'#fffbeb', Low:'#f0fdf4' };
+    var bdr = { Critical:'#fca5a5', High:'#fdba74', Medium:'#fcd34d', Low:'#86efac' };
+    var el = document.getElementById('riskSeverityPreview');
+    if (el) {
+        el.textContent    = sev;
+        el.style.background = bgs[sev];
+        el.style.color      = clr[sev];
+        el.style.borderColor= bdr[sev];
+    }
+}
+
+function submitRiskForm() {
+    var riskId = (document.getElementById('riskFormId') || {}).value || '';
+    var desc   = (document.getElementById('riskDescription') || {}).value || '';
+    if (!desc.trim()) { alert('Please enter a risk description.'); return; }
+
+    var payload = {
+        action:           riskId ? 'updateRisk' : 'appendRisk',
+        riskId:           riskId,
+        projectId:        window.activeWorkspaceProjectId || '',
+        description:      desc.trim(),
+        likelihood:       (document.getElementById('riskLikelihood')       || {}).value || 'Low',
+        impact:           (document.getElementById('riskImpact')           || {}).value || 'Low',
+        strategy:         (document.getElementById('riskStrategy')         || {}).value || 'Acceptance',
+        phase:            (document.getElementById('riskPhase')            || {}).value || 'General',
+        owner:            (document.getElementById('riskOwner')            || {}).value || '',
+        mitigatingAction: (document.getElementById('riskMitigatingAction') || {}).value || '',
+        notes:            (document.getElementById('riskNotes')            || {}).value || '',
+        status:           (document.getElementById('riskStatus')           || {}).value || 'Open',
+        user:             window.currentUserName || 'System'
+    };
+
+    var btn = document.getElementById('riskSubmitBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...'; }
+
+    fetch(googleWebAppUrl, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function() {
+        document.getElementById('riskFormOverlay').style.display = 'none';
+        alert('Risk ' + (riskId ? 'updated' : 'added') + ' successfully!');
+        fetchProjectRisks(window.activeWorkspaceProjectId);
+    })
+    .catch(function(err) { console.error(err); alert('Failed to save risk.'); })
+    .finally(function() { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i>Save Risk'; } });
+}
+
+function openRiskNoteEditor(riskId, currentNote) {
+    window.editingRiskNoteId = riskId;
+    var textarea = document.getElementById('riskNoteTextarea');
+    var overlay  = document.getElementById('riskNoteOverlay');
+    if (textarea) textarea.value = currentNote || '';
+    if (overlay)  overlay.style.display = 'flex';
+}
+
+function submitRiskNote() {
+    var notes  = (document.getElementById('riskNoteTextarea') || {}).value || '';
+    var riskId = window.editingRiskNoteId;
+    if (!riskId) return;
+
+    var payload = {
+        action:  'updateRiskNote',
+        riskId:  riskId,
+        notes:   notes.trim(),
+        user:    window.currentUserName || 'System'
+    };
+
+    var btn = document.getElementById('riskNoteSubmitBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...'; }
+
+    fetch(googleWebAppUrl, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function() {
+        document.getElementById('riskNoteOverlay').style.display = 'none';
+        fetchProjectRisks(window.activeWorkspaceProjectId);
+    })
+    .catch(function(err) { console.error(err); })
+    .finally(function() { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i>Save Note'; } });
+}
+
 </script>
 
 

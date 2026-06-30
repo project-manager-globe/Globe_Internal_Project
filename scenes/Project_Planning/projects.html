@@ -4,27 +4,17 @@
   <meta charset="UTF-8">
   <title>ICTGlobe Project Management Hub</title>
   
-  <script src="../../credentials.js"></script>
   <script>
     if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
         sessionStorage.setItem('redirect_target', window.location.href);
-        window.location.replace("../../index.html"); 
+        window.location.replace("../../index.html");
     } else {
         window.addEventListener('DOMContentLoaded', () => {
-            const currentUser = sessionStorage.getItem('currentUser_ICT');
-            
-            if (typeof authorizedUsers !== 'undefined' && authorizedUsers[currentUser]) {
-                const userData = authorizedUsers[currentUser];
-                const allowedProjects = userData.projects;
-                const role = userData.role;
-                
-                // Permission Gate: Verifies if the user is allowed to view the master projects dashboard
-                if (role !== 'admin' && !allowedProjects.includes('all') && !allowedProjects.includes('projects_dashboard')) {
-                    alert("Access Denied: You do not hold credentials to view the Project Management Panel.");
-                    window.location.replace("../../index.html");
-                }
-            } else if (typeof authorizedUsers === 'undefined') {
-                console.error("Path Error: credentials.js could not be loaded at this directory depth.");
+            const role = sessionStorage.getItem('currentUserRole_ICT') || 'user';
+            const allowedProjects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
+            if (role !== 'admin' && !allowedProjects.includes('all') && !allowedProjects.includes('projects_dashboard')) {
+                alert("Access Denied: You do not hold credentials to view the Project Management Panel.");
+                window.location.replace("../../index.html");
             }
         });
     }
