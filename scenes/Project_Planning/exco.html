@@ -397,6 +397,34 @@
         </section>
 
         <section>
+            <!-- CRITICAL UPCOMING DATES -->
+            <div class="exco-card">
+                <div class="card-header-flex">
+                    <h3 class="card-title-text"><i class="fa-solid fa-calendar-day" style="color: #FF6700;"></i> Critical Upcoming Dates</h3>
+                    <div>
+                        <button id="btn-critical_dates" onclick="openUpdateDrawer('Critical Upcoming Dates', 'critical_dates')" class="btn btn-sm btn-outline-primary">Update</button>
+                    </div>
+                </div>
+                <div style="max-height: 180px; overflow: hidden; position: relative; margin-bottom: 15px;">
+                    <div class="node-content" id="text-critical_dates">
+                        <div class="interactive-row">
+                            <div class="row-icon" style="color: #FF6700;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div>
+                                <div class="row-main-text" style="font-weight: 600;">Next EXCO Alignment Session</div>
+                                <div class="row-meta-text"><i class="fa-regular fa-clock"></i> June 25, 2026 @ 09:00 AM</div>
+                            </div>
+                        </div>
+                        <div class="interactive-row">
+                            <div class="row-icon" style="color: #005AFC;"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+                            <div>
+                                <div class="row-main-text">Mid-Year System Pipeline Audit Closeout</div>
+                                <div class="row-meta-text"><i class="fa-regular fa-clock"></i> June 30, 2026 (All Day)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- EXCO TASK BOARD -->
             <div class="exco-card" id="excoTaskBoardCard">
                 <div class="card-header-flex">
@@ -443,58 +471,11 @@
                     </div>
                 </div>
 
-                <!-- Division filter tabs -->
-                <div class="d-flex gap-2 mb-3 flex-wrap" style="font-size:0.8rem;">
-                    <button class="btn btn-sm" id="excoTFilter-All" style="background:#005AFC;color:#fff;" onclick="window.filterExcoTasks('All')"><i class="fas fa-th-list me-1"></i>All</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Support" onclick="window.filterExcoTasks('Support')">Support</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Finance" onclick="window.filterExcoTasks('Finance')">Finance</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Commercial" onclick="window.filterExcoTasks('Commercial')">Commercial</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Operations" onclick="window.filterExcoTasks('Operations')">Operations</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Procurement" onclick="window.filterExcoTasks('Procurement')">Procurement</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Connectivity" onclick="window.filterExcoTasks('Connectivity')">Connectivity</button>
-                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Projects" onclick="window.filterExcoTasks('Projects')">Projects</button>
-                </div>
-
                 <!-- Task rows -->
                 <div id="excoTaskList">
                     <p style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:20px;">
                         <i class="fas fa-spinner fa-spin me-2"></i>Loading tasks...
                     </p>
-                </div>
-            </div>
-
-            <div class="exco-card" id="actionItemCard">
-                <div class="loading-shield" id="actionLoader"><i class="fa-solid fa-circle-notch fa-spin me-2"></i> Querying Master Pipeline Rows...</div>
-                <div class="card-header-flex">
-                    <h3 class="card-title-text"><i class="fa-solid fa-circle-check" style="color: #00D47E;"></i> Action Item Matrix</h3>
-                </div>
-                <div id="dynamicActionItemsContainer"></div>
-            </div>
-
-            <div class="exco-card">
-                <div class="card-header-flex">
-                    <h3 class="card-title-text"><i class="fa-solid fa-calendar-day" style="color: #FF6700;"></i> Critical Upcoming Dates</h3>
-                    <div>
-                        <button id="btn-critical_dates" onclick="openUpdateDrawer('Critical Upcoming Dates', 'critical_dates')" class="btn btn-sm btn-outline-primary">Update</button>
-                    </div>
-                </div>
-                <div style="max-height: 180px; overflow: hidden; position: relative; margin-bottom: 15px;">
-                    <div class="node-content" id="text-critical_dates">
-                        <div class="interactive-row">
-                            <div class="row-icon" style="color: #FF6700;"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                            <div>
-                                <div class="row-main-text" style="font-weight: 600;">Next EXCO Alignment Session</div>
-                                <div class="row-meta-text"><i class="fa-regular fa-clock"></i> June 25, 2026 @ 09:00 AM</div>
-                            </div>
-                        </div>
-                        <div class="interactive-row">
-                            <div class="row-icon" style="color: #005AFC;"><i class="fa-solid fa-arrow-up-right-from-square"></i></div>
-                            <div>
-                                <div class="row-main-text">Mid-Year System Pipeline Audit Closeout</div>
-                                <div class="row-meta-text"><i class="fa-regular fa-clock"></i> June 30, 2026 (All Day)</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
@@ -842,18 +823,24 @@
             fetchLiveWorkspaceLedger();
         };
 
-        // Preserved clean Point 2 changes: no strike-through, explicit row metrics
         function renderCompletedActions() {
             const container = document.getElementById('completedActionsContainer');
-            if(!container) return;
+            if (!container) return;
             const history = JSON.parse(localStorage.getItem('exco_completed_actions') || '[]');
-            container.innerHTML = history.map(item => `
+            if (!history.length) {
+                container.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:20px 0;">No completed actions yet.</p>';
+                return;
+            }
+            container.style.maxHeight = '320px';
+            container.style.overflowY = 'auto';
+            const reversed = [...history].reverse();
+            container.innerHTML = reversed.map(item => `
                 <div class="interactive-row">
                     <div class="row-icon text-success"><i class="fa-solid fa-circle-check"></i></div>
                     <div>
-                        <div class="row-main-text text-dark" style="text-decoration: none !important;">${item.text}</div>
-                        <div class="row-meta-text" style="color: #6c757d; font-size: 0.82em; margin-top: 2px;">
-                            Completed: ${item.completedAt || new Date().toLocaleDateString()} by ${item.user || 'system'}
+                        <div class="row-main-text text-dark" style="text-decoration:none !important;">${item.text}</div>
+                        <div class="row-meta-text" style="color:#6c757d;font-size:0.82em;margin-top:2px;">
+                            Completed: ${item.completedAt || ''} By ${item.user || 'system'}${item.division ? ' &middot; ' + item.division : ''}
                         </div>
                     </div>
                 </div>
@@ -947,17 +934,6 @@
             });
         };
 
-        window.filterExcoTasks = function(division) {
-            window.excoTaskFilter = division;
-            ['All','Support','Finance','Commercial','Operations','Procurement','Connectivity','Projects'].forEach(d => {
-                const btn = document.getElementById('excoTFilter-' + d);
-                if (!btn) return;
-                if (d === division) { btn.style.background = '#005AFC'; btn.style.color = '#fff'; btn.classList.remove('btn-outline-secondary'); }
-                else { btn.style.background = ''; btn.style.color = ''; btn.classList.add('btn-outline-secondary'); }
-            });
-            renderExcoTasks(window.excoTasksCache, division);
-        };
-
         function renderExcoTasks(tasks, filter) {
             const list    = document.getElementById('excoTaskList');
             const countEl = document.getElementById('excoTaskCount');
@@ -971,29 +947,26 @@
 
             const filtered = filter === 'All' ? tasks : (tasks || []).filter(t => (t.phase || '') === filter);
             const active   = filtered.filter(t => (t.status || '').toLowerCase() !== 'done');
-            const done     = filtered.filter(t => (t.status || '').toLowerCase() === 'done');
-            const sorted   = [...active, ...done];
 
-            if (!sorted.length) {
-                list.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:20px 0;"><i class="fas fa-clipboard-check me-2" style="opacity:0.3;"></i>No tasks yet.</p>';
+            if (!active.length) {
+                list.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:20px 0;"><i class="fas fa-clipboard-check me-2" style="opacity:0.3;"></i>No open tasks.</p>';
                 return;
             }
 
-            list.innerHTML = sorted.map(t => {
+            list.innerHTML = active.map(t => {
                 const division  = t.phase || 'General';
                 const divColor  = EXCO_DIV_COLORS[division] || '#64748b';
-                const isDone    = (t.status || '').toLowerCase() === 'done';
                 const isInProg  = (t.status || '') === 'In Progress';
                 const canEdit   = isAdmin || (t.assignees || '').toLowerCase() === cur;
-                const statusBg  = isDone ? '#10b981' : isInProg ? '#f59e0b' : '#64748b';
+                const statusBg  = isInProg ? '#f59e0b' : '#64748b';
 
-                return `<div style="display:flex;align-items:center;gap:8px;padding:10px 6px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap;opacity:${isDone ? '0.55' : '1'};">
+                return `<div style="display:flex;align-items:center;gap:8px;padding:10px 6px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap;">
                     <span style="flex:0 0 auto;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:${divColor};">${division}</span>
-                    <span style="flex:1;min-width:120px;font-size:0.85rem;color:#334155;font-weight:500;${isDone ? 'text-decoration:line-through;' : ''}">${t.title || ''}</span>
+                    <span style="flex:1;min-width:120px;font-size:0.85rem;color:#334155;font-weight:500;">${t.title || ''}</span>
                     <span style="flex:0 0 auto;font-size:0.75rem;color:#64748b;white-space:nowrap;"><i class="fas fa-user me-1" style="opacity:0.45;"></i>${t.assignees || '—'}</span>
                     ${t.dueDate && t.dueDate !== 'N/A' ? `<span style="flex:0 0 auto;font-size:0.7rem;color:#94a3b8;white-space:nowrap;"><i class="fas fa-calendar me-1"></i>${t.dueDate}</span>` : ''}
                     <span style="flex:0 0 auto;font-size:0.68rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${statusBg}20;color:${statusBg};">${t.status || 'Open'}</span>
-                    ${canEdit && !isDone ? `<div style="flex:0 0 auto;display:flex;gap:4px;">
+                    ${canEdit ? `<div style="flex:0 0 auto;display:flex;gap:4px;">
                         ${!isInProg ? `<button onclick="window.setExcoTaskStatus('${t.taskId}','In Progress')" class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;background:#f59e0b18;color:#f59e0b;border:1px solid #f59e0b40;" title="Mark In Progress"><i class="fas fa-spinner me-1"></i>In Progress</button>` : ''}
                         <button onclick="window.setExcoTaskStatus('${t.taskId}','Done')" class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;background:#10b98118;color:#10b981;border:1px solid #10b98140;" title="Mark Done"><i class="fas fa-check me-1"></i>Done</button>
                     </div>` : ''}
@@ -1032,12 +1005,29 @@
         };
 
         window.setExcoTaskStatus = function(taskId, status) {
-            const payload = { action: 'updateTaskStatus', taskId, status, user: sessionStorage.getItem('currentUser_ICT') || 'System' };
+            const closedBy = sessionStorage.getItem('currentUser_ICT') || 'System';
+            const payload = { action: 'updateTaskStatus', taskId, status, user: closedBy };
             fetch(GAS_WORKSPACE_API, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
                 .then(() => {
                     const task = (window.excoTasksCache || []).find(t => t.taskId === taskId);
-                    if (task) task.status = status;
-                    renderExcoTasks(window.excoTasksCache, window.excoTaskFilter);
+                    if (task) {
+                        if (status === 'Done') {
+                            const history = JSON.parse(localStorage.getItem('exco_completed_actions') || '[]');
+                            history.push({
+                                text: task.title,
+                                division: task.phase || '',
+                                due: task.dueDate || '',
+                                user: closedBy,
+                                completedAt: new Date().toLocaleDateString('en-ZA')
+                            });
+                            localStorage.setItem('exco_completed_actions', JSON.stringify(history));
+                            window.excoTasksCache = window.excoTasksCache.filter(t => t.taskId !== taskId);
+                            renderCompletedActions();
+                        } else {
+                            task.status = status;
+                        }
+                        renderExcoTasks(window.excoTasksCache, window.excoTaskFilter);
+                    }
                 })
                 .catch(err => console.error(err));
         };
