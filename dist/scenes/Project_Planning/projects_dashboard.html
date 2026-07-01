@@ -1318,7 +1318,6 @@ footer.wh_footer {
                     <h4 class="m-0 fw-bold text-dark">
                         <i class="fas fa-calendar-alt me-2 text-primary"></i>Gantt Chart
                     </h4>
-                    <span class="text-muted" style="font-size: .72rem"><i class="fas fa-info-circle me-1"></i>Bars span task created date → due date &nbsp;|&nbsp; <span style="color: #ef4444; font-weight: 600">Red line = Today</span></span>
                 </div>
                 <div id="wsGanttContainer">
                     <p class="text-muted fst-italic small text-center py-4"><i class="fas fa-calendar-alt me-2 opacity-25"></i>No tasks with due dates found for this project.</p>
@@ -1735,6 +1734,12 @@ footer.wh_footer {
                             <i class="fas fa-calendar-plus me-1 text-muted"></i>Created At
                         </label>
                         <div id="utCreatedAtDisplay" class="form-control form-control-sm bg-light text-muted" style="cursor: default; height: 36px; font-size: .85rem; line-height: 22px">—</div>
+                    </div>
+                    <div style="flex: 1">
+                        <label class="form-label small fw-bold text-secondary mb-1">
+                            <i class="fas fa-calendar-day me-1 text-primary"></i>Start Date
+                        </label>
+                        <input type="date" id="utStartDate" class="form-control form-control-sm" style="height: 36px">
                     </div>
                     <div style="flex: 1">
                         <label class="form-label small fw-bold text-secondary mb-1">
@@ -2785,6 +2790,12 @@ window.openUpdateDrawer = function(taskId) {
     document.getElementById('utTaskDescriptionDisplay').innerText = task.description || "No description logged at creation.";
     const createdDisplay = document.getElementById('utCreatedAtDisplay');
     if (createdDisplay) createdDisplay.innerText = task.createdAt || "\u2014";
+    const startDateInput = document.getElementById('utStartDate');
+    if (startDateInput) {
+        const rawS = task.startDate || "";
+        startDateInput.value = rawS && rawS !== "N/A" && rawS !== "None Set" && rawS !== "undefined" ? rawS : "";
+        startDateInput.disabled = !hasEditPrivileges;
+    }
     const dueDateInput = document.getElementById('utDueDate');
     if (dueDateInput) {
         const raw = task.dueDate || "";
@@ -2967,6 +2978,11 @@ window.openViewDrawer = function(taskId) {
     if (createdHeaderEl) {
         const created = task.createdAt || task.created || "";
         createdHeaderEl.innerHTML = created ? `<i class="fas fa-calendar-plus me-1 text-secondary"></i>Created: <strong class="text-dark">${created}</strong>` : "";
+    }
+    const startHeaderEl = document.getElementById('viewDrawerStartHeader');
+    if (startHeaderEl) {
+        const start = task.startDate || "";
+        startHeaderEl.innerHTML = start && start !== "N/A" && start !== "None Set" ? `<i class="fas fa-calendar-day me-1 text-primary"></i>Start: <strong class="text-dark">${start}</strong>` : "";
     }
     const dueHeaderEl = document.getElementById('viewDrawerDueHeader');
     if (dueHeaderEl) {
@@ -3244,12 +3260,14 @@ document.addEventListener('DOMContentLoaded', ()=>{
             finalAssignees = checkedNames.length > 0 ? checkedNames.join(', ') : "Unassigned";
         }
         const rawDueVal = document.getElementById('utDueDate') ? document.getElementById('utDueDate').value : "";
+        const rawStartVal = document.getElementById('utStartDate') ? document.getElementById('utStartDate').value : "";
         const payload = {
             action: "updateTaskStatus",
             taskId: document.getElementById('utTaskId').value,
             status: sheetFormattedStatus,
             note: progressNoteHTML,
             checklist: dynamicChecklistPayload,
+            startDate: rawStartVal || "",
             dueDate: rawDueVal || "",
             user: window.currentUserName || "System"
         };
@@ -3415,6 +3433,7 @@ window.removeChecklistItemElement = function(buttonEl) {
             </div>
             <div class="d-flex gap-3 flex-wrap mt-1">
                 <span class="small text-muted" id="viewDrawerCreatedHeader"></span>
+                <span class="small text-muted" id="viewDrawerStartHeader"></span>
                 <span class="small text-muted" id="viewDrawerDueHeader"></span>
             </div>
         </div>
@@ -3570,7 +3589,7 @@ window.removeChecklistItemElement = function(buttonEl) {
     var maxDate = new Date(today);
     tasksWithDates.forEach(function(t) {
         var due = new Date(t.dueDate);
-        var start = t.startDate && t.startDate !== 'N/A' && t.startDate !== '' ? new Date(t.startDate) : t.createdDate && t.createdDate !== 'N/A' && t.createdDate !== '' ? new Date(t.createdDate) : today;
+        var start = t.startDate && t.startDate !== 'N/A' && t.startDate !== '' ? new Date(t.startDate) : t.createdAt && t.createdAt !== 'N/A' && t.createdAt !== '' ? new Date(t.createdAt) : today;
         if (start < minDate) minDate = new Date(start);
         if (due > maxDate) maxDate = new Date(due);
     });
@@ -3581,18 +3600,18 @@ window.removeChecklistItemElement = function(buttonEl) {
         return Math.max(0, Math.min(100, (date - minDate) / totalMs * 100));
     }
     var statusBg = {
-        'New': '#bfdbfe',
-        'In Progress': '#6ee7b7',
-        'Under Review': '#fde68a',
-        'Done': '#86efac',
-        'Cancelled': '#e2e8f0'
+        'New': '#1d4ed8',
+        'In Progress': '#d97706',
+        'Under Review': '#ea580c',
+        'Done': '#16a34a',
+        'Cancelled': '#881337'
     };
     var statusFg = {
-        'New': '#1e40af',
-        'In Progress': '#065f46',
-        'Under Review': '#92400e',
-        'Done': '#15803d',
-        'Cancelled': '#94a3b8'
+        'New': '#ffffff',
+        'In Progress': '#ffffff',
+        'Under Review': '#ffffff',
+        'Done': '#ffffff',
+        'Cancelled': '#ffffff'
     };
     var phaseOrder = [
         'Phase 1: Initiation',
@@ -3633,11 +3652,24 @@ window.removeChecklistItemElement = function(buttonEl) {
         cur = nextM;
     }
     var monthHtml = months.map(function(m) {
-        return '<div style="position:absolute; left:' + m.left + '%; width:' + m.width + '%; padding:3px 6px; font-size:0.62rem; font-weight:700; color:#64748b; text-transform:uppercase; border-left:1px solid #e2e8f0; box-sizing:border-box; overflow:hidden; white-space:nowrap;">' + m.label + '</div>';
+        return '<div style="position:absolute; left:' + m.left + '%; width:' + m.width + '%; padding:2px 4px; font-size:0.6rem; font-weight:700; color:#475569; text-transform:uppercase; border-left:1px solid #cbd5e1; box-sizing:border-box; overflow:hidden; white-space:nowrap; background:#f1f5f9;">' + m.label + '</div>';
     }).join('');
+    // Day header cells
+    var DAY_MS = 86400000;
+    var daySpan = Math.round((maxDate - minDate) / DAY_MS) || 1;
+    var dayW = (100 / daySpan).toFixed(4);
+    var dayHtml = '';
+    var dCur = new Date(minDate);
+    while(dCur <= maxDate){
+        var dPct = pct(dCur);
+        var dayNum = dCur.getDate();
+        var isToday = dCur.getTime() === today.getTime();
+        dayHtml += '<div style="position:absolute; left:' + dPct + '%; width:' + dayW + '%; font-size:0.62rem; color:' + (isToday ? '#ef4444' : '#475569') + '; text-align:center; font-weight:' + (isToday ? '700' : '500') + '; border-left:1px solid #e2e8f0; box-sizing:border-box; overflow:hidden; padding-top:2px; white-space:nowrap;">' + dayNum + '</div>';
+        dCur = new Date(dCur.getTime() + DAY_MS);
+    }
     // Today marker (shared across all rows)
     var todayPct = pct(today);
-    var todayLine = todayPct >= 0 && todayPct <= 100 ? '<div style="position:absolute; left:' + todayPct + '%; top:0; bottom:0; width:2px; background:rgba(239,68,68,0.6); z-index:3; pointer-events:none;"></div>' : '';
+    var todayLine = todayPct >= 0 && todayPct <= 100 ? '<div style="position:absolute; left:' + todayPct + '%; top:0; bottom:0; width:2px; background:rgba(239,68,68,0.5); z-index:3; pointer-events:none;"></div>' : '';
     // Group tasks by phase
     var grouped = {};
     phaseOrder.forEach(function(p) {
@@ -3657,7 +3689,7 @@ window.removeChecklistItemElement = function(buttonEl) {
         rowsHtml += '<div style="display:flex; border-bottom:1px solid #e2e8f0;"><div style="flex:0 0 190px; min-width:190px; padding:5px 10px; background:#f8fafc; font-size:0.68rem; font-weight:800; color:' + phClr + '; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; border-right:1px solid #e2e8f0;">' + '<i class="fas fa-layer-group me-2" style="font-size:0.62rem;"></i>' + (phaseShort[phase] || phase) + '</div>' + '<div style="flex:1; background:#f8fafc; position:relative; min-height:26px;">' + todayLine + '</div>' + '</div>';
         // Task rows
         pTasks.forEach(function(t) {
-            var startD = t.startDate && t.startDate !== 'N/A' && t.startDate !== '' ? new Date(t.startDate) : t.createdDate && t.createdDate !== 'N/A' && t.createdDate !== '' ? new Date(t.createdDate) : today;
+            var startD = t.startDate && t.startDate !== 'N/A' && t.startDate !== '' ? new Date(t.startDate) : t.createdAt && t.createdAt !== 'N/A' && t.createdAt !== '' ? new Date(t.createdAt) : today;
             var endD = new Date(t.dueDate);
             var sPct = pct(startD);
             var ePct = pct(endD);
@@ -3668,14 +3700,14 @@ window.removeChecklistItemElement = function(buttonEl) {
             var barBorder = overdue ? 'box-shadow:0 0 0 2px #ef4444;' : '';
             var label = t.title || t.taskName || 'Unnamed Task';
             var tooltip = label + ' | ' + (t.status || '') + ' | ' + startD.toLocaleDateString('en-ZA') + " \u2192 " + endD.toLocaleDateString('en-ZA') + (t.assignedTo ? ' | ' + t.assignedTo : '');
-            rowsHtml += '<div style="display:flex; align-items:center; border-bottom:1px solid #f1f5f9; min-height:34px;"><div style="flex:0 0 190px; min-width:190px; padding:4px 10px; font-size:0.73rem; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-right:1px solid #e2e8f0;" title="' + label + '">' + label + '</div>' + '<div style="flex:1; position:relative; min-height:34px;">' + todayLine + '<div style="position:absolute; left:' + sPct + '%; width:' + wPct + '%; top:50%; transform:translateY(-50%); height:22px; background:' + bg + '; border-radius:5px; ' + barBorder + ' display:flex; align-items:center; padding:0 7px; overflow:hidden; cursor:default;" title="' + tooltip + '">' + '<span style="font-size:0.6rem; font-weight:700; color:' + fg + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + label + '</span>' + '</div>' + '</div>' + '</div>';
+            rowsHtml += '<div style="display:flex; align-items:center; border-bottom:1px solid #f1f5f9; min-height:34px;"><div style="flex:0 0 190px; min-width:190px; padding:4px 10px; font-size:0.73rem; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-right:1px solid #e2e8f0;" title="' + label + '">' + label + '</div>' + '<div style="flex:1; position:relative; min-height:34px;">' + todayLine + '<div style="position:absolute; left:' + sPct + '%; width:' + wPct + '%; top:50%; transform:translateY(-50%); height:28px; background:' + bg + '; border-radius:5px; ' + barBorder + ' display:flex; align-items:center; padding:0 9px; overflow:hidden; cursor:default;" title="' + tooltip + '">' + '<span style="font-size:0.68rem; font-weight:700; color:' + fg + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + label + '</span>' + '</div>' + '</div>' + '</div>';
         });
     });
     // Legend
     var legendHtml = Object.keys(statusBg).map(function(s) {
         return '<span style="display:inline-flex; align-items:center; gap:5px; font-size:0.68rem; color:#475569;"><span style="width:13px; height:13px; border-radius:3px; background:' + statusBg[s] + '; flex-shrink:0;"></span>' + s + '</span>';
     }).join('');
-    container.innerHTML = '<div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; align-items:center;">' + legendHtml + '</div>' + '<div style="overflow-x:auto;">' + '<div style="min-width:640px;">' + '<div style="display:flex; border-bottom:2px solid #e2e8f0; margin-bottom:0;">' + '<div style="flex:0 0 190px; min-width:190px; border-right:1px solid #e2e8f0;"></div>' + '<div style="flex:1; position:relative; height:26px;">' + monthHtml + '</div>' + '</div>' + rowsHtml + '</div>' + '</div>';
+    container.innerHTML = '<div style="display:flex; gap:10px; margin-bottom:6px; flex-wrap:wrap; align-items:center;">' + legendHtml + '</div>' + '<div style="display:flex; gap:14px; margin-bottom:10px; flex-wrap:wrap; align-items:center;">' + '<span style="display:inline-flex; align-items:center; gap:5px; font-size:0.65rem; color:#64748b;">' + '<span style="display:inline-block; width:28px; height:8px; background:#94a3b8; border-radius:3px;"></span>' + 'Bars span start date &#8594; due date.' + '</span>' + '<span style="display:inline-flex; align-items:center; gap:5px; font-size:0.65rem; color:#64748b;">' + '<span style="display:inline-block; width:2px; height:14px; background:rgba(239,68,68,0.7); border-radius:1px;"></span>' + 'Red day = Today' + '</span>' + '</div>' + '<div style="overflow-x:auto;">' + '<div style="min-width:640px;">' + '<div style="display:flex; border-bottom:1px solid #cbd5e1;">' + '<div style="flex:0 0 190px; min-width:190px; border-right:1px solid #e2e8f0;"></div>' + '<div style="flex:1; position:relative; height:22px;">' + monthHtml + '</div>' + '</div>' + '<div style="display:flex; border-bottom:2px solid #e2e8f0;">' + '<div style="flex:0 0 190px; min-width:190px; border-right:1px solid #e2e8f0;"></div>' + '<div style="flex:1; position:relative; height:18px;">' + dayHtml + '</div>' + '</div>' + rowsHtml + '</div>' + '</div>';
 }
 /* =====================================================================
    TEAMS CHAT
