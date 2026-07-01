@@ -92,7 +92,7 @@ window.openEditProjectModal = function(projectId) {
         const currentUser = sessionStorage.getItem('currentUser_ICT') || "";
         
         // --- Setup Roles ---
-        const role = sessionStorage.getItem('currentUserRole_ICT') || "user";
+        const role = (sessionStorage.getItem('currentUserRole_ICT') || "user").toLowerCase();
         const allowedProjects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
         window.currentUserRole = role;
         window.currentUserName = currentUser;
@@ -1940,7 +1940,7 @@ async function fetchMasterSuiteDataset() {
 
         // 4. SECURITY GATE: read session directly for reliability across all deployment modes
         const currentSessionUser = (sessionStorage.getItem('currentUser_ICT') || window.currentUserName || "").trim().toLowerCase();
-        const sessionRole = (sessionStorage.getItem('currentUserRole_ICT') || window.currentUserRole || "").trim();
+        const sessionRole = (sessionStorage.getItem('currentUserRole_ICT') || window.currentUserRole || "").trim().toLowerCase();
         const isMasterAdmin = sessionRole === 'admin' || currentSessionUser.includes("admin");
 
         const securedData = data.filter(proj => {
