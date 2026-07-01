@@ -635,26 +635,78 @@ body {
         </div>
     </div>
 
-    <!-- EXCO TEAM CHAT FAB -->
-    <button id="excoChatFab" onclick="window.toggleExcoChat()" title="EXCO Team Chat" style="z-index: 1500; color: #fff; cursor: pointer; background: #005afc; border: none; border-radius: 50%; justify-content: center; align-items: center; width: 52px; height: 52px; font-size: 1.25rem; transition: transform .2s, box-shadow .2s; display: flex; position: fixed; bottom: 28px; right: 28px; box-shadow: 0 4px 18px #005afc59">
+    <!-- EXCO TEAM CHAT FAB — scrolls to chat section below -->
+    <button id="excoChatFab" title="EXCO Team Chat" onclick="document.getElementById('excoChatSection').scrollIntoView({behavior:'smooth'})" style="z-index: 1500; color: #fff; cursor: pointer; background: #005afc; border: none; border-radius: 50%; justify-content: center; align-items: center; width: 52px; height: 52px; font-size: 1.25rem; transition: transform .2s, box-shadow .2s; display: flex; position: fixed; bottom: 28px; right: 28px; box-shadow: 0 4px 18px #005afc59">
         <i class="fas fa-comments"></i>
-        <span id="excoChatBadge" style="color: #fff; background: #ef4444; border-radius: 50%; justify-content: center; align-items: center; width: 18px; height: 18px; font-size: .6rem; font-weight: 700; display: none; position: absolute; top: -4px; right: -4px"></span>
+        <span id="excoChatBadge" style="color: #fff; background: #ef4444; border-radius: 50%; justify-content: center; align-items: center; min-width: 18px; height: 18px; padding: 0 3px; font-size: .6rem; font-weight: 700; display: none; position: absolute; top: -4px; right: -4px"></span>
     </button>
 
-    <!-- EXCO TEAM CHAT PANEL -->
-    <div id="excoChatPanel" style="z-index: 1500; background: #fff; border: 1px solid #e1e1e3; border-radius: 16px; flex-direction: column; width: 360px; max-width: calc(100vw - 40px); display: none; position: fixed; bottom: 90px; right: 28px; overflow: hidden; box-shadow: 0 8px 40px #00000026">
-        <div style="color: #fff; background: #005afc; justify-content: space-between; align-items: center; padding: 14px 18px; display: flex">
-            <span style="font-size: .95rem; font-weight: 700"><i class="fas fa-comments me-2"></i>EXCO Team Chat</span>
-            <button onclick="window.toggleExcoChat()" style="color: #fff; cursor: pointer; background: none; border: none; padding: 0; font-size: 1.1rem"><i class="fas fa-times"></i></button>
+    <!-- EXCO TEAM CHAT SECTION -->
+    <section id="excoChatSection" class="container-fluid px-3 px-md-5 mb-4" style="max-width: 1400px; margin-left: auto; margin-right: auto">
+        <div class="card shadow-sm border-0 p-4" style="background: #fefeff">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="m-0 fw-bold text-dark">
+                    <i class="fas fa-comments me-2" style="color: #005afc"></i>EXCO Team Chat
+                    <span id="excoChatCount" class="badge ms-2" style="color: #005afc; vertical-align: middle; background: #eef4ff; border: 1px solid #bfdbfe; font-size: .7rem">0 messages</span>
+                </h4>
+            </div>
+
+            <!-- Category filter tabs -->
+            <div class="d-flex gap-2 mb-4 pb-3 border-bottom flex-wrap">
+                <button class="btn btn-sm" id="excoChatFilterAll" style="color: #fff; background: #005afc" onclick="switchExcoChatFilter('All')">
+                    <i class="fas fa-th-list me-1"></i>All
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="excoChatFilterSupport" onclick="switchExcoChatFilter('Support')">
+                    <i class="fas fa-life-ring me-1"></i>Support
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="excoChatFilterFinance" onclick="switchExcoChatFilter('Finance')">
+                    <i class="fas fa-coins me-1"></i>Finance
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="excoChatFilterCommercial" onclick="switchExcoChatFilter('Commercial')">
+                    <i class="fas fa-handshake me-1"></i>Commercial
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="excoChatFilterOperations" onclick="switchExcoChatFilter('Operations')">
+                    <i class="fas fa-cogs me-1"></i>Operations
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="excoChatFilterProcurement" onclick="switchExcoChatFilter('Procurement')">
+                    <i class="fas fa-shopping-cart me-1"></i>Procurement
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="excoChatFilterConnectivity" onclick="switchExcoChatFilter('Connectivity')">
+                    <i class="fas fa-network-wired me-1"></i>Connectivity
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" id="excoChatFilterProjects" onclick="switchExcoChatFilter('Projects')">
+                    <i class="fas fa-project-diagram me-1"></i>Projects
+                </button>
+            </div>
+
+            <!-- Comment thread -->
+            <div id="excoChatThread" style="min-height: 60px; max-height: 420px; margin-bottom: 1.25rem; padding-right: 4px; overflow-y: auto"></div>
+
+            <!-- Post form -->
+            <div class="border-top pt-3">
+                <div class="d-flex gap-2 mb-2 align-items-center flex-wrap">
+                    <label class="form-label small fw-bold text-muted mb-0 me-1" style="white-space: nowrap">Category:</label>
+                    <select id="excoChatCategory" class="form-select form-select-sm" style="max-width: 200px">
+                        <option value="General">💬 General</option>
+                        <option value="Support">🛟 Support</option>
+                        <option value="Finance">💰 Finance</option>
+                        <option value="Commercial">🤝 Commercial</option>
+                        <option value="Operations">⚙️ Operations</option>
+                        <option value="Procurement">🛒 Procurement</option>
+                        <option value="Connectivity">🌐 Connectivity</option>
+                        <option value="Projects">📋 Projects</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-2 align-items-start">
+                    <textarea id="excoChatInput" class="form-control form-control-sm" rows="2" placeholder="Share a message, update, or flag a concern..." style="resize: none; font-size: .85rem" onkeydown="if(event.ctrlKey && event.key==='Enter') window.postExcoComment();"></textarea>
+                    <button class="btn btn-sm px-3" style="color: #fff; white-space: nowrap; background: #005afc" onclick="window.postExcoComment()">
+                        <i class="fas fa-paper-plane me-1"></i>Post
+                    </button>
+                </div>
+                <p class="text-muted mb-0 mt-1" style="font-size: .65rem"><i class="fas fa-keyboard me-1"></i>Ctrl + Enter to post</p>
+            </div>
         </div>
-        <div id="excoChatThread" style="background: #f8fafc; height: 300px; padding: 14px; overflow-y: auto"></div>
-        <div style="background: #fff; border-top: 1px solid #e2e8f0; align-items: flex-end; gap: 8px; padding: 12px 14px; display: flex">
-            <textarea id="excoChatInput" rows="2" placeholder="Type a message..." style="resize: none; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; flex: 1; padding: 8px 10px; font-family: inherit; font-size: .83rem"></textarea>
-            <button onclick="window.postExcoComment()" style="color: #fff; cursor: pointer; background: #005afc; border: none; border-radius: 8px; padding: 8px 12px; font-size: .85rem; font-weight: 600">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
+    </section>
 
     <footer class="navbar navbar-default wh_footer">
         <div class="footer-container mx-auto">
@@ -727,6 +779,7 @@ body {
         initializeRecapDateSelector();
         renderCompletedActions();
         fetchLiveWorkspaceLedger();
+        fetchExcoComments();
     });
     // Safe setup to handle the dynamic header target from image_b27533.png
     function initializeAgendaDateSelector() {
@@ -948,12 +1001,33 @@ body {
     // ── EXCO Team Chat ──────────────────────────────────────────────────
     const EXCO_CHAT_ID = 'EXCO_PAGE';
     window.excoCommentsCache = [];
-    window.toggleExcoChat = function() {
-        const panel = document.getElementById('excoChatPanel');
-        if (!panel) return;
-        const isOpen = panel.style.display === 'flex';
-        panel.style.display = isOpen ? 'none' : 'flex';
-        if (!isOpen) fetchExcoComments();
+    window.excoActiveChatFilter = 'All';
+    const EXCO_CHAT_CATEGORIES = [
+        'All',
+        'Support',
+        'Finance',
+        'Commercial',
+        'Operations',
+        'Procurement',
+        'Connectivity',
+        'Projects'
+    ];
+    window.switchExcoChatFilter = function(cat) {
+        window.excoActiveChatFilter = cat;
+        EXCO_CHAT_CATEGORIES.forEach((c)=>{
+            const btn = document.getElementById('excoChatFilter' + c);
+            if (!btn) return;
+            if (c === cat) {
+                btn.style.background = '#005AFC';
+                btn.style.color = '#fff';
+                btn.classList.remove('btn-outline-secondary');
+            } else {
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.classList.add('btn-outline-secondary');
+            }
+        });
+        renderExcoComments(window.excoCommentsCache);
     };
     function fetchExcoComments() {
         const thread = document.getElementById('excoChatThread');
@@ -968,20 +1042,33 @@ body {
     function renderExcoComments(comments) {
         const thread = document.getElementById('excoChatThread');
         if (!thread) return;
+        const filter = window.excoActiveChatFilter || 'All';
+        const filtered = filter === 'All' ? comments : comments.filter((c)=>(c.category || 'General') === filter);
+        const countEl = document.getElementById('excoChatCount');
+        if (countEl) countEl.textContent = comments.length + (comments.length === 1 ? ' message' : ' messages');
+        const badge = document.getElementById('excoChatBadge');
+        if (badge) {
+            badge.textContent = comments.length;
+            badge.style.display = comments.length ? 'flex' : 'none';
+        }
         const curUser = (sessionStorage.getItem('currentUser_ICT') || '').toLowerCase();
-        if (!comments.length) {
+        if (!filtered.length) {
             thread.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.8rem;padding:30px 10px;"><i class="fas fa-comments me-2" style="opacity:0.3;"></i>No messages yet \u2014 be the first!</p>';
             return;
         }
-        thread.innerHTML = comments.map((c)=>{
+        thread.innerHTML = filtered.map((c)=>{
             const displayUser = c.user || c.username || c.author || 'Unknown';
             const isOwn = displayUser.trim().toLowerCase() === curUser;
             const initials = displayUser.split(' ').map((w)=>w[0] || '').join('').toUpperCase().slice(0, 2) || 'U';
+            const cat = c.category || 'General';
             return `<div style="display:flex;gap:8px;margin-bottom:12px;${isOwn ? 'flex-direction:row-reverse;' : ''}">
-                    <div style="flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#eef4ff;border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#1e40af;">${initials}</div>
+                    <div style="flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#eef4ff;border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#005AFC;">${initials}</div>
                     <div style="flex:1;max-width:80%;">
                         <div style="background:${isOwn ? '#eff6ff' : '#fff'};border:1px solid ${isOwn ? '#bfdbfe' : '#e2e8f0'};border-radius:${isOwn ? '12px 4px 12px 12px' : '4px 12px 12px 12px'};padding:8px 12px;">
-                            <div style="font-size:0.72rem;font-weight:700;color:#334155;margin-bottom:3px;">${displayUser}</div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:3px;">
+                                <span style="font-size:0.72rem;font-weight:700;color:#334155;">${displayUser}</span>
+                                <span style="font-size:0.65rem;padding:1px 7px;border-radius:20px;background:#eef4ff;color:#005AFC;border:1px solid #bfdbfe;white-space:nowrap;">${cat}</span>
+                            </div>
                             <p style="margin:0;font-size:0.82rem;color:#334155;line-height:1.5;">${c.message || ''}</p>
                             <span style="font-size:0.6rem;color:#94a3b8;">${c.timestamp || ''}</span>
                         </div>
@@ -992,18 +1079,25 @@ body {
     }
     window.postExcoComment = function() {
         const input = document.getElementById('excoChatInput');
+        const catEl = document.getElementById('excoChatCategory');
         const msg = (input ? input.value : '').trim();
         if (!msg) {
             if (input) input.focus();
             return;
         }
+        const category = catEl ? catEl.value : 'General';
         const payload = {
             action: 'addProjectComment',
             projectId: EXCO_CHAT_ID,
             user: sessionStorage.getItem('currentUser_ICT') || 'System',
-            category: 'General',
+            category: category,
             message: msg
         };
+        const btn = document.querySelector('#excoChatSection button[onclick="window.postExcoComment()"]');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Posting...';
+        }
         fetch(GAS_WORKSPACE_API, {
             method: 'POST',
             mode: 'no-cors',
@@ -1016,6 +1110,7 @@ body {
                 commentId: 'temp-' + Date.now(),
                 timestamp: new Date().toLocaleString('en-ZA'),
                 user: payload.user,
+                category: category,
                 message: msg
             };
             window.excoCommentsCache = (window.excoCommentsCache || []).concat([
@@ -1023,7 +1118,17 @@ body {
             ]);
             renderExcoComments(window.excoCommentsCache);
             if (input) input.value = '';
-        }).catch((err)=>console.error(err));
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Post';
+            }
+        }).catch((err)=>{
+            console.error(err);
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Post';
+            }
+        });
     };
 })();
 
