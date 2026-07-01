@@ -237,10 +237,26 @@
         /* Force left-align inside Task Board rows */
         #excoTaskList, #excoTaskList * { text-align: left !important; }
 
-        /* Strip Quill inline colors — keep all body text black */
+        /* Strip Quill inline colors, fonts & sizes — keep all body text consistent */
         .node-content, .node-content *,
         #viewDrawerBody, #viewDrawerBody *,
-        #historyTabsContent .tab-pane > div { color: #111 !important; }
+        #historyTabsContent .tab-pane > div {
+            color: #111 !important;
+            font-family: 'Roboto', sans-serif !important;
+            font-size: 0.88rem !important;
+            line-height: 1.6 !important;
+            letter-spacing: normal !important;
+        }
+        /* Prevent Quill code-block monospace from leaking into content */
+        .node-content pre, .node-content code,
+        #viewDrawerBody pre, #viewDrawerBody code,
+        #historyTabsContent pre, #historyTabsContent code {
+            font-family: 'Roboto', sans-serif !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            white-space: pre-wrap !important;
+        }
 
         /* Force left-align for chat message text */
         #excoChatThread, #excoChatThread p,
@@ -415,7 +431,7 @@
             <!-- CRITICAL UPCOMING DATES -->
             <div class="exco-card">
                 <div class="card-header-flex">
-                    <h3 class="card-title-text"><i class="fa-solid fa-calendar-day" style="color: #FF6700;"></i> Critical Upcoming Dates</h3>
+                    <h3 class="card-title-text" style="font-size:1.05rem; white-space:nowrap;"><i class="fa-solid fa-calendar-day" style="color: #FF6700;"></i> Critical Upcoming Dates</h3>
                     <div>
                         <button id="btn-critical_dates" onclick="openUpdateDrawer('Critical Upcoming Dates', 'critical_dates')" class="btn btn-sm btn-outline-primary">Update</button>
                     </div>
@@ -442,12 +458,12 @@
 
             <!-- EXCO TASK BOARD -->
             <div class="exco-card" id="excoTaskBoardCard">
-                <div class="card-header-flex">
-                    <h3 class="card-title-text">
+                <div class="card-header-flex" style="flex-wrap:nowrap; align-items:center;">
+                    <h3 class="card-title-text" style="font-size:1.05rem; white-space:nowrap;">
                         <i class="fa-solid fa-list-check" style="color:#005AFC;"></i> EXCO Task Board
                         <span id="excoTaskCount" class="badge ms-2" style="background:#eef4ff;color:#005AFC;border:1px solid #bfdbfe;font-size:0.7rem;vertical-align:middle;">0 open</span>
                     </h3>
-                    <button id="btnAddExcoTask" onclick="window.openExcoTaskForm()" class="btn btn-sm" style="background:#005AFC;color:#fff;border:none;display:none;">
+                    <button id="btnAddExcoTask" onclick="window.openExcoTaskForm()" class="btn ms-3" style="background:#005AFC;color:#fff;border:none;font-size:0.75rem;padding:4px 10px;border-radius:6px;display:none;">
                         <i class="fas fa-plus me-1"></i>Add Task
                     </button>
                 </div>
@@ -1091,7 +1107,7 @@
                                 &nbsp;&middot;&nbsp;
                                 <i class="fas fa-save me-1"></i>Saved ${rec.timestamp}
                             </p>
-                            <div style="line-height:1.7;text-align:left;">${rec.content || '<em style="color:#94a3b8;">No content recorded.</em>'}</div>`;
+                            <div class="node-content" style="line-height:1.6;">${rec.content || '<em style="color:#94a3b8;">No content recorded.</em>'}</div>`;
                         tabContent.appendChild(pane);
                     });
                 })

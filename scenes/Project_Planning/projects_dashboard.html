@@ -33,6 +33,7 @@ window.openEditProjectModal = function(projectId) {
     
     // 2. Populate basic metadata
     document.getElementById("pName").value = project.projectName || project.name;
+    document.getElementById("pName").disabled = true; // Lock name — AppScript does not update it
     document.getElementById("pId").value = projectId;
     document.getElementById("pId").disabled = true; // Lock ID
     document.getElementById("pSponsor").value = project.sponsor || "";
@@ -195,10 +196,15 @@ window.openCreateProjectModal = function() {
     // 2. FORCE the mode to "create" so it doesn't default to the last edit
     if(formActionState) formActionState.value = "create";
     
-    // 3. Unlock the ID field so a new ID can be entered (or auto-generated)
+    // 3. Unlock the ID and Name fields for new project creation
     if(pIdInput) {
         pIdInput.disabled = false;
-        pIdInput.value = ""; 
+        pIdInput.value = "";
+    }
+    const pNameInput = document.getElementById("pName");
+    if (pNameInput) {
+        pNameInput.disabled = false;
+        pNameInput.value = "";
     }
 
     // 4. Reset visibility for project team/members
@@ -319,7 +325,8 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
     .task-list { min-height: 200px; display: flex; flex-direction: column; gap: 0.75rem; }
     .kanban-card { background: #ffffff; border-radius: 6px; padding: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border-left: 4px solid #005AFC; position: relative; }
     .kanban-card.restricted-view { border-left-color: #adb5bd; background-color: #f1f3f5; }
-    .update-log-container { background: #ffffff; border-radius: 8px; padding: 1.5rem; border: 1px solid #dee2e6; height: 380px; overflow-y: auto; }
+    .update-log-container { background: #ffffff; border-radius: 8px; padding: 1.5rem; border: 1px solid #dee2e6; max-height: 420px; overflow-y: auto; text-align: left; }
+    .update-log-container * { text-align: left !important; }
     .log-entry { padding-bottom: 0.75rem; margin-bottom: 0.75rem; border-bottom: 1px dashed #e9ecef; font-size: 0.85rem; }
     .fade-view { animation: fadeIn 0.3s ease-in; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -487,7 +494,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
     color: #ffffff !important;
 }
 .extra-small-badge {
-    font-size: 0.65rem !important;
+    font-size: 0.73rem !important;
     padding: 0.25em 0.6em !important;
 }
 .style-hover-card {
@@ -598,8 +605,13 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
 <div class="row g-4 mb-4">
     <div class="col-12">
         <div class="chart-box">
-            <h5 class="font-weight-bold text-dark m-0">Project Execution Progress Matrix</h5>
-            <small class="text-muted">Real-time dynamic lifecycle completions tracker</small>
+            <div class="d-flex justify-content-between align-items-start w-100">
+                <div>
+                    <h5 class="font-weight-bold text-dark m-0">Project Execution Progress Matrix</h5>
+                    <small class="text-muted">Real-time dynamic lifecycle completions tracker</small>
+                </div>
+                <span id="barHoverBadge" style="font-size:0.8rem; background:#f1f5f9; border-radius:20px; padding:2px 10px; opacity:0; transition:opacity 0.15s; white-space:nowrap; font-weight:600; color:#005AFC; margin-top:2px; flex-shrink:0;"></span>
+            </div>
             
             <div class="bar-graph-scroll-container w-100 mt-2" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
                 <div class="bar-graph-container" id="chartBarWrapper" style="min-width: 600px;"></div>
@@ -664,20 +676,29 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
 
     <div class="col-lg-4">
         <div class="chart-box h-100 d-flex flex-column align-items-center justify-content-center text-center p-4">
-            <h5 class="font-weight-bold text-dark align-self-start mb-3" style="font-size:1.1rem;">Phase Breakout</h5>
+            <div class="align-self-start w-100 d-flex justify-content-between align-items-center mb-3">
+                <h5 class="font-weight-bold text-dark mb-0" style="font-size:1.1rem;">Phase Breakout</h5>
+                <span id="donutHoverBadge" style="font-size:0.8rem; background:#f1f5f9; border-radius:20px; padding:2px 10px; opacity:0; transition:opacity 0.15s; white-space:nowrap; font-weight:600;"></span>
+            </div>
             
             <div class="my-auto d-flex flex-column align-items-center">
                 <svg width="150" height="150" viewBox="0 0 42 42" class="pie-chart-matrix" id="wsDonutSvg" style="transform: rotate(-90deg); border-radius: 50%;">
                     <circle class="donut-ring" cx="21" cy="21" r="10.5" fill="transparent" stroke="#e2e8f0" stroke-width="21"></circle>
-                    <circle id="donutSeg1" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#005AFC" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
-                    <circle id="donutSeg2" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#ffbe22" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
-                    <circle id="donutSeg3" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#2ed573" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0"></circle>
+                    <circle id="donutSeg1" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#94a3b8" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0" style="pointer-events:stroke; cursor:pointer;" data-label="New"></circle>
+                    <circle id="donutSeg2" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#60a5fa" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0" style="pointer-events:stroke; cursor:pointer;" data-label="Planning"></circle>
+                    <circle id="donutSeg3" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#005AFC" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0" style="pointer-events:stroke; cursor:pointer;" data-label="Execution"></circle>
+                    <circle id="donutSeg4" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#ef4444" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0" style="pointer-events:stroke; cursor:pointer;" data-label="High Risk"></circle>
+                    <circle id="donutSeg5" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#f59e0b" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0" style="pointer-events:stroke; cursor:pointer;" data-label="Stabilization"></circle>
+                    <circle id="donutSeg6" class="donut-segment" cx="21" cy="21" r="10.5" fill="transparent" stroke="#2ed573" stroke-width="21" stroke-dasharray="0 100" stroke-dashoffset="0" style="pointer-events:stroke; cursor:pointer;" data-label="Signed-Off"></circle>
                 </svg>
-                
-                <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 x-small text-muted" style="font-size: 0.78rem; font-weight: 500;">
-                    <span class="bg-light px-2 py-1 rounded border shadow-2xs"><i class="fas fa-circle text-primary me-1"></i>Exec/Plan</span>
-                    <span class="bg-light px-2 py-1 rounded border shadow-2xs"><i class="fas fa-circle text-warning me-1"></i>Risk/Stab</span>
-                    <span class="bg-light px-2 py-1 rounded border shadow-2xs"><i class="fas fa-circle text-success me-1"></i>Signed-Off</span>
+
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-4 x-small text-muted" style="font-size: 0.72rem; font-weight: 500;">
+                    <span class="bg-light px-2 py-1 rounded border"><i class="fas fa-circle me-1" style="color:#94a3b8;"></i>New</span>
+                    <span class="bg-light px-2 py-1 rounded border"><i class="fas fa-circle me-1" style="color:#60a5fa;"></i>Planning</span>
+                    <span class="bg-light px-2 py-1 rounded border"><i class="fas fa-circle me-1" style="color:#005AFC;"></i>Execution</span>
+                    <span class="bg-light px-2 py-1 rounded border"><i class="fas fa-circle me-1" style="color:#ef4444;"></i>High Risk</span>
+                    <span class="bg-light px-2 py-1 rounded border"><i class="fas fa-circle me-1" style="color:#f59e0b;"></i>Stabilization</span>
+                    <span class="bg-light px-2 py-1 rounded border"><i class="fas fa-circle me-1" style="color:#2ed573;"></i>Signed-Off</span>
                 </div>
             </div>
         </div>
@@ -805,7 +826,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
         <!-- Classification — static info -->
         <div class="col-6 col-md-4 col-lg">
             <div class="card p-3 shadow-sm border-0 bg-white h-100">
-                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.8rem; letter-spacing:0.5px;">
                     <i class="fas fa-tag me-1 text-secondary"></i>Classification
                 </p>
                 <h5 id="wsClassification" class="m-0 text-dark fw-bold" style="font-size:1rem;">---</h5>
@@ -815,7 +836,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
         <!-- Team Members → scroll to team block -->
         <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsTeamManagementBlock').scrollIntoView({behavior:'smooth'});" style="cursor:pointer;">
             <div class="card p-3 shadow-sm border-0 bg-white style-hover-card h-100">
-                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.8rem; letter-spacing:0.5px;">
                     <i class="fas fa-users me-1 text-primary"></i>Team Members <i class="fas fa-external-link-alt ms-1" style="font-size:0.58rem;"></i>
                 </p>
                 <h3 id="wsTeamCount" class="fw-bold m-0 text-primary" style="font-size:1.6rem;">0</h3>
@@ -825,7 +846,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
         <!-- Total Tasks → scroll to Phase Progression -->
         <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsPhaseProgressionCard').scrollIntoView({behavior:'smooth'});" style="cursor:pointer;">
             <div class="card p-3 shadow-sm border-0 bg-white style-hover-card h-100">
-                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.8rem; letter-spacing:0.5px;">
                     <i class="fas fa-tasks me-1 text-primary"></i>Total Tasks <i class="fas fa-external-link-alt ms-1" style="font-size:0.58rem;"></i>
                 </p>
                 <h3 id="wsTotalTasksCount" class="fw-bold m-0 text-primary" style="font-size:1.6rem;">0</h3>
@@ -835,7 +856,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
         <!-- Total Risks → scroll to Risk Register -->
         <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsRiskSection').scrollIntoView({behavior:'smooth'});" style="cursor:pointer;">
             <div class="card p-3 shadow-sm border-0 bg-white style-hover-card h-100">
-                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                <p class="mb-1 fw-bold text-muted text-uppercase" style="font-size:0.8rem; letter-spacing:0.5px;">
                     <i class="fas fa-shield-alt me-1 text-danger"></i>Total Risks <i class="fas fa-external-link-alt ms-1" style="font-size:0.58rem;"></i>
                 </p>
                 <h3 id="wsRiskTotal" class="fw-bold m-0 text-danger" style="font-size:1.6rem;">0</h3>
@@ -865,7 +886,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
         <!-- Progress -->
         <div class="col-12 col-md-4 col-lg">
             <div class="card p-3 shadow-sm border-0 bg-white h-100">
-                <p class="mb-2 fw-bold text-muted text-uppercase" style="font-size:0.7rem; letter-spacing:0.5px;">
+                <p class="mb-2 fw-bold text-muted text-uppercase" style="font-size:0.8rem; letter-spacing:0.5px;">
                     <i class="fas fa-chart-line me-1 text-primary"></i>Progress
                 </p>
                 <div class="d-flex align-items-center gap-2">
@@ -893,7 +914,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
                         <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
                             <span class="fw-bold text-muted">1</span>
                         </div>
-                        <p class="small fw-bold mt-2 mb-0 text-truncate text-dark">Initiation</p>
+                        <p class="fw-bold mt-2 mb-0 text-truncate text-dark" style="font-size:0.88rem;">Initiation</p>
                         <span class="badge bg-secondary rounded-pill extra-small-badge" id="phaseCount-1">0 Tasks</span>
                     </div>
 
@@ -901,7 +922,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
                         <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
                             <span class="fw-bold text-muted">2</span>
                         </div>
-                        <p class="small fw-bold mt-2 mb-0 text-truncate text-muted">Planning</p>
+                        <p class="fw-bold mt-2 mb-0 text-truncate text-muted" style="font-size:0.88rem;">Planning</p>
                         <span class="badge bg-light text-dark rounded-pill extra-small-badge" id="phaseCount-2">0 Tasks</span>
                     </div>
 
@@ -909,7 +930,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
                         <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
                             <span class="fw-bold text-muted">3</span>
                         </div>
-                        <p class="small fw-bold mt-2 mb-0 text-truncate text-muted">Execution</p>
+                        <p class="fw-bold mt-2 mb-0 text-truncate text-muted" style="font-size:0.88rem;">Execution</p>
                         <span class="badge bg-light text-dark rounded-pill extra-small-badge" id="phaseCount-3">0 Tasks</span>
                     </div>
 
@@ -917,7 +938,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
                         <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
                             <span class="fw-bold text-muted">4</span>
                         </div>
-                        <p class="small fw-bold mt-2 mb-0 text-truncate text-muted">Monitoring</p>
+                        <p class="fw-bold mt-2 mb-0 text-truncate text-muted" style="font-size:0.88rem;">Monitoring</p>
                         <span class="badge bg-light text-dark rounded-pill extra-small-badge" id="phaseCount-4">0 Tasks</span>
                     </div>
 
@@ -925,7 +946,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
                         <div class="node-circle mx-auto d-flex align-items-center justify-content-center border" style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; transition: all 0.2s ease;">
                             <span class="fw-bold text-muted">5</span>
                         </div>
-                        <p class="small fw-bold mt-2 mb-0 text-truncate text-muted">Closure</p>
+                        <p class="fw-bold mt-2 mb-0 text-truncate text-muted" style="font-size:0.88rem;">Closure</p>
                         <span class="badge bg-light text-dark rounded-pill extra-small-badge" id="phaseCount-5">0 Tasks</span>
                     </div>
                 </div>
@@ -1003,7 +1024,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
                     <div style="display:flex; align-items:flex-start; gap:32px; flex-wrap:wrap;">
                         <!-- Matrix grid with axis labels -->
                         <div>
-                            <p class="fw-bold text-secondary mb-2 text-uppercase" style="font-size:0.72rem; letter-spacing:0.5px;">
+                            <p class="fw-bold mb-2 text-uppercase" style="font-size:0.88rem; letter-spacing:0.5px; color:#334155;">
                                 <i class="fas fa-th me-1"></i>Risk Matrix
                             </p>
                             <div style="display:flex; align-items:stretch; gap:10px;">
@@ -1051,8 +1072,8 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
     </div>
 
     <div class="row g-4" id="wsTeamManagementBlock">
-        <div class="col-lg-5">
-            <div class="card shadow-sm border-0 p-4 bg-white h-100">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4 bg-white">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                     <h5 class="fw-bold text-dark m-0"><i class="fas fa-users text-primary me-2"></i> Assigned Project Team</h5>
                     <span class="badge bg-primary text-white admin-only-action" style="font-size: 0.7rem; display: none;">Admin View</span>
@@ -1073,14 +1094,6 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
             </div>
         </div>
 
-        <div class="col-lg-7">
-            <div class="card shadow-sm border-0 p-4 bg-white h-100">
-                <h5 class="mb-3 fw-bold text-dark"><i class="fas fa-history text-secondary me-2"></i> Project Operational Logs</h5>
-                <div class="update-log-container" id="wsAuditStream" style="height: 240px; border-radius: 6px;">
-                    <p class="text-muted text-center py-4">No activity recorded yet.</p>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- ===== GANTT CHART SECTION ===== -->
@@ -1234,6 +1247,18 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
     </div>
 
     <!-- WORKSPACE TEAM CHAT FAB — scrolls to the chat section below -->
+    <!-- ===== OPERATIONAL LOGS SECTION ===== -->
+    <div class="row mb-4" id="wsOperationalLogsSection">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4 bg-white">
+                <h5 class="mb-3 fw-bold text-dark"><i class="fas fa-history text-secondary me-2"></i> Project Operational Logs</h5>
+                <div class="update-log-container" id="wsAuditStream">
+                    <p class="text-muted py-4">No activity recorded yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <button id="wsChatFab" title="Team Chat"
         onclick="document.getElementById('wsTeamsChatSection').scrollIntoView({behavior:'smooth'})"
         style="position:fixed; bottom:28px; right:28px; z-index:1500; width:52px; height:52px; border-radius:50%;
@@ -2192,45 +2217,70 @@ async function fetchMasterSuiteDataset() {
             if (list.length === 0) {
                 barWrapper.innerHTML = `<div class="text-muted w-100 text-center pb-5">No progress records available for current views.</div>`;
             } else {
-                list.slice(0, 12).forEach(p => {
+                barWrapper.style.minWidth = Math.max(600, list.length * 62) + 'px';
+                list.forEach(p => {
                     const group = document.createElement('div');
                     group.className = "graph-pillar-group";
                     group.innerHTML = `
-                        <div class="graph-pillar" data-value="${p.progress}" style="height: ${Math.max(p.progress, 5)}%;"></div>
+                        <div class="graph-pillar" data-value="${p.progress}" data-name="${p.projectName || p.name}" style="height: ${Math.max(p.progress, 5)}%;"></div>
                         <div class="graph-label" title="${p.projectName || p.name}">${p.projectName || p.name}</div>
                     `;
                     barWrapper.appendChild(group);
                 });
+                barWrapper.onmouseover = function(e) {
+                    const pillar = e.target.closest('.graph-pillar');
+                    if (!pillar) return;
+                    const badge = document.getElementById('barHoverBadge');
+                    if (!badge) return;
+                    badge.textContent = `${pillar.getAttribute('data-name')} · ${pillar.getAttribute('data-value')}%`;
+                    badge.style.opacity = '1';
+                };
+                barWrapper.onmouseout = function(e) {
+                    const pillar = e.target.closest('.graph-pillar');
+                    if (!pillar) return;
+                    const badge = document.getElementById('barHoverBadge');
+                    if (badge) badge.style.opacity = '0';
+                };
             }
         }
 
-        let execCount = list.filter(p => p.status === 'Execution' || p.status === 'Planning').length;
-        let riskCount = list.filter(p => p.status === 'Stabilization' || p.status === 'High Risk').length;
-        let signCount = list.filter(p => p.status === 'Signed-Off').length;
-        let totalCount = execCount + riskCount + signCount;
+        const segDefs = [
+            { id: 'donutSeg1', count: list.filter(p => p.status === 'New').length,           label: 'New' },
+            { id: 'donutSeg2', count: list.filter(p => p.status === 'Planning').length,       label: 'Planning' },
+            { id: 'donutSeg3', count: list.filter(p => p.status === 'Execution').length,      label: 'Execution' },
+            { id: 'donutSeg4', count: list.filter(p => p.status === 'High Risk').length,      label: 'High Risk' },
+            { id: 'donutSeg5', count: list.filter(p => p.status === 'Stabilization').length,  label: 'Stabilization' },
+            { id: 'donutSeg6', count: list.filter(p => p.status === 'Signed-Off').length,     label: 'Signed-Off' },
+        ];
+        const totalCount = segDefs.reduce((s, d) => s + d.count, 0);
 
-        const seg1 = document.getElementById('donutSeg1');
-        const seg2 = document.getElementById('donutSeg2');
-        const seg3 = document.getElementById('donutSeg3');
-
-        if (seg1 && seg2 && seg3) {
-            if (totalCount === 0) {
-                seg1.setAttribute('stroke-dasharray', '0 100');
-                seg2.setAttribute('stroke-dasharray', '0 100');
-                seg3.setAttribute('stroke-dasharray', '0 100');
-                return;
-            }
-            let p1 = (execCount / totalCount) * 100;
-            let p2 = (riskCount / totalCount) * 100;
-            let p3 = (signCount / totalCount) * 100;
-
-            seg1.setAttribute('stroke-dasharray', `${p1} ${100 - p1}`);
-            seg1.setAttribute('stroke-dashoffset', '0');
-            seg2.setAttribute('stroke-dasharray', `${p2} ${100 - p2}`);
-            seg2.setAttribute('stroke-dashoffset', `-${p1}`);
-            seg3.setAttribute('stroke-dasharray', `${p3} ${100 - p3}`);
-            seg3.setAttribute('stroke-dashoffset', `-${p1 + p2}`);
+        if (totalCount === 0) {
+            segDefs.forEach(d => { const el = document.getElementById(d.id); if (el) el.setAttribute('stroke-dasharray', '0 100'); });
+            return;
         }
+
+        const C = 2 * Math.PI * 10.5;
+        let offset = 0;
+        segDefs.forEach(d => {
+            const el = document.getElementById(d.id);
+            if (!el) return;
+            const arc = (d.count / totalCount) * C;
+            el.setAttribute('stroke-dasharray', `${arc} ${C - arc}`);
+            el.setAttribute('stroke-dashoffset', `-${offset}`);
+            el.setAttribute('data-count', d.count);
+            offset += arc;
+            el.addEventListener('mouseenter', function() {
+                const badge = document.getElementById('donutHoverBadge');
+                if (!badge) return;
+                badge.textContent = `${this.getAttribute('data-count')} · ${this.getAttribute('data-label')}`;
+                badge.style.color = this.getAttribute('stroke');
+                badge.style.opacity = '1';
+            });
+            el.addEventListener('mouseleave', function() {
+                const badge = document.getElementById('donutHoverBadge');
+                if (badge) badge.style.opacity = '0';
+            });
+        });
     }
 
     function commitNewProject() {
@@ -2629,28 +2679,34 @@ function renderWorkspaceTasks(tasks) {
         const auditStream = document.getElementById('wsAuditStream');
         if (!auditStream) return;
         auditStream.innerHTML = "";
-        
-        const historicalTimelineSamples = tasks.slice(0, 4);
-        if (historicalTimelineSamples.length === 0) {
-            auditStream.innerHTML = `<p class="text-muted text-center py-4 small">No operational actions captured inside active project scopes.</p>`;
+
+        if (!tasks || tasks.length === 0) {
+            auditStream.innerHTML = `<p class="text-muted py-4 small">No operational actions captured inside active project scopes.</p>`;
             return;
         }
 
-        historicalTimelineSamples.forEach(t => {
+        const sorted = tasks.slice().sort((a, b) => {
+            const ta = a.updatedAt ? new Date(a.updatedAt).getTime() : (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+            const tb = b.updatedAt ? new Date(b.updatedAt).getTime() : (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+            return tb - ta;
+        });
+
+        sorted.forEach(t => {
             if (!t) return;
             const displayTitle = t.title || t.taskName || "Untitled Task";
-            const displayUser = t.assignees || t.assignedTo || 'Unassigned';
+            const displayUser = t.updatedBy || t.assignees || 'System';
             const displayStatus = t.status || 'New';
+            const rawDate = t.updatedAt || t.createdAt || '';
+            const displayDate = rawDate ? new Date(rawDate).toLocaleString('en-ZA', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
             const logEntry = document.createElement('div');
-            logEntry.className = "pb-3 mb-3 border-bottom text-start";
-            logEntry.style.fontSize = "0.8rem";
+            logEntry.className = "pb-3 mb-3 border-bottom";
             logEntry.innerHTML = `
-                <div class="d-flex justify-content-between text-muted mb-1 x-small" style="font-size:0.7rem;">
-                    <span><i class="fas fa-history me-1"></i>System Registry Sync</span>
-                    <span>Active</span>
+                <div class="d-flex justify-content-between text-muted mb-1" style="font-size:0.65rem;">
+                    <span><i class="fas fa-user-edit me-1"></i>${displayUser}</span>
+                    <span>${displayDate}</span>
                 </div>
-                <p class="mb-0 text-dark">Task <strong>"${displayTitle}"</strong> targeted to tracking column <em>(${displayStatus})</em>.</p>
+                <p class="mb-0 text-dark" style="font-size:0.75rem;">Task <strong>"${displayTitle}"</strong> — status: <em>${displayStatus}</em></p>
             `;
             auditStream.appendChild(logEntry);
         });
@@ -3884,7 +3940,7 @@ function renderProjectComments(comments) {
                             (isActioned ? '<span style="background:#f0fdf4; color:#15803d; border:1px solid #86efac; border-radius:4px; padding:1px 7px; font-size:0.6rem; font-weight:700;"><i class="fas fa-check me-1"></i>Actioned</span>' : '') +
                         '</div>' +
                     '</div>' +
-                    '<p style="margin:0 0 6px; font-size:0.83rem; color:#334155; line-height:1.55;">' + (c.message || '') + '</p>' +
+                    '<p style="margin:0 0 6px; font-size:0.83rem; color:#334155; line-height:1.55; text-align:left;">' + (c.message || '') + '</p>' +
                     '<div style="display:flex; justify-content:space-between; align-items:center;">' +
                         '<span style="font-size:0.62rem; color:#94a3b8;">' + (c.timestamp || '') + '</span>' +
                         (canAction && !isActioned ? '<button class="btn btn-link btn-sm p-0" style="font-size:0.65rem; color:#15803d;" onclick="actionProjectComment(\'' + c.commentId + '\')"><i class="fas fa-check-circle me-1"></i>Mark Actioned</button>' : '') +
