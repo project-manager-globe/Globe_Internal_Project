@@ -230,6 +230,12 @@
             align-items: center; z-index: 10; border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: #005AFC;
         }
         .d-none { display: none !important; }
+
+        /* Force left-align inside Meeting Archive panes — overrides Quill ql-align-center */
+        #historyTabsContent, #historyTabsContent * { text-align: left !important; }
+
+        /* Force left-align inside Task Board rows */
+        #excoTaskList, #excoTaskList * { text-align: left !important; }
     </style>
 </head>
 <body>
