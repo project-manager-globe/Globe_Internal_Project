@@ -397,6 +397,72 @@
         </section>
 
         <section>
+            <!-- EXCO TASK BOARD -->
+            <div class="exco-card" id="excoTaskBoardCard">
+                <div class="card-header-flex">
+                    <h3 class="card-title-text">
+                        <i class="fa-solid fa-list-check" style="color:#005AFC;"></i> EXCO Task Board
+                        <span id="excoTaskCount" class="badge ms-2" style="background:#eef4ff;color:#005AFC;border:1px solid #bfdbfe;font-size:0.7rem;vertical-align:middle;">0 open</span>
+                    </h3>
+                    <button onclick="window.openExcoTaskForm()" class="btn btn-sm" style="background:#005AFC;color:#fff;border:none;">
+                        <i class="fas fa-plus me-1"></i>Add Task
+                    </button>
+                </div>
+
+                <!-- Inline add form -->
+                <div id="excoTaskForm" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; margin-bottom:14px;">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-12 col-sm-4">
+                            <label class="form-label small fw-bold text-muted mb-1">Title *</label>
+                            <input type="text" id="etTitle" class="form-control form-control-sm" placeholder="Task title">
+                        </div>
+                        <div class="col-6 col-sm-2">
+                            <label class="form-label small fw-bold text-muted mb-1">Division *</label>
+                            <select id="etDivision" class="form-select form-select-sm">
+                                <option value="">Select...</option>
+                                <option>Support</option><option>Finance</option><option>Commercial</option>
+                                <option>Operations</option><option>Procurement</option><option>Connectivity</option><option>Projects</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-sm-2">
+                            <label class="form-label small fw-bold text-muted mb-1">Assign to *</label>
+                            <select id="etAssignee" class="form-select form-select-sm"><option value="">Loading...</option></select>
+                        </div>
+                        <div class="col-6 col-sm-2">
+                            <label class="form-label small fw-bold text-muted mb-1">Due date</label>
+                            <input type="date" id="etDueDate" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-6 col-sm-2 d-flex gap-2 pt-1">
+                            <button onclick="window.submitExcoTask()" class="btn btn-sm flex-grow-1" style="background:#005AFC;color:#fff;border:none;">
+                                <i class="fas fa-check me-1"></i>Save
+                            </button>
+                            <button onclick="window.closeExcoTaskForm()" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Division filter tabs -->
+                <div class="d-flex gap-2 mb-3 flex-wrap" style="font-size:0.8rem;">
+                    <button class="btn btn-sm" id="excoTFilter-All" style="background:#005AFC;color:#fff;" onclick="window.filterExcoTasks('All')"><i class="fas fa-th-list me-1"></i>All</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Support" onclick="window.filterExcoTasks('Support')">Support</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Finance" onclick="window.filterExcoTasks('Finance')">Finance</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Commercial" onclick="window.filterExcoTasks('Commercial')">Commercial</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Operations" onclick="window.filterExcoTasks('Operations')">Operations</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Procurement" onclick="window.filterExcoTasks('Procurement')">Procurement</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Connectivity" onclick="window.filterExcoTasks('Connectivity')">Connectivity</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="excoTFilter-Projects" onclick="window.filterExcoTasks('Projects')">Projects</button>
+                </div>
+
+                <!-- Task rows -->
+                <div id="excoTaskList">
+                    <p style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:20px;">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Loading tasks...
+                    </p>
+                </div>
+            </div>
+
             <div class="exco-card" id="actionItemCard">
                 <div class="loading-shield" id="actionLoader"><i class="fa-solid fa-circle-notch fa-spin me-2"></i> Querying Master Pipeline Rows...</div>
                 <div class="card-header-flex">
@@ -611,6 +677,8 @@
 
             renderCompletedActions();
             fetchLiveWorkspaceLedger();
+            fetchExcoUsers();
+            fetchExcoTasks();
             fetchHistoricalAgenda();
             fetchExcoComments();
         });
@@ -818,6 +886,159 @@
         function escapeHtml(string) {
             return String(string).replace(/[&<>"']/g, m => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[m]));
         }
+
+        // ── EXCO Task Board ──────────────────────────────────────────────────
+        const EXCO_TASK_PID = 'EXCO';
+        window.excoTasksCache = [];
+        window.excoTaskFilter = 'All';
+        window.excoUserList   = [];
+
+        const EXCO_DIV_COLORS = {
+            'Support':'#3b82f6','Finance':'#10b981','Commercial':'#f59e0b',
+            'Operations':'#8b5cf6','Procurement':'#ec4899','Connectivity':'#06b6d4','Projects':'#005AFC'
+        };
+
+        function fetchExcoUsers() {
+            fetch(GAS_WORKSPACE_API + '?action=readUsers')
+                .then(r => r.json())
+                .then(data => { window.excoUserList = (data.users || []).map(u => u.username); })
+                .catch(() => {});
+        }
+
+        function fetchExcoTasks() {
+            fetch(GAS_WORKSPACE_API + '?action=readTasks&projectId=' + EXCO_TASK_PID + '&ts=' + Date.now())
+                .then(r => r.json())
+                .then(data => {
+                    window.excoTasksCache = (data.tasks || []).filter(t => (t.projectId || '').toUpperCase() === EXCO_TASK_PID);
+                    renderExcoTasks(window.excoTasksCache, window.excoTaskFilter);
+                })
+                .catch(() => {
+                    const el = document.getElementById('excoTaskList');
+                    if (el) el.innerHTML = '<p style="text-align:center;color:#ef4444;font-size:0.85rem;padding:20px;">Could not load tasks.</p>';
+                });
+        }
+
+        window.openExcoTaskForm = function() {
+            const form = document.getElementById('excoTaskForm');
+            if (!form) return;
+            const sel = document.getElementById('etAssignee');
+            if (sel) {
+                sel.innerHTML = '<option value="">Select person *</option>';
+                (window.excoUserList || []).forEach(u => {
+                    const o = document.createElement('option');
+                    o.value = u; o.textContent = u;
+                    sel.appendChild(o);
+                });
+            }
+            form.style.display = 'block';
+            const t = document.getElementById('etTitle');
+            if (t) t.focus();
+        };
+
+        window.closeExcoTaskForm = function() {
+            const form = document.getElementById('excoTaskForm');
+            if (!form) return;
+            form.style.display = 'none';
+            ['etTitle','etDivision','etAssignee','etDueDate'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+        };
+
+        window.filterExcoTasks = function(division) {
+            window.excoTaskFilter = division;
+            ['All','Support','Finance','Commercial','Operations','Procurement','Connectivity','Projects'].forEach(d => {
+                const btn = document.getElementById('excoTFilter-' + d);
+                if (!btn) return;
+                if (d === division) { btn.style.background = '#005AFC'; btn.style.color = '#fff'; btn.classList.remove('btn-outline-secondary'); }
+                else { btn.style.background = ''; btn.style.color = ''; btn.classList.add('btn-outline-secondary'); }
+            });
+            renderExcoTasks(window.excoTasksCache, division);
+        };
+
+        function renderExcoTasks(tasks, filter) {
+            const list    = document.getElementById('excoTaskList');
+            const countEl = document.getElementById('excoTaskCount');
+            if (!list) return;
+
+            const openCount = (tasks || []).filter(t => (t.status || '').toLowerCase() !== 'done').length;
+            if (countEl) countEl.textContent = openCount + ' open';
+
+            const cur     = (sessionStorage.getItem('currentUser_ICT') || '').toLowerCase();
+            const isAdmin = (sessionStorage.getItem('currentUserRole_ICT') || '').toLowerCase() === 'admin';
+
+            const filtered = filter === 'All' ? tasks : (tasks || []).filter(t => (t.phase || '') === filter);
+            const active   = filtered.filter(t => (t.status || '').toLowerCase() !== 'done');
+            const done     = filtered.filter(t => (t.status || '').toLowerCase() === 'done');
+            const sorted   = [...active, ...done];
+
+            if (!sorted.length) {
+                list.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.85rem;padding:20px 0;"><i class="fas fa-clipboard-check me-2" style="opacity:0.3;"></i>No tasks yet.</p>';
+                return;
+            }
+
+            list.innerHTML = sorted.map(t => {
+                const division  = t.phase || 'General';
+                const divColor  = EXCO_DIV_COLORS[division] || '#64748b';
+                const isDone    = (t.status || '').toLowerCase() === 'done';
+                const isInProg  = (t.status || '') === 'In Progress';
+                const canEdit   = isAdmin || (t.assignees || '').toLowerCase() === cur;
+                const statusBg  = isDone ? '#10b981' : isInProg ? '#f59e0b' : '#64748b';
+
+                return `<div style="display:flex;align-items:center;gap:8px;padding:10px 6px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap;opacity:${isDone ? '0.55' : '1'};">
+                    <span style="flex:0 0 auto;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:${divColor};">${division}</span>
+                    <span style="flex:1;min-width:120px;font-size:0.85rem;color:#334155;font-weight:500;${isDone ? 'text-decoration:line-through;' : ''}">${t.title || ''}</span>
+                    <span style="flex:0 0 auto;font-size:0.75rem;color:#64748b;white-space:nowrap;"><i class="fas fa-user me-1" style="opacity:0.45;"></i>${t.assignees || '—'}</span>
+                    ${t.dueDate && t.dueDate !== 'N/A' ? `<span style="flex:0 0 auto;font-size:0.7rem;color:#94a3b8;white-space:nowrap;"><i class="fas fa-calendar me-1"></i>${t.dueDate}</span>` : ''}
+                    <span style="flex:0 0 auto;font-size:0.68rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${statusBg}20;color:${statusBg};">${t.status || 'Open'}</span>
+                    ${canEdit && !isDone ? `<div style="flex:0 0 auto;display:flex;gap:4px;">
+                        ${!isInProg ? `<button onclick="window.setExcoTaskStatus('${t.taskId}','In Progress')" class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;background:#f59e0b18;color:#f59e0b;border:1px solid #f59e0b40;" title="Mark In Progress"><i class="fas fa-spinner me-1"></i>In Progress</button>` : ''}
+                        <button onclick="window.setExcoTaskStatus('${t.taskId}','Done')" class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;background:#10b98118;color:#10b981;border:1px solid #10b98140;" title="Mark Done"><i class="fas fa-check me-1"></i>Done</button>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        window.submitExcoTask = function() {
+            const title    = (document.getElementById('etTitle')?.value || '').trim();
+            const division = document.getElementById('etDivision')?.value || '';
+            const assignee = document.getElementById('etAssignee')?.value || '';
+            const dueDate  = document.getElementById('etDueDate')?.value || '';
+            if (!title)    { document.getElementById('etTitle')?.focus();    return; }
+            if (!division) { document.getElementById('etDivision')?.focus(); return; }
+            if (!assignee) { document.getElementById('etAssignee')?.focus(); return; }
+
+            const taskId  = 'ET-' + Date.now();
+            const payload = {
+                action: 'createTask', projectId: EXCO_TASK_PID, taskId,
+                title, description: '', assignees: assignee,
+                phase: division, status: 'Open', dueDate,
+                user: sessionStorage.getItem('currentUser_ICT') || 'System', checklist: []
+            };
+
+            const btn = document.querySelector('#excoTaskForm button[onclick="window.submitExcoTask()"]');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...'; }
+
+            fetch(GAS_WORKSPACE_API, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                .then(() => {
+                    window.excoTasksCache = [...(window.excoTasksCache || []), { ...payload, createdAt: new Date().toLocaleDateString('en-ZA') }];
+                    renderExcoTasks(window.excoTasksCache, window.excoTaskFilter);
+                    window.closeExcoTaskForm();
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check me-1"></i>Save'; }
+                })
+                .catch(err => { console.error(err); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check me-1"></i>Save'; } });
+        };
+
+        window.setExcoTaskStatus = function(taskId, status) {
+            const payload = { action: 'updateTaskStatus', taskId, status, user: sessionStorage.getItem('currentUser_ICT') || 'System' };
+            fetch(GAS_WORKSPACE_API, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                .then(() => {
+                    const task = (window.excoTasksCache || []).find(t => t.taskId === taskId);
+                    if (task) task.status = status;
+                    renderExcoTasks(window.excoTasksCache, window.excoTaskFilter);
+                })
+                .catch(err => console.error(err));
+        };
 
         // ── Meeting Archive & History ────────────────────────────────────────
         function fetchHistoricalAgenda() {
