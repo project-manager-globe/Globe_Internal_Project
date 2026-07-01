@@ -1129,16 +1129,21 @@ body {
             const isInProg = (t.status || '') === 'In Progress';
             const canEdit = isAdmin || (t.assignees || '').toLowerCase() === cur;
             const statusBg = isInProg ? '#f59e0b' : '#64748b';
-            return `<div style="display:flex;align-items:center;gap:8px;padding:10px 6px;border-bottom:1px solid #f1f5f9;flex-wrap:wrap;">
-                    <span style="flex:0 0 auto;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:${divColor};">${division}</span>
-                    <span style="flex:1;min-width:120px;font-size:0.85rem;color:#334155;font-weight:500;">${t.title || ''}</span>
-                    <span style="flex:0 0 auto;font-size:0.75rem;color:#64748b;white-space:nowrap;"><i class="fas fa-user me-1" style="opacity:0.45;"></i>${t.assignees || "\u2014"}</span>
-                    ${t.dueDate && t.dueDate !== 'N/A' ? `<span style="flex:0 0 auto;font-size:0.7rem;color:#94a3b8;white-space:nowrap;"><i class="fas fa-calendar me-1"></i>${t.dueDate}</span>` : ''}
-                    <span style="flex:0 0 auto;font-size:0.68rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${statusBg}20;color:${statusBg};">${t.status || 'Open'}</span>
-                    ${canEdit ? `<div style="flex:0 0 auto;display:flex;gap:4px;">
-                        ${!isInProg ? `<button onclick="window.setExcoTaskStatus('${t.taskId}','In Progress')" class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;background:#f59e0b18;color:#f59e0b;border:1px solid #f59e0b40;" title="Mark In Progress"><i class="fas fa-spinner me-1"></i>In Progress</button>` : ''}
-                        <button onclick="window.setExcoTaskStatus('${t.taskId}','Done')" class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;background:#10b98118;color:#10b981;border:1px solid #10b98140;" title="Mark Done"><i class="fas fa-check me-1"></i>Done</button>
-                    </div>` : ''}
+            const displayStatus = (t.status || 'Open') === 'Open' ? 'New' : t.status || 'Open';
+            return `<div style="padding:10px 6px;border-bottom:1px solid #f1f5f9;">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+                        <span style="flex:0 0 auto;font-size:0.68rem;font-weight:700;padding:2px 9px;border-radius:20px;color:#fff;background:${divColor};">${division}</span>
+                        <span style="flex:1;font-size:0.88rem;color:#1e293b;font-weight:600;">${t.title || ''}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:4px;">
+                        <span style="font-size:0.73rem;color:#64748b;white-space:nowrap;"><i class="fas fa-user me-1" style="opacity:0.45;"></i>${t.assignees || "\u2014"}</span>
+                        ${t.dueDate && t.dueDate !== 'N/A' ? `<span style="font-size:0.7rem;color:#94a3b8;white-space:nowrap;"><i class="fas fa-calendar me-1"></i>${t.dueDate}</span>` : ''}
+                        <span style="font-size:0.68rem;font-weight:600;padding:2px 8px;border-radius:20px;background:${statusBg}20;color:${statusBg};">${displayStatus}</span>
+                        ${canEdit ? `<div style="display:flex;gap:4px;margin-left:auto;">
+                            ${!isInProg ? `<button onclick="window.setExcoTaskStatus('${t.taskId}','In Progress')" class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;background:#f59e0b18;color:#f59e0b;border:1px solid #f59e0b40;" title="Mark In Progress"><i class="fas fa-spinner me-1"></i>In Progress</button>` : ''}
+                            <button onclick="window.setExcoTaskStatus('${t.taskId}','Done')" class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;background:#10b98118;color:#10b981;border:1px solid #10b98140;" title="Mark Done"><i class="fas fa-check me-1"></i>Done</button>
+                        </div>` : ''}
+                    </div>
                 </div>`;
         }).join('');
     }
@@ -1272,12 +1277,12 @@ body {
                 pane.className = `tab-pane fade${isActive ? ' show active' : ''}`;
                 pane.id = paneId;
                 pane.innerHTML = `
-                            <p style="font-size:0.75rem;color:#94a3b8;margin-bottom:10px;">
+                            <p style="font-size:0.75rem;color:#94a3b8;margin-bottom:10px;text-align:left;">
                                 <i class="fas fa-user me-1"></i>${rec.updatedBy || 'System'}
                                 &nbsp;&middot;&nbsp;
                                 <i class="fas fa-save me-1"></i>Saved ${rec.timestamp}
                             </p>
-                            <div style="line-height:1.7;">${rec.content || '<em style="color:#94a3b8;">No content recorded.</em>'}</div>`;
+                            <div style="line-height:1.7;text-align:left;">${rec.content || '<em style="color:#94a3b8;">No content recorded.</em>'}</div>`;
                 tabContent.appendChild(pane);
             });
         }).catch(()=>{
