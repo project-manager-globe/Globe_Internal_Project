@@ -291,10 +291,14 @@
             <div class="exco-card" id="recapCard">
                 <div class="loading-shield" id="recapLoader"><i class="fa-solid fa-circle-notch fa-spin me-2"></i> Syncing Recap...</div>
                 <div class="card-header-flex">
-                    <h3 class="card-title-text"><i class="fa-solid fa-clipboard-list" style="color: #005AFC;"></i> Previous EXCO Recap Summary</h3>
+                    <h3 class="card-title-text">
+                        <i class="fa-solid fa-clipboard-list" style="color: #005AFC;"></i> Previous EXCO Recap Summary
+                        <span class="text-muted" style="font-size: 0.8em; margin-left: 15px; font-weight: 400;">
+                            <i class="fa-regular fa-calendar"></i> Session: <span id="session-date-exco_recap">May 28, 2026</span>
+                        </span>
+                    </h3>
                     <div>
                         <button id="btn-exco_recap" onclick="openUpdateDrawer('Previous EXCO Recap Summary', 'exco_recap')" class="btn btn-sm btn-outline-primary">Update</button>
-                        <span class="ms-2" style="font-size: 0.85rem; color: #666; font-weight: bold;"><i class="fa-regular fa-calendar"></i> Session: May 28, 2026</span>
                     </div>
                 </div>
                 <div style="max-height: 120px; overflow: hidden; position: relative;">
@@ -534,6 +538,7 @@
 
             // Bind the inline dynamic date selector action for upcoming agenda header
             initializeAgendaDateSelector();
+            initializeRecapDateSelector();
 
             renderCompletedActions();
             fetchLiveWorkspaceLedger();
@@ -560,6 +565,25 @@
                     const newDate = prompt("Enter the Next Session Date string:", dateContainer.innerText);
                     if (newDate !== null && newDate.trim() !== "") {
                         localStorage.setItem('agenda_session_date', newDate.trim());
+                        dateContainer.innerText = newDate.trim();
+                    }
+                });
+            }
+        }
+
+        function initializeRecapDateSelector() {
+            const dateContainer = document.getElementById('session-date-exco_recap');
+            if (!dateContainer) return;
+            const savedDate = localStorage.getItem('recap_session_date') || 'May 28, 2026';
+            dateContainer.innerText = savedDate;
+            if (userRole === 'admin') {
+                dateContainer.style.cursor = 'pointer';
+                dateContainer.style.borderBottom = '1px dashed #007bff';
+                dateContainer.title = 'Click to update last session date';
+                dateContainer.addEventListener('click', () => {
+                    const newDate = prompt("Enter the Last Session Date:", dateContainer.innerText);
+                    if (newDate !== null && newDate.trim() !== '') {
+                        localStorage.setItem('recap_session_date', newDate.trim());
                         dateContainer.innerText = newDate.trim();
                     }
                 });
