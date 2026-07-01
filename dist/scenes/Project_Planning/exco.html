@@ -635,6 +635,27 @@ body {
         </div>
     </div>
 
+    <!-- EXCO TEAM CHAT FAB -->
+    <button id="excoChatFab" onclick="window.toggleExcoChat()" title="EXCO Team Chat" style="z-index: 1500; color: #fff; cursor: pointer; background: #005afc; border: none; border-radius: 50%; justify-content: center; align-items: center; width: 52px; height: 52px; font-size: 1.25rem; transition: transform .2s, box-shadow .2s; display: flex; position: fixed; bottom: 28px; right: 28px; box-shadow: 0 4px 18px #005afc59">
+        <i class="fas fa-comments"></i>
+        <span id="excoChatBadge" style="color: #fff; background: #ef4444; border-radius: 50%; justify-content: center; align-items: center; width: 18px; height: 18px; font-size: .6rem; font-weight: 700; display: none; position: absolute; top: -4px; right: -4px"></span>
+    </button>
+
+    <!-- EXCO TEAM CHAT PANEL -->
+    <div id="excoChatPanel" style="z-index: 1500; background: #fff; border: 1px solid #e1e1e3; border-radius: 16px; flex-direction: column; width: 360px; max-width: calc(100vw - 40px); display: none; position: fixed; bottom: 90px; right: 28px; overflow: hidden; box-shadow: 0 8px 40px #00000026">
+        <div style="color: #fff; background: #005afc; justify-content: space-between; align-items: center; padding: 14px 18px; display: flex">
+            <span style="font-size: .95rem; font-weight: 700"><i class="fas fa-comments me-2"></i>EXCO Team Chat</span>
+            <button onclick="window.toggleExcoChat()" style="color: #fff; cursor: pointer; background: none; border: none; padding: 0; font-size: 1.1rem"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="excoChatThread" style="background: #f8fafc; height: 300px; padding: 14px; overflow-y: auto"></div>
+        <div style="background: #fff; border-top: 1px solid #e2e8f0; align-items: flex-end; gap: 8px; padding: 12px 14px; display: flex">
+            <textarea id="excoChatInput" rows="2" placeholder="Type a message..." style="resize: none; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; flex: 1; padding: 8px 10px; font-family: inherit; font-size: .83rem"></textarea>
+            <button onclick="window.postExcoComment()" style="color: #fff; cursor: pointer; background: #005afc; border: none; border-radius: 8px; padding: 8px 12px; font-size: .85rem; font-weight: 600">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+
     <footer class="navbar navbar-default wh_footer">
         <div class="footer-container mx-auto">
             <div>
@@ -924,6 +945,86 @@ body {
                 "'": '&#39;'
             })[m]);
     }
+    // ── EXCO Team Chat ──────────────────────────────────────────────────
+    const EXCO_CHAT_ID = 'EXCO_PAGE';
+    window.excoCommentsCache = [];
+    window.toggleExcoChat = function() {
+        const panel = document.getElementById('excoChatPanel');
+        if (!panel) return;
+        const isOpen = panel.style.display === 'flex';
+        panel.style.display = isOpen ? 'none' : 'flex';
+        if (!isOpen) fetchExcoComments();
+    };
+    function fetchExcoComments() {
+        const thread = document.getElementById('excoChatThread');
+        if (thread) thread.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.8rem;padding:20px;"><i class="fas fa-spinner fa-spin me-1"></i>Loading...</p>';
+        fetch(GAS_WORKSPACE_API + '?action=readProjectComments&projectId=' + EXCO_CHAT_ID + '&ts=' + Date.now()).then((r)=>r.json()).then((comments)=>{
+            window.excoCommentsCache = Array.isArray(comments) ? comments : [];
+            renderExcoComments(window.excoCommentsCache);
+        }).catch(()=>{
+            if (thread) thread.innerHTML = '<p style="text-align:center;color:#ef4444;font-size:0.8rem;padding:20px;">Could not load messages.</p>';
+        });
+    }
+    function renderExcoComments(comments) {
+        const thread = document.getElementById('excoChatThread');
+        if (!thread) return;
+        const curUser = (sessionStorage.getItem('currentUser_ICT') || '').toLowerCase();
+        if (!comments.length) {
+            thread.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.8rem;padding:30px 10px;"><i class="fas fa-comments me-2" style="opacity:0.3;"></i>No messages yet \u2014 be the first!</p>';
+            return;
+        }
+        thread.innerHTML = comments.map((c)=>{
+            const displayUser = c.user || c.username || c.author || 'Unknown';
+            const isOwn = displayUser.trim().toLowerCase() === curUser;
+            const initials = displayUser.split(' ').map((w)=>w[0] || '').join('').toUpperCase().slice(0, 2) || 'U';
+            return `<div style="display:flex;gap:8px;margin-bottom:12px;${isOwn ? 'flex-direction:row-reverse;' : ''}">
+                    <div style="flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#eef4ff;border:2px solid #bfdbfe;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#1e40af;">${initials}</div>
+                    <div style="flex:1;max-width:80%;">
+                        <div style="background:${isOwn ? '#eff6ff' : '#fff'};border:1px solid ${isOwn ? '#bfdbfe' : '#e2e8f0'};border-radius:${isOwn ? '12px 4px 12px 12px' : '4px 12px 12px 12px'};padding:8px 12px;">
+                            <div style="font-size:0.72rem;font-weight:700;color:#334155;margin-bottom:3px;">${displayUser}</div>
+                            <p style="margin:0;font-size:0.82rem;color:#334155;line-height:1.5;">${c.message || ''}</p>
+                            <span style="font-size:0.6rem;color:#94a3b8;">${c.timestamp || ''}</span>
+                        </div>
+                    </div>
+                </div>`;
+        }).join('');
+        thread.scrollTop = thread.scrollHeight;
+    }
+    window.postExcoComment = function() {
+        const input = document.getElementById('excoChatInput');
+        const msg = (input ? input.value : '').trim();
+        if (!msg) {
+            if (input) input.focus();
+            return;
+        }
+        const payload = {
+            action: 'addProjectComment',
+            projectId: EXCO_CHAT_ID,
+            user: sessionStorage.getItem('currentUser_ICT') || 'System',
+            category: 'General',
+            message: msg
+        };
+        fetch(GAS_WORKSPACE_API, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).then(()=>{
+            const newMsg = {
+                commentId: 'temp-' + Date.now(),
+                timestamp: new Date().toLocaleString('en-ZA'),
+                user: payload.user,
+                message: msg
+            };
+            window.excoCommentsCache = (window.excoCommentsCache || []).concat([
+                newMsg
+            ]);
+            renderExcoComments(window.excoCommentsCache);
+            if (input) input.value = '';
+        }).catch((err)=>console.error(err));
+    };
 })();
 
 </script>
