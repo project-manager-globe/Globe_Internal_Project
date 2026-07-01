@@ -142,11 +142,11 @@ window.checkWorkspaceAccess = function(projectToken) {
 
     // 🛡️ VECTOR 4: DOM Omni-Search (Visual Fallback)
     try {
-        const allCards = document.querySelectorAll('.card, .project-card, [data-id]');
-        for (let card of allCards) {
-            const cardText = card.innerText.toLowerCase();
-            const cardAttr = String(card.getAttribute('data-id') || "").toLowerCase().replace(/\s+/g, '');
-            if (cardAttr === squashedToken && cardText.includes(liveUser)) {
+        var domCards = Array.from(document.querySelectorAll('.card, .project-card, [data-id]'));
+        for (var dci = 0; dci < domCards.length; dci++) {
+            var domCardText = domCards[dci].innerText.toLowerCase();
+            var domCardAttr = String(domCards[dci].getAttribute('data-id') || "").toLowerCase().replace(/\s+/g, '');
+            if (domCardAttr === squashedToken && domCardText.includes(liveUser)) {
                 return true;
             }
         }
