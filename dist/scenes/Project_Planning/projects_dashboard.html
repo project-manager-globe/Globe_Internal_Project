@@ -1690,9 +1690,15 @@ footer.wh_footer {
                 <div class="form-text text-muted" style="font-size: .65rem">Hold Ctrl (Windows) or Cmd (Mac) to select multiple resources for this assignment.</div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label small fw-bold text-secondary mb-1">Target Milestone / Due By</label>
-                <input type="date" id="tDueDate" class="form-control form-control-sm" required="">
+            <div class="d-flex gap-3 mb-3">
+                <div style="flex: 1">
+                    <label class="form-label small fw-bold text-secondary mb-1">Start Date</label>
+                    <input type="date" id="tStartDate" class="form-control form-control-sm">
+                </div>
+                <div style="flex: 1">
+                    <label class="form-label small fw-bold text-secondary mb-1">Target Milestone / Due By</label>
+                    <input type="date" id="tDueDate" class="form-control form-control-sm" required="">
+                </div>
             </div>
              
             <div class="d-flex justify-content-end gap-2 mt-4">
@@ -2013,6 +2019,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
             status: "New",
             creator: window.currentUserName || "System Portal",
             dueDate: document.getElementById('tDueDate') ? document.getElementById('tDueDate').value : "",
+            startDate: document.getElementById('tStartDate') ? document.getElementById('tStartDate').value : "",
             phase: activeWorkspacePhase || "Phase 1: Initiation"
         };
         const submitBtn = taskForm.querySelector('button[type="submit"]');
@@ -3563,7 +3570,7 @@ window.removeChecklistItemElement = function(buttonEl) {
     var maxDate = new Date(today);
     tasksWithDates.forEach(function(t) {
         var due = new Date(t.dueDate);
-        var start = t.createdDate && t.createdDate !== 'N/A' && t.createdDate !== '' ? new Date(t.createdDate) : today;
+        var start = t.startDate && t.startDate !== 'N/A' && t.startDate !== '' ? new Date(t.startDate) : t.createdDate && t.createdDate !== 'N/A' && t.createdDate !== '' ? new Date(t.createdDate) : today;
         if (start < minDate) minDate = new Date(start);
         if (due > maxDate) maxDate = new Date(due);
     });
@@ -3650,7 +3657,7 @@ window.removeChecklistItemElement = function(buttonEl) {
         rowsHtml += '<div style="display:flex; border-bottom:1px solid #e2e8f0;"><div style="flex:0 0 190px; min-width:190px; padding:5px 10px; background:#f8fafc; font-size:0.68rem; font-weight:800; color:' + phClr + '; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; border-right:1px solid #e2e8f0;">' + '<i class="fas fa-layer-group me-2" style="font-size:0.62rem;"></i>' + (phaseShort[phase] || phase) + '</div>' + '<div style="flex:1; background:#f8fafc; position:relative; min-height:26px;">' + todayLine + '</div>' + '</div>';
         // Task rows
         pTasks.forEach(function(t) {
-            var startD = t.createdDate && t.createdDate !== 'N/A' && t.createdDate !== '' ? new Date(t.createdDate) : today;
+            var startD = t.startDate && t.startDate !== 'N/A' && t.startDate !== '' ? new Date(t.startDate) : t.createdDate && t.createdDate !== 'N/A' && t.createdDate !== '' ? new Date(t.createdDate) : today;
             var endD = new Date(t.dueDate);
             var sPct = pct(startD);
             var ePct = pct(endD);
@@ -3659,7 +3666,7 @@ window.removeChecklistItemElement = function(buttonEl) {
             var fg = statusFg[t.status] || '#1e40af';
             var overdue = endD < today && t.status !== 'Done' && t.status !== 'Cancelled';
             var barBorder = overdue ? 'box-shadow:0 0 0 2px #ef4444;' : '';
-            var label = t.taskName || 'Unnamed Task';
+            var label = t.title || t.taskName || 'Unnamed Task';
             var tooltip = label + ' | ' + (t.status || '') + ' | ' + startD.toLocaleDateString('en-ZA') + " \u2192 " + endD.toLocaleDateString('en-ZA') + (t.assignedTo ? ' | ' + t.assignedTo : '');
             rowsHtml += '<div style="display:flex; align-items:center; border-bottom:1px solid #f1f5f9; min-height:34px;"><div style="flex:0 0 190px; min-width:190px; padding:4px 10px; font-size:0.73rem; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; border-right:1px solid #e2e8f0;" title="' + label + '">' + label + '</div>' + '<div style="flex:1; position:relative; min-height:34px;">' + todayLine + '<div style="position:absolute; left:' + sPct + '%; width:' + wPct + '%; top:50%; transform:translateY(-50%); height:22px; background:' + bg + '; border-radius:5px; ' + barBorder + ' display:flex; align-items:center; padding:0 7px; overflow:hidden; cursor:default;" title="' + tooltip + '">' + '<span style="font-size:0.6rem; font-weight:700; color:' + fg + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + label + '</span>' + '</div>' + '</div>' + '</div>';
         });
