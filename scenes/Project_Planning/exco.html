@@ -478,9 +478,6 @@
                box-shadow:0 4px 18px rgba(0,90,252,0.35); display:flex; align-items:center;
                justify-content:center; font-size:1.25rem; transition:transform 0.2s,box-shadow 0.2s;">
         <i class="fas fa-comments"></i>
-        <span id="excoChatBadge" style="position:absolute; top:-4px; right:-4px; background:#ef4444; color:#fff;
-              border-radius:50%; min-width:18px; height:18px; padding:0 3px; font-size:0.6rem; font-weight:700;
-              display:none; align-items:center; justify-content:center;"></span>
     </button>
 
     <!-- EXCO TEAM CHAT SECTION -->
@@ -923,8 +920,7 @@
 
             const countEl = document.getElementById('excoChatCount');
             if (countEl) countEl.textContent = comments.length + (comments.length === 1 ? ' message' : ' messages');
-            const badge = document.getElementById('excoChatBadge');
-            if (badge) { badge.textContent = comments.length; badge.style.display = comments.length ? 'flex' : 'none'; }
+
 
             const curUser = (sessionStorage.getItem('currentUser_ICT') || '').toLowerCase();
             if (!filtered.length) {

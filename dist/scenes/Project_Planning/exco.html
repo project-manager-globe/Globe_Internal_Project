@@ -627,7 +627,6 @@ body {
     <!-- EXCO TEAM CHAT FAB — scrolls to chat section below -->
     <button id="excoChatFab" title="EXCO Team Chat" onclick="document.getElementById('excoChatSection').scrollIntoView({behavior:'smooth'})" style="z-index: 1500; color: #fff; cursor: pointer; background: #005afc; border: none; border-radius: 50%; justify-content: center; align-items: center; width: 52px; height: 52px; font-size: 1.25rem; transition: transform .2s, box-shadow .2s; display: flex; position: fixed; bottom: 28px; right: 28px; box-shadow: 0 4px 18px #005afc59">
         <i class="fas fa-comments"></i>
-        <span id="excoChatBadge" style="color: #fff; background: #ef4444; border-radius: 50%; justify-content: center; align-items: center; min-width: 18px; height: 18px; padding: 0 3px; font-size: .6rem; font-weight: 700; display: none; position: absolute; top: -4px; right: -4px"></span>
     </button>
 
     <!-- EXCO TEAM CHAT SECTION -->
@@ -1092,11 +1091,6 @@ body {
         const filtered = filter === 'All' ? comments : comments.filter((c)=>(c.category || 'General') === filter);
         const countEl = document.getElementById('excoChatCount');
         if (countEl) countEl.textContent = comments.length + (comments.length === 1 ? ' message' : ' messages');
-        const badge = document.getElementById('excoChatBadge');
-        if (badge) {
-            badge.textContent = comments.length;
-            badge.style.display = comments.length ? 'flex' : 'none';
-        }
         const curUser = (sessionStorage.getItem('currentUser_ICT') || '').toLowerCase();
         if (!filtered.length) {
             thread.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.8rem;padding:30px 10px;"><i class="fas fa-comments me-2" style="opacity:0.3;"></i>No messages yet \u2014 be the first!</p>';

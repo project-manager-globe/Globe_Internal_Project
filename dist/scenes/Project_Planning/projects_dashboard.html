@@ -166,6 +166,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
     const managerSelect = document.getElementById('pProjectManager');
     const leadSelect = document.getElementById('pTeamLead');
     if (!managerSelect || !leadSelect) return;
+    if (!window.teamUserList || !window.teamUserList.length) return;
     managerSelect.innerHTML = '<option value="">\u2014 Select Coordinator \u2014</option>';
     leadSelect.innerHTML = '<option value="">\u2014 Select Team Lead \u2014</option>';
     window.teamUserList.forEach(function(username) {
@@ -1827,7 +1828,7 @@ function fetchTeamUsers() {
     fetch(googleWebAppUrl + '?action=readUsers').then((r)=>r.json()).then((data)=>{
         if (data.users) {
             window.teamUserList = data.users.map((u)=>u.username);
-            // Populate pTeam dropdown once user list is ready
+            // Populate pTeam (Assign Team Members multi-select)
             const teamSel = document.getElementById('pTeam');
             if (teamSel) window.teamUserList.forEach((username)=>{
                 const opt = document.createElement('option');
@@ -1835,6 +1836,8 @@ function fetchTeamUsers() {
                 opt.textContent = username;
                 teamSel.appendChild(opt);
             });
+            // Populate coordinator/lead dropdowns now that the list is ready
+            populateRoleDropdowns("", "");
         }
     }).catch((err)=>console.warn('Could not load team user list:', err));
 }
