@@ -136,4 +136,759 @@
                     <span class="ut-checklist-item-text text-dark ms-1" style="font-size:0.9rem; font-weight:500;">${e}</span>
                 </div>
                 ${r?'<button type="button" class="btn btn-link btn-sm text-danger p-0 border-0 ms-2" onclick="removeChecklistItemElement(this)" style="line-height:1;"><i class="fas fa-trash-alt"></i></button>':""}
-            `,s.appendChild(l),n.value=""}),s&&s.addEventListener("change",e=>{if(e.target.classList.contains("ut-checklist-item-check")){let t=e.target.closest(".ut-matrix-item-row").querySelector(".ut-checklist-item-text");t&&(e.target.checked?t.classList.add("text-decoration-line-through","text-muted"):t.classList.remove("text-decoration-line-through","text-muted"))}}),["closeUpdateTaskFormBtn","cancelUpdateTaskBtn"].forEach(e=>{let t=document.getElementById(e);t&&t.addEventListener("click",closeDrawer)}),e&&e.addEventListener("submit",function(e){e.preventDefault();let t=document.getElementById("utStatus").value,n="New";"InProgress"===t?n="In Progress":"UnderReview"===t?n="Under Review":"Done"===t?n="Done":"Cancelled"===t&&(n="Cancelled");let i="";void 0!==y&&y&&y.getLength()>1?i=y.root.innerHTML.trim():document.getElementById("utNote")&&(i=document.getElementById("utNote").value.trim());let l=[];s&&s.querySelectorAll(".ut-matrix-item-row").forEach(e=>{let t=e.querySelector(".ut-checklist-item-check"),n=e.querySelector(".ut-checklist-item-text");t&&n&&l.push({text:n.innerText.trim(),completed:t.checked})});let o=(window.currentUserName||"").trim().toLowerCase(),d="admin"===window.currentUserRole||o.includes("admin")||o.includes("system"),c=null;if(d){let e=Array.from(document.querySelectorAll(".ut-assignee-matrix-checkbox:checked")).map(e=>e.value);c=e.length>0?e.join(", "):"Unassigned"}let u=document.getElementById("utDueDate")?document.getElementById("utDueDate").value:"",p={action:"updateTaskStatus",taskId:document.getElementById("utTaskId").value,status:n,note:i,checklist:l,dueDate:u||"",user:window.currentUserName||"System"};null!==c&&(p.assignees=c);let g=document.getElementById("submitUpdateTaskBtn");g.disabled=!0,fetch(r,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(p)}).then(()=>{setTimeout(()=>{globalCloseAllDrawers(),document.getElementById("utNote")&&(document.getElementById("utNote").value=""),void 0!==y&&y&&y.setText(""),void 0!==a&&a&&m(a)},400)}).catch(e=>{console.error("Network Error Handshake Trace:",e),alert("Sync error.")}).finally(()=>{g.disabled=!1})})}),window.switchWorkspacePhase=function(e){n=e,document.querySelectorAll(".phase-node").forEach(e=>e.classList.remove("active-phase"));let t=e.match(/\d+/);if(t){let e=document.getElementById(`phaseNode-${t[0]}`);e&&e.classList.add("active-phase")}let s=document.getElementById("wsActivePhaseTitleDisplay");s&&(s.innerHTML=`<i class="fas fa-tasks me-2 text-primary"></i>${e} Tasks`),window.activeTasksCache&&u(window.activeTasksCache.filter(t=>(t.phase||"Phase 1: Initiation").trim().toLowerCase()===e.trim().toLowerCase()))},window.openPhaseTaskCreationOverlay=function(){let e=document.getElementById("taskFormOverlay");e&&(e.style.display="flex")},window.commitTeamAllocationUpdate=function(){if(!a){alert("No active project selected.");return}let t=Array.from(document.querySelectorAll(".ws-team-pill-checkbox:checked")).map(e=>e.value);if(0===t.length){alert("Please select at least one team member.");return}let n=t.join(", ");fetch(r,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"updateProjectMembers",projectId:a,team:n,user:window.currentUserName||"System"})}).then(()=>{alert("Team updated successfully.");let t=e.find(e=>(e.projectId||e.id)===a);t&&(t.team=n),c(a),i()}).catch(e=>{console.error("Team update error:",e),alert("Error saving team update.")})},window.removeChecklistItemElement=function(e){let t=e.closest(".ut-matrix-item-row");if(t){let e=t.parentNode;t.remove(),e&&0===e.querySelectorAll(".ut-matrix-item-row").length&&(e.innerHTML='<span class="text-muted small mx-auto py-2 italic no-items-flag">No active checklist matrix items configured.</span>')}};</script> <div class="drawer-backdrop" id="drawerBackdrop" onclick="globalCloseAllDrawers()"></div> <div class="detail-drawer" id="updateDrawer"> <div class="align-items-center d-flex justify-content-between mb-4"> <h4 class="fw-bold m-0 text-dark"><i class="fa-edit fas me-2 text-primary"></i>Update Task</h4> <button class="btn-close" onclick="closeDrawer()" aria-label="Close"></button> </div> <div class="bg-light border border-secondary mb-3 p-3 rounded"> <span class="fw-bold small text-muted text-uppercase">Target Task</span> <p class="fw-bold m-0 text-primary" id="editTaskTitleDisplay"></p> </div> <form id="updateTaskDrawerForm"> <input type="hidden" id="editTaskId"> <div class="mb-3"> <label class="form-label fw-bold small text-muted">Pipeline Status</label> <select id="editStatus" class="border-primary form-select form-select-sm shadow-sm" style="height:40px"> <option value="New">New</option> <option value="InProgress">In Progress</option> <option value="UnderReview">Under Review</option> <option value="Done">Done</option> <option value="Cancelled">Cancelled</option> </select> </div> <div class="mb-4"> <label class="form-label fw-bold mb-1 small text-secondary">Append Activity Note</label> <div id="utQuillEditorContainerDrawer" style="background:#fff;border-radius:6px;height:120px" class="border"></div> <input type="hidden" id="utNoteDrawer"> </div> <button type="submit" class="btn btn-primary btn-sm fw-bold mt-2 py-2 shadow-sm w-100"> <i class="fa-save fas me-1"></i> Commit Status Update </button> </form> </div> <div class="custom-viewer-drawer" id="viewFullDrawer"> <div class="align-items-start border-bottom d-flex justify-content-between mb-4 pb-3"> <div> <p class="mb-1 text-muted" style="font-size:.82rem"> <i class="fa-folder-open fas me-1 text-secondary"></i> Project: <strong class="text-dark" id="viewDrawerProjectName"></strong> </p> <div class="align-items-center d-flex flex-wrap gap-2 mb-1"> <span class="badge bg-light border font-monospace text-secondary" id="viewDrawerBadgeId" style="font-size:.75rem"></span> <span class="fw-bold text-dark" id="viewDrawerTitle" style="font-size:1.15rem;line-height:1.4"></span> </div> <div class="d-flex flex-wrap gap-3 mt-1"> <span class="small text-muted" id="viewDrawerCreatedHeader"></span> <span class="small text-muted" id="viewDrawerDueHeader"></span> </div> </div> <button class="btn btn-outline-secondary btn-sm fw-bold ms-3 px-3 py-2" onclick="closeReadPanel()"> <i class="fa-times fas me-1"></i> Close </button> </div> <div style="flex-wrap:wrap;align-items:flex-start;gap:24px;display:flex"> <div style="flex:60%;min-width:280px"> <div class="bg-white border-0 card mb-4 p-4 shadow-sm"> <h5 class="border-bottom fw-bold mb-3 pb-2 text-secondary"> <i class="fa-align-left fas me-2"></i>Task Description </h5> <div id="viewDrawerDescription" class="lh-base text-dark" style="white-space:pre-wrap;font-size:.95rem"></div> </div> <div class="bg-white border-0 card mb-4 p-4 shadow-sm"> <h5 class="border-bottom fw-bold mb-3 pb-2 text-secondary"><i class="fa-sticky-note fas me-2"></i>Latest Activity Note</h5> <div id="viewDrawerNotes"> <p id="viewDrawerNoteText" class="small text-dark"></p> <p id="viewDrawerNoteMeta" class="italic small text-muted"></p> </div> </div> <div class="bg-white border-0 card p-4 shadow-sm"> <h5 class="border-bottom fw-bold mb-3 pb-2 text-primary"><i class="fa-tasks fas me-2"></i>Active Action Items</h5> <div id="viewDrawerChecklistActive" class="mb-4 ps-2"></div> <h5 class="border-bottom fw-bold mb-3 pb-2 text-success"><i class="fa-check-circle fas me-2"></i>Completed Items</h5> <div id="viewDrawerChecklistCompleted" class="ps-2"></div> </div> <div class="bg-white border-0 card mt-4 p-4 shadow-sm"> <h5 class="border-bottom fw-bold mb-3 pb-2 text-secondary"> <i class="fa-comments fas me-2"></i>Comments <span id="viewDrawerCommentCount" class="badge bg-light border ms-2 text-secondary" style="font-size:.72rem"></span> </h5> <div id="viewDrawerCommentThread" style="max-height:320px;margin-bottom:1rem;overflow-y:auto"></div> <div id="viewDrawerCommentInput" style="display:none"> <div class="align-items-start d-flex gap-2"> <textarea id="viewDrawerCommentText" class="form-control form-control-sm" rows="2" placeholder="Add a comment..." style="resize:none;font-size:.85rem"></textarea> <button onclick="postViewDrawerComment()" class="btn btn-primary btn-sm px-3" style="white-space:nowrap"> <i class="fa-paper-plane fas me-1"></i>Post </button> </div> </div> </div> </div> <div style="flex:0 0 260px;min-width:220px"> <div class="bg-white border-0 card mb-3 p-4 shadow-sm"> <div class="mb-3"> <span class="d-block fw-bold mb-1 small text-muted text-uppercase">Current Status</span> <div id="viewDrawerStatusPill"></div> </div> <hr class="my-3 opacity-25"> <div class="mb-3"> <span class="d-block fw-bold mb-2 small text-muted text-uppercase"><i class="fa-chart-line fas me-1"></i> Checklist Progress</span> <div id="viewDrawerProgressBar"></div> </div> <hr class="my-3 opacity-25"> <div class="mb-3"> <span class="d-block fw-bold mb-1 small text-muted text-uppercase"><i class="fa-users fas me-1"></i> Assigned Resources</span> <p id="viewDrawerAssignees" class="fw-bold m-0 text-capitalize text-primary"></p> </div> <hr class="my-3 opacity-25"> <div> <span class="d-block fw-bold mb-1 small text-muted text-uppercase"><i class="fa-clock fas me-1"></i> Logged Timestamp</span> <p id="viewDrawerCreatedAt" class="fw-bold m-0 small text-dark"></p> </div> </div> </div> </div> </div> <script>!function(){let e=document.getElementById("updateDrawer");if(!e)return;let t="none";new MutationObserver(l=>{l.forEach(l=>{if("style"===l.attributeName){let l=e.style.display;"flex"===l&&"flex"!==t?(t="flex",setTimeout(()=>{let e=document.getElementById("utQuillEditorContainerDrawer");if(e&&"undefined"!=typeof Quill){e.parentElement.querySelectorAll(".ql-toolbar").forEach(e=>e.remove()),e.className="border rounded bg-white",e.innerHTML="",window.utQuillEditorInstance=new Quill("#utQuillEditorContainerDrawer",{theme:"snow",placeholder:"Specify integration status updates or operational blocks here...",modules:{toolbar:[["bold","italic"],[{list:"ordered"},{list:"bullet"}]]}});let t=document.getElementById("utNoteDrawer");t&&t.value&&(window.utQuillEditorInstance.root.innerHTML=t.value),window.utQuillEditorInstance.on("text-change",function(){t&&(t.value=window.utQuillEditorInstance.root.innerHTML)})}},100)):"none"===l&&(t="none")}})}).observe(e,{attributes:!0,attributeFilter:["style"]})}(),window.activeChatFilter="All",window.projectCommentsCache=[],window.activeResourcesCache=[],window.resourcePanelMode="file";</script> </div></body></html>
+            `,s.appendChild(l),n.value=""}),s&&s.addEventListener("change",e=>{if(e.target.classList.contains("ut-checklist-item-check")){let t=e.target.closest(".ut-matrix-item-row").querySelector(".ut-checklist-item-text");t&&(e.target.checked?t.classList.add("text-decoration-line-through","text-muted"):t.classList.remove("text-decoration-line-through","text-muted"))}}),["closeUpdateTaskFormBtn","cancelUpdateTaskBtn"].forEach(e=>{let t=document.getElementById(e);t&&t.addEventListener("click",closeDrawer)}),e&&e.addEventListener("submit",function(e){e.preventDefault();let t=document.getElementById("utStatus").value,n="New";"InProgress"===t?n="In Progress":"UnderReview"===t?n="Under Review":"Done"===t?n="Done":"Cancelled"===t&&(n="Cancelled");let i="";void 0!==y&&y&&y.getLength()>1?i=y.root.innerHTML.trim():document.getElementById("utNote")&&(i=document.getElementById("utNote").value.trim());let l=[];s&&s.querySelectorAll(".ut-matrix-item-row").forEach(e=>{let t=e.querySelector(".ut-checklist-item-check"),n=e.querySelector(".ut-checklist-item-text");t&&n&&l.push({text:n.innerText.trim(),completed:t.checked})});let o=(window.currentUserName||"").trim().toLowerCase(),d="admin"===window.currentUserRole||o.includes("admin")||o.includes("system"),c=null;if(d){let e=Array.from(document.querySelectorAll(".ut-assignee-matrix-checkbox:checked")).map(e=>e.value);c=e.length>0?e.join(", "):"Unassigned"}let u=document.getElementById("utDueDate")?document.getElementById("utDueDate").value:"",p={action:"updateTaskStatus",taskId:document.getElementById("utTaskId").value,status:n,note:i,checklist:l,dueDate:u||"",user:window.currentUserName||"System"};null!==c&&(p.assignees=c);let g=document.getElementById("submitUpdateTaskBtn");g.disabled=!0,fetch(r,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(p)}).then(()=>{setTimeout(()=>{globalCloseAllDrawers(),document.getElementById("utNote")&&(document.getElementById("utNote").value=""),void 0!==y&&y&&y.setText(""),void 0!==a&&a&&m(a)},400)}).catch(e=>{console.error("Network Error Handshake Trace:",e),alert("Sync error.")}).finally(()=>{g.disabled=!1})})}),window.switchWorkspacePhase=function(e){n=e,document.querySelectorAll(".phase-node").forEach(e=>e.classList.remove("active-phase"));let t=e.match(/\d+/);if(t){let e=document.getElementById(`phaseNode-${t[0]}`);e&&e.classList.add("active-phase")}let s=document.getElementById("wsActivePhaseTitleDisplay");s&&(s.innerHTML=`<i class="fas fa-tasks me-2 text-primary"></i>${e} Tasks`),window.activeTasksCache&&u(window.activeTasksCache.filter(t=>(t.phase||"Phase 1: Initiation").trim().toLowerCase()===e.trim().toLowerCase()))},window.openPhaseTaskCreationOverlay=function(){let e=document.getElementById("taskFormOverlay");e&&(e.style.display="flex")},window.commitTeamAllocationUpdate=function(){if(!a){alert("No active project selected.");return}let t=Array.from(document.querySelectorAll(".ws-team-pill-checkbox:checked")).map(e=>e.value);if(0===t.length){alert("Please select at least one team member.");return}let n=t.join(", ");fetch(r,{method:"POST",mode:"no-cors",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"updateProjectMembers",projectId:a,team:n,user:window.currentUserName||"System"})}).then(()=>{alert("Team updated successfully.");let t=e.find(e=>(e.projectId||e.id)===a);t&&(t.team=n),c(a),i()}).catch(e=>{console.error("Team update error:",e),alert("Error saving team update.")})},window.removeChecklistItemElement=function(e){let t=e.closest(".ut-matrix-item-row");if(t){let e=t.parentNode;t.remove(),e&&0===e.querySelectorAll(".ut-matrix-item-row").length&&(e.innerHTML='<span class="text-muted small mx-auto py-2 italic no-items-flag">No active checklist matrix items configured.</span>')}};</script> <div class="drawer-backdrop" id="drawerBackdrop" onclick="globalCloseAllDrawers()"></div> <div class="detail-drawer" id="updateDrawer"> <div class="align-items-center d-flex justify-content-between mb-4"> <h4 class="fw-bold m-0 text-dark"><i class="fa-edit fas me-2 text-primary"></i>Update Task</h4> <button class="btn-close" onclick="closeDrawer()" aria-label="Close"></button> </div> <div class="bg-light border border-secondary mb-3 p-3 rounded"> <span class="fw-bold small text-muted text-uppercase">Target Task</span> <p class="fw-bold m-0 text-primary" id="editTaskTitleDisplay"></p> </div> <form id="updateTaskDrawerForm"> <input type="hidden" id="editTaskId"> <div class="mb-3"> <label class="form-label fw-bold small text-muted">Pipeline Status</label> <select id="editStatus" class="border-primary form-select form-select-sm shadow-sm" style="height:40px"> <option value="New">New</option> <option value="InProgress">In Progress</option> <option value="UnderReview">Under Review</option> <option value="Done">Done</option> <option value="Cancelled">Cancelled</option> </select> </div> <div class="mb-4"> <label class="form-label fw-bold mb-1 small text-secondary">Append Activity Note</label> <div id="utQuillEditorContainerDrawer" style="background:#fff;border-radius:6px;height:120px" class="border"></div> <input type="hidden" id="utNoteDrawer"> </div> <button type="submit" class="btn btn-primary btn-sm fw-bold mt-2 py-2 shadow-sm w-100"> <i class="fa-save fas me-1"></i> Commit Status Update </button> </form> </div> <div class="custom-viewer-drawer" id="viewFullDrawer"> <div class="align-items-start border-bottom d-flex justify-content-between mb-4 pb-3"> <div> <p class="mb-1 text-muted" style="font-size:.82rem"> <i class="fa-folder-open fas me-1 text-secondary"></i> Project: <strong class="text-dark" id="viewDrawerProjectName"></strong> </p> <div class="align-items-center d-flex flex-wrap gap-2 mb-1"> <span class="badge bg-light border font-monospace text-secondary" id="viewDrawerBadgeId" style="font-size:.75rem"></span> <span class="fw-bold text-dark" id="viewDrawerTitle" style="font-size:1.15rem;line-height:1.4"></span> </div> <div class="d-flex flex-wrap gap-3 mt-1"> <span class="small text-muted" id="viewDrawerCreatedHeader"></span> <span class="small text-muted" id="viewDrawerDueHeader"></span> </div> </div> <button class="btn btn-outline-secondary btn-sm fw-bold ms-3 px-3 py-2" onclick="closeReadPanel()"> <i class="fa-times fas me-1"></i> Close </button> </div> <div style="flex-wrap:wrap;align-items:flex-start;gap:24px;display:flex"> <div style="flex:60%;min-width:280px"> <div class="bg-white border-0 card mb-4 p-4 shadow-sm"> <h5 class="border-bottom fw-bold mb-3 pb-2 text-secondary"> <i class="fa-align-left fas me-2"></i>Task Description </h5> <div id="viewDrawerDescription" class="lh-base text-dark" style="white-space:pre-wrap;font-size:.95rem"></div> </div> <div class="bg-white border-0 card mb-4 p-4 shadow-sm"> <h5 class="border-bottom fw-bold mb-3 pb-2 text-secondary"><i class="fa-sticky-note fas me-2"></i>Latest Activity Note</h5> <div id="viewDrawerNotes"> <p id="viewDrawerNoteText" class="small text-dark"></p> <p id="viewDrawerNoteMeta" class="italic small text-muted"></p> </div> </div> <div class="bg-white border-0 card p-4 shadow-sm"> <h5 class="border-bottom fw-bold mb-3 pb-2 text-primary"><i class="fa-tasks fas me-2"></i>Active Action Items</h5> <div id="viewDrawerChecklistActive" class="mb-4 ps-2"></div> <h5 class="border-bottom fw-bold mb-3 pb-2 text-success"><i class="fa-check-circle fas me-2"></i>Completed Items</h5> <div id="viewDrawerChecklistCompleted" class="ps-2"></div> </div> <div class="bg-white border-0 card mt-4 p-4 shadow-sm"> <h5 class="border-bottom fw-bold mb-3 pb-2 text-secondary"> <i class="fa-comments fas me-2"></i>Comments <span id="viewDrawerCommentCount" class="badge bg-light border ms-2 text-secondary" style="font-size:.72rem"></span> </h5> <div id="viewDrawerCommentThread" style="max-height:320px;margin-bottom:1rem;overflow-y:auto"></div> <div id="viewDrawerCommentInput" style="display:none"> <div class="align-items-start d-flex gap-2"> <textarea id="viewDrawerCommentText" class="form-control form-control-sm" rows="2" placeholder="Add a comment..." style="resize:none;font-size:.85rem"></textarea> <button onclick="postViewDrawerComment()" class="btn btn-primary btn-sm px-3" style="white-space:nowrap"> <i class="fa-paper-plane fas me-1"></i>Post </button> </div> </div> </div> </div> <div style="flex:0 0 260px;min-width:220px"> <div class="bg-white border-0 card mb-3 p-4 shadow-sm"> <div class="mb-3"> <span class="d-block fw-bold mb-1 small text-muted text-uppercase">Current Status</span> <div id="viewDrawerStatusPill"></div> </div> <hr class="my-3 opacity-25"> <div class="mb-3"> <span class="d-block fw-bold mb-2 small text-muted text-uppercase"><i class="fa-chart-line fas me-1"></i> Checklist Progress</span> <div id="viewDrawerProgressBar"></div> </div> <hr class="my-3 opacity-25"> <div class="mb-3"> <span class="d-block fw-bold mb-1 small text-muted text-uppercase"><i class="fa-users fas me-1"></i> Assigned Resources</span> <p id="viewDrawerAssignees" class="fw-bold m-0 text-capitalize text-primary"></p> </div> <hr class="my-3 opacity-25"> <div> <span class="d-block fw-bold mb-1 small text-muted text-uppercase"><i class="fa-clock fas me-1"></i> Logged Timestamp</span> <p id="viewDrawerCreatedAt" class="fw-bold m-0 small text-dark"></p> </div> </div> </div> </div> </div> <script>!function(){let e=document.getElementById("updateDrawer");if(!e)return;let t="none";new MutationObserver(l=>{l.forEach(l=>{if("style"===l.attributeName){let l=e.style.display;"flex"===l&&"flex"!==t?(t="flex",setTimeout(()=>{let e=document.getElementById("utQuillEditorContainerDrawer");if(e&&"undefined"!=typeof Quill){e.parentElement.querySelectorAll(".ql-toolbar").forEach(e=>e.remove()),e.className="border rounded bg-white",e.innerHTML="",window.utQuillEditorInstance=new Quill("#utQuillEditorContainerDrawer",{theme:"snow",placeholder:"Specify integration status updates or operational blocks here...",modules:{toolbar:[["bold","italic"],[{list:"ordered"},{list:"bullet"}]]}});let t=document.getElementById("utNoteDrawer");t&&t.value&&(window.utQuillEditorInstance.root.innerHTML=t.value),window.utQuillEditorInstance.on("text-change",function(){t&&(t.value=window.utQuillEditorInstance.root.innerHTML)})}},100)):"none"===l&&(t="none")}})}).observe(e,{attributes:!0,attributeFilter:["style"]})}(),window.activeChatFilter="All",window.projectCommentsCache=[],window.activeResourcesCache=[],window.resourcePanelMode="file";</script> </div>
+<script>
+/* -- Workspace functions injected from source (not minified) -- */
+var googleWebAppUrl = 'https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec';
+function fetchProjectComments(projectId) {
+    fetch(googleWebAppUrl + '?action=readProjectComments&projectId=' + encodeURIComponent(projectId) + '&ts=' + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(comments) {
+            window.projectCommentsCache = Array.isArray(comments) ? comments : [];
+            renderProjectComments(window.projectCommentsCache);
+        })
+        .catch(function(err) {
+            console.error('Teams Chat fetch failed:', err);
+            var thread = document.getElementById('wsTeamsChatThread');
+            if (thread) thread.innerHTML = '<p class="text-muted small fst-italic text-center py-3">Could not load messages.</p>';
+        });
+}
+
+function renderProjectComments(comments) {
+    var thread = document.getElementById('wsTeamsChatThread');
+    if (!thread) return;
+
+    var filter   = window.activeChatFilter || 'All';
+    var filtered = filter === 'All' ? comments : comments.filter(function(c) {
+        return (c.category || c.Category || 'General') === filter;
+    });
+
+    // Update count badge + shortcut card
+    var total = comments.length;
+    var countEl = document.getElementById('chatCommentCount');
+    if (countEl) countEl.textContent = total + (total === 1 ? ' message' : ' messages');
+    var cardEl = document.getElementById('wsTeamsChatCount');
+    if (cardEl) cardEl.textContent = total;
+
+    if (!filtered.length) {
+        thread.innerHTML = '<p class="text-muted fst-italic small text-center py-4">' +
+            (filter === 'All' ? '<i class="fas fa-comments me-2 opacity-25"></i>No messages yet — be the first to post!' : 'No ' + filter + ' messages yet.') + '</p>';
+        return;
+    }
+
+    var catStyle = {
+        'Task Suggestion': { bg:'#eff6ff', border:'#bfdbfe', text:'#1e40af', icon:'fa-tasks' },
+        'Risk Awareness':  { bg:'#fef2f2', border:'#fca5a5', text:'#b91c1c', icon:'fa-shield-alt' },
+        'General':         { bg:'#f5f3ff', border:'#ddd6fe', text:'#7c3aed', icon:'fa-comment' }
+    };
+
+    var curUser  = (window.currentUserName || '').trim().toLowerCase();
+    var isAdm    = window.currentUserRole === 'admin' || curUser.includes('admin');
+    var canAction = isAdm || window.isProjectTeamLead;
+
+    thread.innerHTML = filtered.map(function(c) {
+        var displayUser = c.user || c.username || c.author || c.postedBy || 'Unknown';
+        var displayCat  = c.category || c.Category || 'General';
+        var cat         = catStyle[displayCat] || catStyle['General'];
+        var isOwn       = displayUser.trim().toLowerCase() === curUser;
+        var isActioned  = c.status === 'Actioned';
+        var initials    = displayUser.split(' ').map(function(w) { return w[0] || ''; }).join('').toUpperCase().slice(0,2) || 'U';
+
+        return '<div style="display:flex; gap:10px; margin-bottom:14px; ' + (isOwn ? 'flex-direction:row-reverse;' : '') + '">' +
+            '<div style="flex:0 0 34px; width:34px; height:34px; border-radius:50%; background:' + cat.bg + '; border:2px solid ' + cat.border + '; display:flex; align-items:center; justify-content:center; font-size:0.68rem; font-weight:800; color:' + cat.text + '; flex-shrink:0;">' + initials + '</div>' +
+            '<div style="flex:1; max-width:82%;">' +
+                '<div style="background:' + (isOwn ? '#f0f7ff' : '#f8fafc') + '; border:1px solid ' + (isOwn ? '#bfdbfe' : '#e2e8f0') + '; border-radius:' + (isOwn ? '12px 4px 12px 12px' : '4px 12px 12px 12px') + '; padding:10px 14px;">' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; flex-wrap:wrap; gap:6px;">' +
+                        '<span style="font-size:0.78rem; font-weight:700; color:#334155;">' + displayUser + '</span>' +
+                        '<div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap;">' +
+                            '<span style="background:' + cat.bg + '; color:' + cat.text + '; border:1px solid ' + cat.border + '; border-radius:4px; padding:1px 7px; font-size:0.6rem; font-weight:700;">' +
+                                '<i class="fas ' + cat.icon + ' me-1"></i>' + displayCat + '</span>' +
+                            (isActioned ? '<span style="background:#f0fdf4; color:#15803d; border:1px solid #86efac; border-radius:4px; padding:1px 7px; font-size:0.6rem; font-weight:700;"><i class="fas fa-check me-1"></i>Actioned</span>' : '') +
+                        '</div>' +
+                    '</div>' +
+                    '<p style="margin:0 0 6px; font-size:0.83rem; color:#334155; line-height:1.55;">' + (c.message || '') + '</p>' +
+                    '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                        '<span style="font-size:0.62rem; color:#94a3b8;">' + (c.timestamp || '') + '</span>' +
+                        (canAction && !isActioned ? '<button class="btn btn-link btn-sm p-0" style="font-size:0.65rem; color:#15803d;" onclick="actionProjectComment(\'' + c.commentId + '\')"><i class="fas fa-check-circle me-1"></i>Mark Actioned</button>' : '') +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }).join('');
+
+    thread.scrollTop = thread.scrollHeight;
+}
+
+function switchChatFilter(filter) {
+    window.activeChatFilter = filter;
+    var filterMap = { 'All':'All', 'Task Suggestion':'TaskSuggestion', 'Risk Awareness':'RiskAwareness', 'General':'General' };
+    Object.keys(filterMap).forEach(function(f) {
+        var btn = document.getElementById('chatFilter' + filterMap[f]);
+        if (!btn) return;
+        if (f === filter) {
+            btn.style.background = '#7c3aed'; btn.style.color = '#fff'; btn.style.border = 'none';
+        } else {
+            btn.style.background = ''; btn.style.color = ''; btn.style.border = '';
+            btn.className = 'btn btn-sm btn-outline-secondary';
+        }
+    });
+    renderProjectComments(window.projectCommentsCache || []);
+}
+
+function postProjectComment() {
+    var msg = ((document.getElementById('chatNewMessage') || {}).value || '').trim();
+    var cat = (document.getElementById('chatNewCategory') || {}).value || 'General';
+    if (!msg) { document.getElementById('chatNewMessage') && document.getElementById('chatNewMessage').focus(); return; }
+
+    var payload = {
+        action:    'addProjectComment',
+        projectId: window.activeWorkspaceProjectId || '',
+        user:      window.currentUserName || 'System',
+        category:  cat,
+        message:   msg
+    };
+
+    var btn = document.querySelector('#wsTeamsChatSection button[onclick="postProjectComment()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Posting...'; }
+
+    fetch(googleWebAppUrl, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function() {
+        if (document.getElementById('chatNewMessage')) document.getElementById('chatNewMessage').value = '';
+        var newComment = {
+            commentId: 'temp-' + Date.now(),
+            projectId: payload.projectId,
+            timestamp: new Date().toLocaleString('en-ZA'),
+            user:      payload.user,
+            category:  payload.category,
+            message:   payload.message,
+            status:    'Open'
+        };
+        window.projectCommentsCache = (window.projectCommentsCache || []).concat([newComment]);
+        renderProjectComments(window.projectCommentsCache);
+    })
+    .catch(function(err) { console.error(err); alert('Failed to post message.'); })
+    .finally(function() { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Post'; } });
+}
+
+function actionProjectComment(commentId) {
+    var payload = { action: 'updateCommentStatus', commentId: commentId, status: 'Actioned', user: window.currentUserName || 'System' };
+    fetch(googleWebAppUrl, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function() {
+        window.projectCommentsCache = (window.projectCommentsCache || []).map(function(c) {
+            return c.commentId === commentId ? Object.assign({}, c, { status: 'Actioned' }) : c;
+        });
+        renderProjectComments(window.projectCommentsCache);
+    })
+    .catch(function(err) { console.error(err); });
+}
+
+/* =====================================================================
+   PROJECT RESOURCES — fetch, render, upload, link, delete
+   ===================================================================== */
+
+window.activeResourcesCache = [];
+window.resourcePanelMode = 'file';
+
+function fetchProjectResources(projectId) {
+    fetch(googleWebAppUrl + '?action=readResources&projectId=' + encodeURIComponent(projectId))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            window.activeResourcesCache = data.resources || [];
+            renderResourcesGallery(window.activeResourcesCache);
+        })
+        .catch(function(err) { console.warn('Resources fetch failed:', err); });
+}
+
+function renderResourcesGallery(resources) {
+    var gallery  = document.getElementById('wsResourcesGallery');
+    var badge    = document.getElementById('wsResourcesBadge');
+    var countEl  = document.getElementById('wsResourceCount');
+    if (!gallery) return;
+
+    if (badge)   badge.textContent   = resources.length + ' file' + (resources.length !== 1 ? 's' : '');
+    if (countEl) countEl.textContent = resources.length;
+
+    if (!resources.length) {
+        gallery.innerHTML = '<div class="col-12 text-center text-muted py-5">' +
+            '<i class="fas fa-folder-open" style="font-size:2.5rem; opacity:0.2;"></i>' +
+            '<p class="mt-2 mb-0" style="font-size:0.85rem;">No resources uploaded yet.</p></div>';
+        return;
+    }
+
+    var typeConfig = {
+        pdf:   { icon: 'fa-file-pdf',   bg: '#fee2e2', color: '#dc2626', label: 'PDF',   btnLabel: 'Open'  },
+        image: { icon: 'fa-file-image', bg: '#dcfce7', color: '#16a34a', label: 'Image', btnLabel: 'View'  },
+        video: { icon: 'fa-file-video', bg: '#0f172a', color: '#e2e8f0', label: 'Video', btnLabel: 'Watch' },
+        audio: { icon: 'fa-file-audio', bg: '#f3e8ff', color: '#7c3aed', label: 'Audio', btnLabel: 'Play'  },
+        link:  { icon: 'fa-link',       bg: '#dbeafe', color: '#1d4ed8', label: 'Link',  btnLabel: 'Open'  },
+        file:  { icon: 'fa-file-alt',   bg: '#f1f5f9', color: '#475569', label: 'File',  btnLabel: 'Open'  }
+    };
+
+    var currentUser = (sessionStorage.getItem('currentUser_ICT') || '').toLowerCase();
+    var isAdmin     = window.currentUserRole === 'admin';
+    var isTeamLead  = window.isProjectTeamLead === true;
+
+    gallery.innerHTML = resources.map(function(r) {
+        var cfg = typeConfig[r.type] || typeConfig.file;
+        var canDelete = isAdmin || isTeamLead || currentUser === (r.uploadedBy || '').toLowerCase();
+
+        var sizeStr = '';
+        if (r.fileSize && r.fileSize > 0) {
+            sizeStr = r.fileSize > 1048576
+                ? (r.fileSize / 1048576).toFixed(1) + ' MB'
+                : Math.round(r.fileSize / 1024) + ' KB';
+        }
+
+        var thumbHtml = (r.type === 'image' && r.driveFileId)
+            ? '<div style="height:80px; overflow:hidden; border-radius:10px 10px 0 0; background:#f1f5f9;">' +
+              '<img src="https://drive.google.com/thumbnail?id=' + r.driveFileId + '&sz=w300" ' +
+              'style="width:100%; height:100%; object-fit:cover;" onerror="this.parentElement.style.display=\'none\'"></div>'
+            : '';
+
+        var audioHtml = (r.type === 'audio')
+            ? '<audio controls class="w-100 mt-2" style="height:28px; border-radius:6px;">' +
+              '<source src="' + r.url + '" type="audio/mpeg"></audio>'
+            : '';
+
+        var deleteBtn = canDelete
+            ? '<button class="btn btn-sm ms-1" style="font-size:0.7rem; padding:3px 7px; background:#fee2e2; color:#dc2626; border-radius:6px;" ' +
+              'onclick="deleteResource(\'' + r.resourceId + '\',\'' + (r.uploadedBy||'').replace(/'/g,"\\'"  ) + '\')" title="Delete">' +
+              '<i class="fas fa-trash-alt"></i></button>'
+            : '';
+
+        var titleDisplay = r.title.length > 38 ? r.title.substring(0, 38) + '…' : r.title;
+
+        return '<div class="col-12 col-sm-6 col-md-4 col-xl-3">' +
+            '<div class="card h-100 border-0 shadow-sm" style="border-radius:12px; overflow:hidden;">' +
+            thumbHtml +
+            '<div class="px-3 pt-2 pb-1 d-flex align-items-center gap-2" style="background:' + cfg.bg + ';">' +
+            '<i class="fas ' + cfg.icon + '" style="color:' + cfg.color + '; font-size:1rem;"></i>' +
+            '<span style="font-size:0.63rem; font-weight:700; color:' + cfg.color + '; text-transform:uppercase; letter-spacing:0.5px;">' + cfg.label + '</span>' +
+            (sizeStr ? '<span class="ms-auto" style="font-size:0.6rem; color:' + cfg.color + '; opacity:0.65;">' + sizeStr + '</span>' : '') +
+            '</div>' +
+            '<div class="card-body px-3 py-2">' +
+            '<p class="fw-semibold mb-1" style="font-size:0.82rem; word-break:break-word;" title="' + r.title + '">' + titleDisplay + '</p>' +
+            (r.description ? '<p class="text-muted mb-1" style="font-size:0.72rem;">' + r.description + '</p>' : '') +
+            audioHtml +
+            '</div>' +
+            '<div class="card-footer bg-transparent border-top px-3 py-2 d-flex justify-content-between align-items-center">' +
+            '<span style="font-size:0.62rem; color:#6c757d; line-height:1.6;">' +
+            '<i class="fas fa-user me-1" style="opacity:0.45;"></i>' + r.uploadedBy + '<br>' +
+            '<i class="fas fa-calendar me-1" style="opacity:0.45;"></i>' + r.uploadDate +
+            '</span>' +
+            '<div class="d-flex align-items-center">' +
+            '<a href="' + r.url + '" target="_blank" class="btn btn-sm" style="font-size:0.7rem; padding:3px 8px; background:' + cfg.bg + '; color:' + cfg.color + '; border-radius:6px;">' +
+            '<i class="fas fa-external-link-alt me-1" style="font-size:0.58rem;"></i>' + cfg.btnLabel + '</a>' +
+            deleteBtn +
+            '</div>' +
+            '</div>' +
+            '</div></div>';
+    }).join('');
+}
+
+function toggleResourcePanel(mode) {
+    var panel    = document.getElementById('wsResourcePanel');
+    var fileForm = document.getElementById('wsResourceFileForm');
+    var linkForm = document.getElementById('wsResourceLinkForm');
+    if (!panel) return;
+    if (window.resourcePanelMode === mode && panel.style.display !== 'none') {
+        closeResourcePanel(); return;
+    }
+    window.resourcePanelMode = mode;
+    panel.style.display      = 'block';
+    fileForm.style.display   = mode === 'file' ? 'block' : 'none';
+    linkForm.style.display   = mode === 'link' ? 'block' : 'none';
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function closeResourcePanel() {
+    var panel = document.getElementById('wsResourcePanel');
+    if (panel) panel.style.display = 'none';
+    var fi = document.getElementById('resourceFileInput');
+    if (fi) fi.value = '';
+    var warn = document.getElementById('resourceFileSizeWarning');
+    if (warn) warn.style.display = 'none';
+}
+
+function handleResourceFileSelect(input) {
+    var warn = document.getElementById('resourceFileSizeWarning');
+    if (!input.files || !input.files[0] || !warn) return;
+    warn.style.display = input.files[0].size > 20 * 1024 * 1024 ? 'block' : 'none';
+}
+
+function postResource(payload) {
+    // text/plain is a CORS simple request — no preflight needed, response is readable
+    return fetch(googleWebAppUrl, {
+        method:  'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body:    JSON.stringify(payload)
+    }).then(function(r) {
+        if (!r.ok) return r.text().then(function(t) { throw new Error('AppScript ' + r.status + ': ' + t); });
+        return r.text();
+    });
+}
+
+async function submitResourceUpload() {
+    var fileInput = document.getElementById('resourceFileInput');
+    var descInput = document.getElementById('resourceFileDesc');
+    var btn       = document.getElementById('resourceUploadBtn');
+    var progress  = document.getElementById('resourceUploadProgress');
+    var progSpan  = progress ? progress.querySelector('span') : null;
+
+    if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+        alert('Please select a file to upload.'); return;
+    }
+    var file = fileInput.files[0];
+    if (file.size > 20 * 1024 * 1024) {
+        alert('File is too large (max 20MB). For large videos, upload to Google Drive and use Add Link.'); return;
+    }
+
+    btn.disabled = true;
+    if (progress) progress.style.display = 'flex';
+    if (progSpan) progSpan.textContent = 'Uploading to Drive…';
+
+    try {
+        var base64 = await new Promise(function(resolve, reject) {
+            var reader = new FileReader();
+            reader.onload  = function(e) { resolve(e.target.result.split(',')[1]); };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+
+        if (progSpan) progSpan.textContent = 'Saving to Drive…';
+
+        await postResource({
+            action: 'saveResource', resourceType: 'file',
+            projectId:   window.activeWorkspaceProjectId,
+            fileName:    file.name,
+            mimeType:    file.type,
+            fileData:    base64,
+            fileSize:    file.size,
+            description: descInput ? descInput.value.trim() : '',
+            uploadedBy:  sessionStorage.getItem('currentUser_ICT') || 'System'
+        });
+
+        // POST succeeded — refresh gallery from sheet
+        if (progSpan) progSpan.textContent = 'Done! Refreshing…';
+        await fetchProjectResourcesAsync(window.activeWorkspaceProjectId);
+        closeResourcePanel();
+        if (descInput) descInput.value = '';
+
+    } catch(err) {
+        console.error('[Upload error]', err);
+        alert('Upload failed: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        if (progress) progress.style.display = 'none';
+    }
+}
+
+async function submitResourceLink() {
+    var titleEl = document.getElementById('resourceLinkTitle');
+    var urlEl   = document.getElementById('resourceLinkUrl');
+    var descEl  = document.getElementById('resourceLinkDesc');
+    var title   = titleEl ? titleEl.value.trim() : '';
+    var url     = urlEl   ? urlEl.value.trim()   : '';
+    var desc    = descEl  ? descEl.value.trim()  : '';
+
+    if (!title)                          { alert('Please enter a title for the link.'); return; }
+    if (!url || !url.startsWith('http')) { alert('Please enter a valid URL starting with http.'); return; }
+
+    try {
+        await postResource({
+            action: 'saveResource', resourceType: 'link',
+            projectId:   window.activeWorkspaceProjectId,
+            title:       title,
+            url:         url,
+            description: desc,
+            uploadedBy:  sessionStorage.getItem('currentUser_ICT') || 'System'
+        });
+        closeResourcePanel();
+        if (titleEl) titleEl.value = '';
+        if (urlEl)   urlEl.value   = '';
+        if (descEl)  descEl.value  = '';
+        await fetchProjectResourcesAsync(window.activeWorkspaceProjectId);
+    } catch(err) {
+        console.error('[Link error]', err);
+        alert('Failed to save link: ' + err.message);
+    }
+}
+
+async function deleteResource(resourceId, uploadedBy) {
+    if (!confirm('Delete this resource? Files will be removed from Google Drive.')) return;
+
+    // Optimistic: remove card immediately
+    window.activeResourcesCache = (window.activeResourcesCache || []).filter(function(r) {
+        return r.resourceId !== resourceId;
+    });
+    renderResourcesGallery(window.activeResourcesCache);
+
+    try {
+        await postResource({
+            action:     'deleteResource',
+            resourceId: resourceId,
+            uploadedBy: sessionStorage.getItem('currentUser_ICT') || 'System'
+        });
+        await fetchProjectResourcesAsync(window.activeWorkspaceProjectId);
+    } catch(err) {
+        console.error('[Delete error]', err);
+        fetchProjectResources(window.activeWorkspaceProjectId); // restore on failure
+    }
+}
+
+function fetchProjectResourcesAsync(projectId) {
+    return fetch(googleWebAppUrl + '?action=readResources&projectId=' + encodeURIComponent(projectId || ''))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            window.activeResourcesCache = data.resources || [];
+            renderResourcesGallery(window.activeResourcesCache);
+        });
+}
+
+/* =====================================================================
+   RISK REGISTER — view toggle, fetch, render, matrix, add/edit/note
+   ===================================================================== */
+
+function switchWorkspaceView(view) {
+    const boardView = document.getElementById('wsBoardView');
+    const riskView  = document.getElementById('wsRiskView');
+    const btnBoard  = document.getElementById('btnViewBoard');
+    const btnRisks  = document.getElementById('btnViewRisks');
+
+    if (view === 'risks') {
+        if (boardView) boardView.style.display = 'none';
+        if (riskView)  riskView.style.display  = 'block';
+        if (btnBoard)  { btnBoard.classList.remove('btn-primary'); btnBoard.classList.add('btn-outline-secondary'); }
+        if (btnRisks)  { btnRisks.classList.remove('btn-outline-secondary'); btnRisks.classList.add('btn-primary'); }
+        if (window.activeWorkspaceProjectId) fetchProjectRisks(window.activeWorkspaceProjectId);
+    } else {
+        if (boardView) boardView.style.display = 'block';
+        if (riskView)  riskView.style.display  = 'none';
+        if (btnBoard)  { btnBoard.classList.add('btn-primary'); btnBoard.classList.remove('btn-outline-secondary'); }
+        if (btnRisks)  { btnRisks.classList.remove('btn-primary'); btnRisks.classList.add('btn-outline-secondary'); }
+    }
+}
+
+function fetchProjectRisks(projectId) {
+    const container = document.getElementById('wsRiskTableContainer');
+    if (container) container.innerHTML = '<p class="text-muted fst-italic small text-center py-4"><i class="fas fa-spinner fa-spin me-2"></i>Loading risks...</p>';
+
+    fetch(googleWebAppUrl + '?action=readRisks&projectId=' + encodeURIComponent(projectId) + '&ts=' + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(risks) {
+            window.activeRisksCache = Array.isArray(risks) ? risks : [];
+            renderRiskRegister(window.activeRisksCache);
+
+            // Show Add Risk button for admin / team lead
+            const btn = document.getElementById('btnAddRisk');
+            const curUser = (window.currentUserName || '').trim().toLowerCase();
+            const isAdm = window.currentUserRole === 'admin' || curUser.includes('admin');
+            if (btn && (isAdm || window.isProjectTeamLead)) {
+                btn.style.setProperty('display', 'inline-block', 'important');
+            }
+        })
+        .catch(function(err) {
+            console.error('Risk fetch failed:', err);
+            if (container) container.innerHTML = '<p class="text-danger small text-center py-4"><i class="fas fa-exclamation-triangle me-1"></i>Failed to load risks.</p>';
+        });
+}
+
+function renderRiskRegister(risks) {
+    const sevColor = { Critical: '#b91c1c', High: '#c2410c', Medium: '#b45309', Low: '#15803d' };
+    const sevBg    = { Critical: '#fef2f2', High: '#fff7ed', Medium: '#fffbeb', Low: '#f0fdf4' };
+    const sevBorder= { Critical: '#fca5a5', High: '#fdba74', Medium: '#fcd34d', Low: '#86efac' };
+    const stratIcon= { Avoidance: 'fa-ban', Reduction: 'fa-compress-alt', Transference: 'fa-exchange-alt', Acceptance: 'fa-check-circle', Contingency: 'fa-life-ring' };
+    const statCls  = { Open: 'bg-danger', 'In Progress': 'bg-warning text-dark', Mitigated: 'bg-info text-dark', Closed: 'bg-success' };
+
+    // Summary counts — normalise case so "low"/"LOW" still match
+    const counts = { Critical: 0, High: 0, Medium: 0, Low: 0 };
+    risks.forEach(function(r) {
+        var raw = r.severity || r.Severity || r.riskSeverity || '';
+        var key = raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+        if (counts[key] !== undefined) counts[key]++;
+    });
+    console.log('[Risks] sample row:', risks[0], '| counts:', counts);
+
+    // Update in-section severity badges
+    ['Critical','High','Medium','Low'].forEach(function(s) {
+        const el = document.getElementById('riskSum' + s);
+        if (el) el.textContent = counts[s] + ' ' + s;
+    });
+
+    // Update top shortcut cards
+    const total = counts.Critical + counts.High + counts.Medium + counts.Low;
+    var totalEl    = document.getElementById('wsRiskTotal');
+    var critEl     = document.getElementById('wsRiskCriticalCount');
+    var highEl     = document.getElementById('wsRiskHighCount');
+    var medEl      = document.getElementById('wsRiskMediumCount');
+    var lowEl      = document.getElementById('wsRiskLowCount');
+    if (totalEl) totalEl.textContent = total;
+    if (critEl)  critEl.textContent  = counts.Critical;
+    if (highEl)  highEl.textContent  = counts.High;
+    if (medEl)   medEl.textContent   = counts.Medium;
+    if (lowEl)   lowEl.textContent   = counts.Low;
+
+    // Badge on risk register header
+    const badge = document.getElementById('riskBadgeCount');
+    const urgent = counts.Critical + counts.High;
+    if (badge) { badge.textContent = urgent; badge.style.display = urgent > 0 ? 'inline' : 'none'; }
+
+    const container = document.getElementById('wsRiskTableContainer');
+    if (!container) return;
+
+    if (!risks.length) {
+        container.innerHTML = '<p class="text-muted fst-italic small text-center py-4"><i class="fas fa-shield-alt me-2"></i>No risks registered for this project.</p>';
+        renderRiskMatrix([]);
+        return;
+    }
+
+    const curUser = (window.currentUserName || '').trim().toLowerCase();
+    const isAdm   = window.currentUserRole === 'admin' || curUser.includes('admin');
+    const canEdit = isAdm || window.isProjectTeamLead;
+
+    const phaseShort = {
+        'General': 'General', 'Phase 1: Initiation': 'Ph.1 Initiation',
+        'Phase 2: Planning': 'Ph.2 Planning', 'Phase 3: Execution': 'Ph.3 Execution',
+        'Phase 4: Monitoring & Onboarding': 'Ph.4 Monitoring', 'Phase 5: Project Closure': 'Ph.5 Closure'
+    };
+
+    const rows = risks.map(function(r) {
+        const isOwner     = r.owner && r.owner.toLowerCase() === curUser;
+        const canEditNote = canEdit || isOwner;
+        const rawSev      = r.severity || r.Severity || r.riskSeverity || 'Low';
+        const sev         = rawSev.charAt(0).toUpperCase() + rawSev.slice(1).toLowerCase();
+        const sta         = r.status || r.Status || 'Open';
+        const phLabel     = phaseShort[r.phase] || (r.phase || 'General');
+
+        return '<tr style="border-bottom:1px solid #f1f5f9;">' +
+            '<td style="padding:8px 10px; font-size:0.72rem; color:#64748b; white-space:nowrap;">' + (r.dateRaised || 'N/A') + '</td>' +
+            '<td style="padding:8px 10px; max-width:200px;">' +
+                '<div class="fw-semibold" style="font-size:0.82rem;">' + (r.description || '') + '</div>' +
+                (r.mitigatingAction ? '<div class="text-muted" style="font-size:0.7rem; margin-top:2px;"><i class="fas fa-wrench me-1"></i>' + r.mitigatingAction + '</div>' : '') +
+            '</td>' +
+            '<td style="padding:8px 8px; text-align:center; white-space:nowrap;"><span style="font-size:0.7rem; background:#f1f5f9; color:#475569; border-radius:4px; padding:2px 7px;">' + phLabel + '</span></td>' +
+            '<td style="padding:8px 6px; text-align:center;"><span style="font-size:0.72rem; font-weight:600; color:' + (sevColor[r.likelihood] || '#64748b') + ';">' + (r.likelihood || '-') + '</span></td>' +
+            '<td style="padding:8px 6px; text-align:center;"><span style="font-size:0.72rem; font-weight:600; color:' + (sevColor[r.impact] || '#64748b') + ';">' + (r.impact || '-') + '</span></td>' +
+            '<td style="padding:8px 6px; text-align:center;"><span style="background:' + (sevBg[sev] || '#f8fafc') + '; color:' + (sevColor[sev] || '#64748b') + '; border:1px solid ' + (sevBorder[sev] || '#e2e8f0') + '; border-radius:4px; padding:2px 7px; font-size:0.7rem; font-weight:700;">' + sev + '</span></td>' +
+            '<td style="padding:8px 10px; font-size:0.75rem; white-space:nowrap;"><i class="fas ' + (stratIcon[r.strategy] || 'fa-question') + ' me-1 text-secondary"></i>' + (r.strategy || '-') + '</td>' +
+            '<td style="padding:8px 10px; font-size:0.75rem;">' + (r.owner || '<span class="text-muted">—</span>') + '</td>' +
+            '<td style="padding:8px 10px; max-width:180px;">' +
+                '<div style="font-size:0.72rem; color:#334155;">' + (r.notes || '<span class="text-muted fst-italic">No notes</span>') + '</div>' +
+                (canEditNote ? '<button class="btn btn-link btn-sm p-0 mt-1" style="font-size:0.65rem;" onclick="openRiskNoteEditor(\'' + r.riskId + '\', `' + (r.notes || '').replace(/`/g, "'") + '`)"><i class="fas fa-pencil-alt me-1"></i>Edit note</button>' : '') +
+            '</td>' +
+            '<td style="padding:8px 6px;"><span class="badge ' + (statCls[sta] || 'bg-secondary') + '" style="font-size:0.65rem;">' + sta + '</span></td>' +
+            '<td style="padding:8px 4px;">' +
+                (canEdit ? '<button class="btn btn-link btn-sm p-0" style="font-size:0.7rem; color:#0369a1; white-space:nowrap;" onclick="openRiskModal(\'' + r.riskId + '\')"><i class="fas fa-edit me-1"></i>Edit</button>' : '') +
+            '</td>' +
+        '</tr>';
+    }).join('');
+
+    container.innerHTML =
+        '<div style="overflow-x:auto;">' +
+        '<table style="width:100%; border-collapse:collapse; min-width:860px;">' +
+            '<thead><tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0;">' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase; white-space:nowrap;">Date</th>' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Risk Description</th>' +
+                '<th style="padding:8px 8px; font-size:0.68rem; color:#64748b; text-transform:uppercase; text-align:center; white-space:nowrap;">Phase</th>' +
+                '<th style="padding:8px 6px; font-size:0.68rem; color:#64748b; text-transform:uppercase; text-align:center;">Likelihood</th>' +
+                '<th style="padding:8px 6px; font-size:0.68rem; color:#64748b; text-transform:uppercase; text-align:center;">Impact</th>' +
+                '<th style="padding:8px 6px; font-size:0.68rem; color:#64748b; text-transform:uppercase; text-align:center;">Severity</th>' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Strategy</th>' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Owner</th>' +
+                '<th style="padding:8px 10px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Notes</th>' +
+                '<th style="padding:8px 6px; font-size:0.68rem; color:#64748b; text-transform:uppercase;">Status</th>' +
+                '<th style="padding:8px 4px;"></th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody>' +
+        '</table></div>';
+
+    renderRiskMatrix(risks);
+}
+
+function renderRiskMatrix(risks) {
+    const el = document.getElementById('wsRiskMatrix');
+    if (!el) return;
+
+    const likelihoods = ['High', 'Medium', 'Low'];
+    const impacts     = ['Low',  'Medium',  'High'];
+    const sevMap = {
+        'High-Low':'Medium',   'High-Medium':'High',     'High-High':'Critical',
+        'Medium-Low':'Low',    'Medium-Medium':'Medium',  'Medium-High':'High',
+        'Low-Low':'Low',       'Low-Medium':'Low',        'Low-High':'Medium'
+    };
+    const cellBg     = { Critical:'#fca5a5', High:'#fdba74', Medium:'#fcd34d', Low:'#bbf7d0' };
+    const cellColor  = { Critical:'#7f1d1d', High:'#7c2d12', Medium:'#713f12', Low:'#14532d' };
+
+    let html = '';
+    likelihoods.forEach(function(l) {
+        // Row label (likelihood)
+        html += '<div style="display:flex; align-items:center; justify-content:flex-end; padding-right:8px; font-size:0.68rem; color:#64748b; font-weight:700;">' + l + '</div>';
+        impacts.forEach(function(i) {
+            const sev   = sevMap[l + '-' + i];
+            const bg    = cellBg[sev]   || '#e2e8f0';
+            const clr   = cellColor[sev]|| '#334155';
+            const count = risks.filter(function(r) {
+                return r.likelihood === l && r.impact === i && r.status !== 'Closed' && r.status !== 'Mitigated';
+            }).length;
+            html += '<div style="background:' + bg + '; border-radius:8px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; cursor:default;" title="' + l + ' Likelihood / ' + i + ' Impact → ' + sev + '">' +
+                '<span style="font-size:0.62rem; font-weight:700; color:' + clr + '; text-transform:uppercase; letter-spacing:0.5px; opacity:0.75;">' + sev + '</span>' +
+                (count > 0 ? '<span style="font-size:1.4rem; font-weight:800; color:' + clr + '; line-height:1;">' + count + '</span>' : '<span style="font-size:0.75rem; color:' + clr + '; opacity:0.3;">—</span>') +
+            '</div>';
+        });
+    });
+
+    el.innerHTML = html;
+}
+
+function openRiskModal(riskId) {
+    // Populate owner dropdown
+    const ownerSel = document.getElementById('riskOwner');
+    if (ownerSel) {
+        ownerSel.innerHTML = '<option value="">— Select Owner —</option>';
+        window.teamUserList.forEach(function(u) {
+            var opt = document.createElement('option');
+            opt.value = u; opt.textContent = u;
+            ownerSel.appendChild(opt);
+        });
+    }
+
+    const overlay     = document.getElementById('riskFormOverlay');
+    const titleEl     = document.getElementById('riskFormTitle');
+    const riskIdInput = document.getElementById('riskFormId');
+
+    if (riskId) {
+        var risk = (window.activeRisksCache || []).find(function(r) { return r.riskId === riskId; });
+        if (!risk) return;
+        if (titleEl)     titleEl.textContent = 'Edit Risk';
+        if (riskIdInput) riskIdInput.value   = riskId;
+        document.getElementById('riskDescription').value      = risk.description      || '';
+        document.getElementById('riskLikelihood').value       = risk.likelihood       || 'Low';
+        document.getElementById('riskImpact').value           = risk.impact           || 'Low';
+        document.getElementById('riskStrategy').value         = risk.strategy         || 'Acceptance';
+        document.getElementById('riskPhase').value            = risk.phase            || 'General';
+        document.getElementById('riskMitigatingAction').value = risk.mitigatingAction || '';
+        document.getElementById('riskNotes').value            = risk.notes            || '';
+        document.getElementById('riskStatus').value           = risk.status           || 'Open';
+        if (ownerSel) ownerSel.value = risk.owner || '';
+    } else {
+        if (titleEl)     titleEl.textContent = 'Add Risk';
+        if (riskIdInput) riskIdInput.value   = '';
+        document.getElementById('riskFormEl').reset();
+        if (ownerSel) {
+            ownerSel.innerHTML = '<option value="">— Select Owner —</option>';
+            window.teamUserList.forEach(function(u) {
+                var opt = document.createElement('option'); opt.value = u; opt.textContent = u;
+                ownerSel.appendChild(opt);
+            });
+        }
+    }
+
+    updateRiskSeverityPreview();
+    if (overlay) overlay.style.display = 'flex';
+}
+
+function updateRiskSeverityPreview() {
+    var l = (document.getElementById('riskLikelihood') || {}).value || 'Low';
+    var i = (document.getElementById('riskImpact')     || {}).value || 'Low';
+    var matrix = {
+        'Low-Low':'Low','Low-Medium':'Low','Low-High':'Medium',
+        'Medium-Low':'Low','Medium-Medium':'Medium','Medium-High':'High',
+        'High-Low':'Medium','High-Medium':'High','High-High':'Critical'
+    };
+    var sev = matrix[l + '-' + i] || 'Low';
+    var clr = { Critical:'#b91c1c', High:'#c2410c', Medium:'#b45309', Low:'#15803d' };
+    var bgs = { Critical:'#fef2f2', High:'#fff7ed', Medium:'#fffbeb', Low:'#f0fdf4' };
+    var bdr = { Critical:'#fca5a5', High:'#fdba74', Medium:'#fcd34d', Low:'#86efac' };
+    var el = document.getElementById('riskSeverityPreview');
+    if (el) {
+        el.textContent    = sev;
+        el.style.background = bgs[sev];
+        el.style.color      = clr[sev];
+        el.style.borderColor= bdr[sev];
+    }
+}
+
+function submitRiskForm() {
+    var riskId = (document.getElementById('riskFormId') || {}).value || '';
+    var desc   = (document.getElementById('riskDescription') || {}).value || '';
+    if (!desc.trim()) { alert('Please enter a risk description.'); return; }
+
+    var payload = {
+        action:           riskId ? 'updateRisk' : 'appendRisk',
+        riskId:           riskId,
+        projectId:        window.activeWorkspaceProjectId || '',
+        description:      desc.trim(),
+        likelihood:       (document.getElementById('riskLikelihood')       || {}).value || 'Low',
+        impact:           (document.getElementById('riskImpact')           || {}).value || 'Low',
+        strategy:         (document.getElementById('riskStrategy')         || {}).value || 'Acceptance',
+        phase:            (document.getElementById('riskPhase')            || {}).value || 'General',
+        owner:            (document.getElementById('riskOwner')            || {}).value || '',
+        mitigatingAction: (document.getElementById('riskMitigatingAction') || {}).value || '',
+        notes:            (document.getElementById('riskNotes')            || {}).value || '',
+        status:           (document.getElementById('riskStatus')           || {}).value || 'Open',
+        user:             window.currentUserName || 'System'
+    };
+
+    var btn = document.getElementById('riskSubmitBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...'; }
+
+    fetch(googleWebAppUrl, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function() {
+        document.getElementById('riskFormOverlay').style.display = 'none';
+        alert('Risk ' + (riskId ? 'updated' : 'added') + ' successfully!');
+        fetchProjectRisks(window.activeWorkspaceProjectId);
+    })
+    .catch(function(err) { console.error(err); alert('Failed to save risk.'); })
+    .finally(function() { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i>Save Risk'; } });
+}
+
+function openRiskNoteEditor(riskId, currentNote) {
+    window.editingRiskNoteId = riskId;
+    var textarea = document.getElementById('riskNoteTextarea');
+    var overlay  = document.getElementById('riskNoteOverlay');
+    if (textarea) textarea.value = currentNote || '';
+    if (overlay)  overlay.style.display = 'flex';
+}
+
+function submitRiskNote() {
+    var notes  = (document.getElementById('riskNoteTextarea') || {}).value || '';
+    var riskId = window.editingRiskNoteId;
+    if (!riskId) return;
+
+    var payload = {
+        action:  'updateRiskNote',
+        riskId:  riskId,
+        notes:   notes.trim(),
+        user:    window.currentUserName || 'System'
+    };
+
+    var btn = document.getElementById('riskNoteSubmitBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...'; }
+
+    fetch(googleWebAppUrl, {
+        method: 'POST', mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(function() {
+        document.getElementById('riskNoteOverlay').style.display = 'none';
+        fetchProjectRisks(window.activeWorkspaceProjectId);
+    })
+    .catch(function(err) { console.error(err); })
+    .finally(function() { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i>Save Note'; } });
+}
+
+</script>
+</body></html>
