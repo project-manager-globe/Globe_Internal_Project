@@ -1078,16 +1078,6 @@ footer.wh_footer {
             </div>
         </div>
 
-        <!-- Teams Chat → open FAB chat panel -->
-        <div class="col-6 col-md-4 col-lg" onclick="window.toggleWsChat()" style="cursor: pointer">
-            <div class="card p-3 shadow-sm border-0 style-hover-card h-100" style="background: #faf5ff">
-                <p class="mb-1 fw-bold text-uppercase" style="letter-spacing: .5px; color: #7c3aed; font-size: .7rem">
-                    <i class="fas fa-comments me-1"></i>Teams Chat <i class="fas fa-external-link-alt ms-1" style="font-size: .58rem"></i>
-                </p>
-                <h3 id="wsTeamsChatCount" class="fw-bold m-0" style="color: #7c3aed; font-size: 1.6rem">0</h3>
-            </div>
-        </div>
-
         <!-- Resources → scroll to resources section -->
         <div class="col-6 col-md-4 col-lg" onclick="document.getElementById('wsResourcesSection').scrollIntoView({behavior:'smooth'});" style="cursor: pointer">
             <div class="card p-3 shadow-sm border-0 style-hover-card h-100" style="background: #f0fdf4">
@@ -1337,7 +1327,7 @@ footer.wh_footer {
     </div>
 
     <!-- ===== TEAMS CHAT SECTION ===== -->
-    <div class="row mb-4" id="wsTeamsChatSection" style="display: none">
+    <div class="row mb-4" id="wsTeamsChatSection">
         <div class="col-12">
             <div class="card shadow-sm border-0 p-4" style="background: #fefeff">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1465,26 +1455,11 @@ footer.wh_footer {
         </div>
     </div>
 
-    <!-- WORKSPACE TEAM CHAT FAB -->
-    <button id="wsChatFab" onclick="window.toggleWsChat()" title="Team Chat" style="z-index: 1500; color: #fff; cursor: pointer; background: #7c3aed; border: none; border-radius: 50%; justify-content: center; align-items: center; width: 52px; height: 52px; font-size: 1.25rem; transition: transform .2s, box-shadow .2s; display: flex; position: fixed; bottom: 28px; right: 28px; box-shadow: 0 4px 18px #7c3aed59">
+    <!-- WORKSPACE TEAM CHAT FAB — scrolls to the chat section below -->
+    <button id="wsChatFab" title="Team Chat" onclick="document.getElementById('wsTeamsChatSection').scrollIntoView({behavior:'smooth'})" style="z-index: 1500; color: #fff; cursor: pointer; background: #7c3aed; border: none; border-radius: 50%; justify-content: center; align-items: center; width: 52px; height: 52px; font-size: 1.25rem; transition: transform .2s, box-shadow .2s; display: flex; position: fixed; bottom: 28px; right: 28px; box-shadow: 0 4px 18px #7c3aed59">
         <i class="fas fa-comments"></i>
-        <span id="wsChatBadge" style="color: #fff; background: #ef4444; border-radius: 50%; justify-content: center; align-items: center; width: 18px; height: 18px; font-size: .6rem; font-weight: 700; display: none; position: absolute; top: -4px; right: -4px"></span>
+        <span id="wsTeamsChatCount" style="color: #fff; background: #ef4444; border-radius: 50%; justify-content: center; align-items: center; min-width: 18px; height: 18px; padding: 0 3px; font-size: .6rem; font-weight: 700; display: none; position: absolute; top: -4px; right: -4px"></span>
     </button>
-
-    <!-- WORKSPACE TEAM CHAT PANEL -->
-    <div id="wsChatPanel" style="z-index: 1500; background: #fff; border: 1px solid #e1e1e3; border-radius: 16px; flex-direction: column; width: 360px; max-width: calc(100vw - 40px); display: none; position: fixed; bottom: 90px; right: 28px; overflow: hidden; box-shadow: 0 8px 40px #00000026">
-        <div style="color: #fff; background: #7c3aed; justify-content: space-between; align-items: center; padding: 14px 18px; display: flex">
-            <span style="font-size: .95rem; font-weight: 700"><i class="fas fa-comments me-2"></i>Team Chat</span>
-            <button onclick="window.toggleWsChat()" style="color: #fff; cursor: pointer; background: none; border: none; padding: 0; font-size: 1.1rem"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="wsChatPanelThread" style="background: #f8fafc; height: 300px; padding: 14px; overflow-y: auto"></div>
-        <div style="background: #fff; border-top: 1px solid #e2e8f0; align-items: flex-end; gap: 8px; padding: 12px 14px; display: flex">
-            <textarea id="wsChatPanelInput" rows="2" placeholder="Type a message..." style="resize: none; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; flex: 1; padding: 8px 10px; font-family: inherit; font-size: .83rem"></textarea>
-            <button onclick="window.postWsChatMessage()" style="color: #fff; cursor: pointer; background: #7c3aed; border: none; border-radius: 8px; padding: 8px 12px; font-size: .85rem; font-weight: 600">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
 
 </div>
 
@@ -3861,87 +3836,6 @@ function actionProjectComment(commentId) {
         console.error(err);
     });
 }
-/* =====================================================================
-   WORKSPACE FAB CHAT — simplified floating panel (no categories)
-   ===================================================================== */ window.toggleWsChat = function() {
-    var panel = document.getElementById('wsChatPanel');
-    if (!panel) return;
-    var isOpen = panel.style.display === 'flex';
-    panel.style.display = isOpen ? 'none' : 'flex';
-    if (!isOpen) {
-        var pid = window.activeWorkspaceProjectId;
-        if (!pid) return;
-        var thread = document.getElementById('wsChatPanelThread');
-        if (thread) thread.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.8rem;padding:20px;"><i class="fas fa-spinner fa-spin me-1"></i>Loading...</p>';
-        fetch(googleWebAppUrl + '?action=readProjectComments&projectId=' + encodeURIComponent(pid) + '&ts=' + Date.now()).then(function(r) {
-            return r.json();
-        }).then(function(comments) {
-            window.projectCommentsCache = Array.isArray(comments) ? comments : [];
-            renderWsChatPanel(window.projectCommentsCache);
-        }).catch(function() {
-            var t = document.getElementById('wsChatPanelThread');
-            if (t) t.innerHTML = '<p style="text-align:center;color:#ef4444;font-size:0.8rem;padding:20px;">Could not load messages.</p>';
-        });
-    }
-};
-function renderWsChatPanel(comments) {
-    var thread = document.getElementById('wsChatPanelThread');
-    if (!thread) return;
-    var curUser = (sessionStorage.getItem('currentUser_ICT') || '').toLowerCase();
-    if (!comments.length) {
-        thread.innerHTML = '<p style="text-align:center;color:#94a3b8;font-size:0.8rem;padding:30px 10px;"><i class="fas fa-comments me-2" style="opacity:0.3;"></i>No messages yet \u2014 be the first!</p>';
-        return;
-    }
-    thread.innerHTML = comments.map(function(c) {
-        var displayUser = c.user || c.username || c.author || 'Unknown';
-        var isOwn = displayUser.trim().toLowerCase() === curUser;
-        var initials = displayUser.split(' ').map(function(w) {
-            return w[0] || '';
-        }).join('').toUpperCase().slice(0, 2) || 'U';
-        return '<div style="display:flex;gap:8px;margin-bottom:12px;' + (isOwn ? 'flex-direction:row-reverse;' : '') + '">' + '<div style="flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#f3e8ff;border:2px solid #ddd6fe;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:800;color:#7c3aed;">' + initials + '</div>' + '<div style="flex:1;max-width:80%;">' + '<div style="background:' + (isOwn ? '#f3e8ff' : '#fff') + ';border:1px solid ' + (isOwn ? '#ddd6fe' : '#e2e8f0') + ';border-radius:' + (isOwn ? '12px 4px 12px 12px' : '4px 12px 12px 12px') + ';padding:8px 12px;">' + '<div style="font-size:0.72rem;font-weight:700;color:#334155;margin-bottom:3px;">' + displayUser + '</div>' + '<p style="margin:0;font-size:0.82rem;color:#334155;line-height:1.5;">' + (c.message || '') + '</p>' + '<span style="font-size:0.6rem;color:#94a3b8;">' + (c.timestamp || '') + '</span>' + '</div>' + '</div>' + '</div>';
-    }).join('');
-    thread.scrollTop = thread.scrollHeight;
-    var badge = document.getElementById('wsTeamsChatCount');
-    if (badge) badge.textContent = comments.length;
-}
-window.postWsChatMessage = function() {
-    var input = document.getElementById('wsChatPanelInput');
-    var msg = (input ? input.value : '').trim();
-    if (!msg) {
-        if (input) input.focus();
-        return;
-    }
-    var pid = window.activeWorkspaceProjectId || '';
-    var payload = {
-        action: 'addProjectComment',
-        projectId: pid,
-        user: window.currentUserName || sessionStorage.getItem('currentUser_ICT') || 'System',
-        category: 'General',
-        message: msg
-    };
-    fetch(googleWebAppUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-    }).then(function() {
-        window.projectCommentsCache = (window.projectCommentsCache || []).concat([
-            {
-                commentId: 'temp-' + Date.now(),
-                timestamp: new Date().toLocaleString('en-ZA'),
-                user: payload.user,
-                category: 'General',
-                message: msg
-            }
-        ]);
-        renderWsChatPanel(window.projectCommentsCache);
-        if (input) input.value = '';
-    }).catch(function(err) {
-        console.error(err);
-    });
-};
 /* =====================================================================
    PROJECT RESOURCES — fetch, render, upload, link, delete
    ===================================================================== */ window.activeResourcesCache = [];
