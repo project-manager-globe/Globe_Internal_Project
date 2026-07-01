@@ -404,7 +404,7 @@
                         <i class="fa-solid fa-list-check" style="color:#005AFC;"></i> EXCO Task Board
                         <span id="excoTaskCount" class="badge ms-2" style="background:#eef4ff;color:#005AFC;border:1px solid #bfdbfe;font-size:0.7rem;vertical-align:middle;">0 open</span>
                     </h3>
-                    <button onclick="window.openExcoTaskForm()" class="btn btn-sm" style="background:#005AFC;color:#fff;border:none;">
+                    <button id="btnAddExcoTask" onclick="window.openExcoTaskForm()" class="btn btn-sm" style="background:#005AFC;color:#fff;border:none;display:none;">
                         <i class="fas fa-plus me-1"></i>Add Task
                     </button>
                 </div>
@@ -677,6 +677,7 @@
 
             renderCompletedActions();
             fetchLiveWorkspaceLedger();
+            if (userRole === 'admin') { const b = document.getElementById('btnAddExcoTask'); if (b) b.style.display = ''; }
             fetchExcoUsers();
             fetchExcoTasks();
             fetchHistoricalAgenda();
@@ -919,6 +920,7 @@
         }
 
         window.openExcoTaskForm = function() {
+            if (userRole !== 'admin') return;
             const form = document.getElementById('excoTaskForm');
             if (!form) return;
             const sel = document.getElementById('etAssignee');
