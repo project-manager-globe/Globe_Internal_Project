@@ -236,6 +236,11 @@
 
         /* Force left-align inside Task Board rows */
         #excoTaskList, #excoTaskList * { text-align: left !important; }
+
+        /* Strip Quill inline colors — keep all body text black */
+        .node-content, .node-content *,
+        #viewDrawerBody, #viewDrawerBody *,
+        #historyTabsContent .tab-pane > div { color: #111 !important; }
     </style>
 </head>
 <body>
