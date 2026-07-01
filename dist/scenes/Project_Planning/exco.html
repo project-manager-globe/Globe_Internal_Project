@@ -534,22 +534,11 @@ body {
                 <div class="card-header-flex">
                     <h3 class="card-title-text"><i class="fa-solid fa-clock-rotate-left" style="color: #a855f7"></i> Meeting Archive & History</h3>
                 </div>
-                <ul class="nav nav-tabs" id="historyTabs" role="tablist">
-                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#hist-april" type="button">April 30, 2026</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#hist-march" type="button">March 26, 2026</button></li>
-                    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#hist-feb" type="button">Feb 22, 2026</button></li>
-                </ul>
-                <div class="tab-content pt-3" id="historyTabsContent" style="color: #555; text-align: left; font-family: Roboto, sans-serif; font-size: .9rem; line-height: 1.5">
-                    <div class="tab-pane fade show active" id="hist-april">
-                        <strong>Summary:</strong> Finalized technical scoping requirements for automation scripts. Validated structural migration protocols with Danie regarding customer transition pipelines. Commenced pipeline framework optimization.
-                    </div>
-                    <div class="tab-pane fade" id="hist-march">
-                        <strong>Summary:</strong> Reviewed standard escalation runbooks. Authorized provisioning for upcoming system environment additions. Addressed infrastructure throughput constraints.
-                    </div>
-                    <div class="tab-pane fade" id="hist-feb">
-                        <strong>Summary:</strong> Completed audit alignment protocols between internal billing records and Xero. Verified billing run consistency before processing data structures.
-                    </div>
+                <div id="historyArchiveLoader" style="text-align: center; color: #94a3b8; padding: 20px 0 10px; font-size: .85rem">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Loading archive...
                 </div>
+                <ul class="nav nav-tabs" id="historyTabs" role="tablist" style="display: none"></ul>
+                <div class="tab-content pt-3" id="historyTabsContent" style="color: #555; text-align: left; font-family: Roboto, sans-serif; font-size: .9rem; line-height: 1.5; display: none"></div>
             </div>
 
             <!-- 5. COMPLETED ACTIONS TO DATE CARD -->
@@ -779,6 +768,7 @@ body {
         initializeRecapDateSelector();
         renderCompletedActions();
         fetchLiveWorkspaceLedger();
+        fetchHistoricalAgenda();
         fetchExcoComments();
     });
     // Safe setup to handle the dynamic header target from image_b27533.png
@@ -997,6 +987,60 @@ body {
                 '"': '&quot;',
                 "'": '&#39;'
             })[m]);
+    }
+    // ── Meeting Archive & History ────────────────────────────────────────
+    function fetchHistoricalAgenda() {
+        const loader = document.getElementById('historyArchiveLoader');
+        fetch(GAS_WORKSPACE_API + '?action=getHistoricalAgenda&ts=' + Date.now()).then((r)=>r.json()).then((records)=>{
+            if (loader) loader.style.display = 'none';
+            const tabsList = document.getElementById('historyTabs');
+            const tabContent = document.getElementById('historyTabsContent');
+            if (!tabsList || !tabContent) return;
+            if (!Array.isArray(records) || !records.length) {
+                loader.style.display = '';
+                loader.innerHTML = '<i class="fas fa-archive me-2" style="opacity:0.4;"></i>No archived meetings yet.';
+                return;
+            }
+            tabsList.innerHTML = '';
+            tabContent.innerHTML = '';
+            tabsList.style.display = '';
+            tabContent.style.display = '';
+            records.forEach((rec, idx)=>{
+                const paneId = 'hist-archive-' + idx;
+                const isActive = idx === 0;
+                const label = formatArchiveDate(rec.timestamp);
+                const li = document.createElement('li');
+                li.className = 'nav-item';
+                li.innerHTML = `<button class="nav-link${isActive ? ' active' : ''}" data-bs-toggle="tab" data-bs-target="#${paneId}" type="button">${label}</button>`;
+                tabsList.appendChild(li);
+                const pane = document.createElement('div');
+                pane.className = `tab-pane fade${isActive ? ' show active' : ''}`;
+                pane.id = paneId;
+                pane.innerHTML = `
+                            <p style="font-size:0.75rem;color:#94a3b8;margin-bottom:10px;">
+                                <i class="fas fa-user me-1"></i>${rec.updatedBy || 'System'}
+                                &nbsp;&middot;&nbsp;
+                                <i class="fas fa-calendar me-1"></i>${rec.timestamp}
+                            </p>
+                            <div style="line-height:1.7;">${rec.content || '<em style="color:#94a3b8;">No content recorded.</em>'}</div>`;
+                tabContent.appendChild(pane);
+            });
+        }).catch(()=>{
+            if (loader) loader.innerHTML = '<i class="fas fa-exclamation-triangle me-2" style="color:#ef4444;"></i>Could not load archive.';
+        });
+    }
+    function formatArchiveDate(ts) {
+        try {
+            const d = new Date(ts);
+            if (isNaN(d.getTime())) return ts;
+            return d.toLocaleDateString('en-ZA', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        } catch (e) {
+            return ts;
+        }
     }
     // ── EXCO Team Chat ──────────────────────────────────────────────────
     const EXCO_CHAT_ID = 'EXCO_PAGE';
