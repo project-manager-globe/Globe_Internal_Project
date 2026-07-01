@@ -1,1 +1,494 @@
-<!DOCTYPE html><html lang="en" class="no-js"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ICTGlobe Internal Updates</title><meta name="theme-color" content="#000000"><meta name="Information Is Key" content="A Landing Page for Project Management & Information Sharing"><meta name="Estelle" content="Project Management"><link rel="stylesheet" href="index.45abe701.css"><script>var e,t;document.documentElement.className="js",(t=document.createElement("style")).innerHTML="root: { --tmp-var: bold; }",document.head.appendChild(t),e=!!(window.CSS&&window.CSS.supports&&window.CSS.supports("font-weight","var(--tmp-var)")),t.parentNode.removeChild(t),e||alert("Please view this demo in a modern browser that supports CSS Variables.");</script><link rel="stylesheet" href="https://use.typekit.net/nbe0mhe.css"><link rel="stylesheet" type="text/css" href="index.e207550c.css"><link rel="stylesheet" type="text/css" href="index.89378a80.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><style>#loginOverlay{z-index:10000;color:#fff;background:#0b2147;justify-content:center;align-items:center;width:100%;height:100%;font-family:EB Garamond,serif;display:flex;position:fixed;top:0;left:0}.login-box{color:#333;text-align:center;background:#fff;border-radius:12px;width:90%;max-width:400px;padding:40px;box-shadow:0 10px 30px #00000080}#userName{box-sizing:border-box;border:1px solid #dadce0;border-radius:6px;width:100%;margin-bottom:10px;padding:12px;font-size:16px}.pass-wrapper{width:100%;display:block;position:relative}#passInput{box-sizing:border-box;border:1px solid #dadce0;border-radius:6px;width:100%;margin-bottom:10px;padding:12px 45px 12px 12px;font-size:16px}.toggle-password{cursor:pointer;color:#666;z-index:10;width:22px;height:22px;transition:color .2s;position:absolute;top:50%;right:15px;transform:translateY(-70%)}.toggle-password:hover{color:#1a1b48}.login-box button{color:#fff;cursor:pointer;background:#505152;border:none;border-radius:6px;width:100%;padding:12px 30px;font-weight:700;transition:all .3s}.login-box button:hover{background:#1a1b48}#protectedContent{display:none}</style></head><body class="demo-1 loading"> <div id="loginOverlay"> <div class="login-box"> <img src="ictglobe.6de83f7e.png" height="60px" alt="ICTGlobe Logo"><br><br> <h2 style="color:#0b2147;font-weight:700">SL<strong style="color:#1a30fc;font-size:45px;font-weight:700">i</strong>M Office Portal</h2> <h5 style="color:#0b2147;font-size:16px;font-weight:700"> <strong style="color:#1a30fc;font-size:20px;font-weight:700">S</strong>trategy - <strong style="color:#1a30fc;font-size:20px;font-weight:700">L</strong>eadership - <strong style="color:#1a30fc;font-size:20px;font-weight:700">I</strong>mprove - <strong style="color:#1a30fc;font-size:20px;font-weight:700">M</strong>easure </h5> <p style="color:#494848;font-size:14px">Enter your credentials to access project insights.</p> <input type="text" id="userName" placeholder="Username" autofocus> <div class="pass-wrapper"> <input type="password" id="passInput" placeholder="Password"> <svg id="eyeIcon" fill="none" stroke="currentColor" stroke-width="1.5" class="toggle-password" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1 1 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/></svg> </div> <button id="submitLogin">Verify & Access</button> <p id="errMsg" style="color:#d93025;margin-top:15px;font-size:13px;font-weight:700;display:none">⚠️ Access Denied.</p> </div> </div> <div id="protectedContent"> <header class="navbar navbar-default wh_header" id="mainHeaderNavigation"> <div class="topcontainer"> <div class="bg-primary"> <nav class="fixed-top navbar navbar-dark navbar-expand-md"> <div class="container-fluid"> <a class="navbar-brand" href="/"> <img src="ictglobe.6de83f7e.png" height="40px" alt="ICTGlobe"> </a> <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation"> <span class="navbar-toggler-icon"></span> </button> <div class="collapse navbar-collapse" id="navbarTogglerDemo02"> <ul class="ml-auto ms-auto navbar-nav"> <li class="nav-item"> <a href="scenes/Project_Planning/strategy.html" class="myTopButton project-link" data-project="strategy">Strategy</a> </li> <li class="nav-item"> <a href="#devisions" class="myTopButton">Devisions</a> </li> <li class="nav-item"> <a href="scenes/Project_Planning/resources.html" class="myTopButton project-link" data-project="resources">Resources</a> </li> <li class="nav-item"> </li><li class="nav-item"><a href="scenes/Project_Planning/projects_dashboard.html" class="myTopButton">Projects</a></li> <li class="nav-item"> <a href="#" class="myTopButton" id="logoutBtn" style="color:#0137fb;font-weight:700">Logout</a> </li> </ul> </div> </div> </nav> </div> </div> </header> <main> <div id="projectMainWrapper" style="display:block"> <section class="content" id="project"> <div class="mb-5 mt-3 text-center"> <h1 class="content__START font-weight-bold m-0" style="letter-spacing:-.5px;font-size:3.6rem">SLiM Office Portal</h1> <p class="mb-0 mt-1 text-secondary" style="padding-left:450px;font-family:Roboto,sans-serif;font-size:1.15rem"> <strong class="HOW">S</strong>trategy &middot; <strong class="HOW">L</strong>eadership &middot; <strong class="HOW">I</strong>mprove &middot; <strong class="HOW">M</strong>easure </p> </div> <h2 class="intro2">Welcome to a<span class="HOW"><strong> Clever </strong></span>Office Workspace!</h2> <h3 class="content__subtitle"><strong>Where ideas sync and success happens.... </strong><br><br>This page outlines initiation, planning and execution, <br>the shared internal goals of <span class="HOW"><strong> ICTGlobe </strong>.</span></h3> <div class="panel"> <div class="panel__item"> <div class="panel__item-imgwrap" style="color:#686164"><img class="panel__item-img" src="5unsplash.c944fadc.jpg" alt="Some image" width="200" height="360"></div> <h3 class="panel__item-title"><span style="color:#005afc">Services</span><br><span>with</span><span>Strategy</span></h3> <div class="panel__item-subtitle"> <span><p><strong style="color:#c70c12">Customer</strong> service should not be a department, it should be the <br><strong style="color:#c70c12">focus</strong> of the entire organization!</p></span><p></p> <h4 data-splitting> <i class="fa-file-video fa-solid"> <a href="scenes/Project_Planning/strategy.html#solution" class="myButton3 project-link" data-project="strategy">Strategic Plan </a> </i> </h4> </div> <button class="panel__item-close"><span>Close</span></button> </div> <div class="panel__item"> <div class="panel__item-imgwrap" style="color:#686164"><img class="panel__item-img" src="D5.9c3743af.jpg" alt="Some image" width="250" height="360"></div> <h3 class="panel__item-title"><span style="color:#fdc806">Delivering</span><br><span>with</span><span>Meaning</span></h3> <div class="panel__item-subtitle"> <span><strong style="color:#0137fb">Empowering</strong> South Africa... <br>one <strong style="color:#0137fb">valued client</strong> at a time!</span> <h4 data-splitting><i class="fa-file-video fa-solid"><a href="scenes/Project_Planning/activityMeasure.html" class="myButton5 project-link" data-project="activityMeasures">Onboarding Activity Tracker</a></i></h4> </div> <button class="panel__item-close"><span>Close</span></button> </div> <div class="panel__item"> <div class="panel__item-imgwrap" style="color:#686164"><img class="panel__item-img" src="teamBoat.14d8866f.png" alt="Some image" width="240" height="360"></div> <h3 class="panel__item-title"><span style="color:#c70c12">Exco</span><br><span>Planning </span><span>Objectives</span></h3> <div class="panel__item-subtitle"> <span>Empowering <strong style="color:#deae00">visionary</strong> concepts into<br> impactful <strong style="color:#deae00">initiatives</strong>.</span> <h4 data-splitting><i class="fa-file-video fa-solid"><a href="scenes/Project_Planning/exco.html" class="myButton4 project-link" data-project="exco">Coordination and Execution </a></i></h4> </div> <button class="panel__item-close"><span>Close</span></button> </div> </div> </section> <h2 class="intro2">This is <span class="HOW"><strong>how</strong></span> we will achieve business <span class="HOW"><strong>success</strong></span>.</h2>   <h5 class="content__subtitle">Collaborative team efforts, will encourage information and skill s<span class="HOW"><strong>h</strong></span>aring, <span class="HOW"><strong>o</strong></span>rederly timelines, and daily or <span class="HOW"><strong>w</strong></span>eekly overviews, which in turn, will contribute to the successful growth of <span class="HOW"><strong>ICTGlobe</strong></span>.</h5> <h5 class="content__subtitle">Communication is key... <span class="HOW"><strong>H</strong></span>ulle weet wat <span class="HOW"><strong>O</strong></span>ns <span class="HOW"><strong>W</strong></span>eet!</h5>  <section class="content" id="devisions"> <h4 class="content__title">ICTGlobe Internal Devisions</h4> <div class="panel"> <div class="panel__item"> <div class="panel__item-imgwrap" style="color:#686164"><img class="panel__item-img" src="finance.9528d9f5.jpg" alt="Some image" width="250" height="360"></div> <h3 class="panel__item-title"><span style="color:#c70c12">Finance</span><br><span>Process</span><span>Flows</span></h3> <div class="panel__item-subtitle"> <span><strong style="color:#005afc">Demystifying</strong> the standard <br><strong style="color:#005afc">processes</strong> of finance.</span> <h4 data-splitting><i class="fa-file-video fa-solid"><a href="#devisions" class="myButton4">Fiance Processes Explained</a></i></h4> </div> <button class="panel__item-close"><span>Close</span></button> </div> <div class="panel__item"> <div class="panel__item-imgwrap" style="color:#686164"><img class="panel__item-img" src="lightBulb.db0d9121.png" alt="Some image" width="250" height="360"></div> <h3 class="panel__item-title"><span style="color:#0137fb">Constructing</span><br><span>cost effective</span><span>Solutions</span></h3> <div class="panel__item-subtitle"> <span>Commercial, making<strong style="color:#fdc806"> connections</strong>,<br> making <strong style="color:#fdc806">solutions </strong> work!</span> <h4 data-splitting><i class="fa-file-video fa-solid"><a href="#devisions" target="_blank" class="myButton3">Digital Stuff</a></i></h4> </div> <button class="panel__item-close"><span>Close</span></button> </div> <div class="panel__item"> <div class="panel__item-imgwrap" style="color:#686164"><img class="panel__item-img" src="Dish1.f94c0889.jpg" alt="Some image" width="250" height="360"></div> <h3 class="panel__item-title" id="MultiServices"><span style="color:#fdc806">Products</span><br><span>and</span><span>Services</span></h3> <div class="panel__item-subtitle"> <span><strong style="color:#c70c12">ICTGlobe</strong> has established a rich <br>portfolio of <strong style="color:#c70c12">products and services.</strong></span> <h4 data-splitting><i class="fa-file-video fa-solid"><a href="scenes/Project_Planning/services.html" class="myButton5 project-link" data-project="nowtech">Services</a></i></h4> </div> <button class="panel__item-close"><span>Close</span></button> </div> </div> </section> <footer class="navbar navbar-default wh_footer"> <div class="footer-container mx-auto"> <div> <a href="https://ictglobe.com/" target="_blank" style="color:inherit;text-decoration:none"><img style="font-size:20px" src="ictglobe.6de83f7e.png" alt="ICTGlobe" width="100px"></a> <strong>Projects made easy</strong> </div> </div> </footer> </div> </main> <svg width="30" height="20" class="cursor" viewBox="0 0 20 20"><circle cx="10" cy="10" r="5" class="cursor__inner"/></svg> </div> <script type="module" src="index.19163108.js"></script><script src="index.1049b4ec.js" nomodule defer></script> <script>!function(){let e=document.getElementById("eyeIcon"),t=document.getElementById("passInput"),r=document.getElementById("userName"),s=document.getElementById("submitLogin"),o=document.getElementById("logoutBtn");e&&(e.style.cursor="pointer",e.addEventListener("mouseenter",()=>{t.type="text",e.innerHTML='<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.815 7.815 3 3m-3-3-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />'}),e.addEventListener("mouseleave",()=>{t.type="password",e.innerHTML='<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />'}));let n=new BroadcastChannel("ictglobe_session_sync");function a(e){let t=e.currentTarget.getAttribute("data-project"),r=sessionStorage.getItem("currentUser_ICT"),s=sessionStorage.getItem("currentUserRole_ICT")||"user",o=JSON.parse(sessionStorage.getItem("currentUserProjects_ICT")||"[]");if(!r){e.preventDefault(),alert("Session error. Please log in again.");return}let n=(t||"").toLowerCase().trim(),a=o.map(function(e){return e.toLowerCase().trim()});"admin"===s||a.includes(n)||a.includes("all")||(e.preventDefault(),alert("You are not authorized to view this content, for access please contact project management \uD83D\uDCE7"))}async function i(){let e=r.value.trim().toLowerCase(),s=t.value.trim();if(!e||!s)return;let o=new TextEncoder,n=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",o.encode(s)))).map(e=>e.toString(16).padStart(2,"0")).join("");try{let r="https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec?action=validateLogin&username="+encodeURIComponent(e)+"&hash="+encodeURIComponent(n),s=await fetch(r),o=await s.json();if(o.success){sessionStorage.setItem("isLoggedIn_ICT","true"),sessionStorage.setItem("currentUser_ICT",o.user.username),sessionStorage.setItem("currentUserRole_ICT",o.user.role),sessionStorage.setItem("currentUserProjects_ICT",JSON.stringify(o.user.projects));let t=sessionStorage.getItem("redirect_target");if(t){sessionStorage.removeItem("redirect_target"),window.location.replace(t);return}c(),fetch("https://formspree.io/f/mvzyvpqq",{method:"POST",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({Status:"⚠️ Access Logged",AuthorizedUser:e,Message:`User ${e} has successfully authorized the ICTGlobe Internal portal.`})}).catch(e=>console.error("Metrics push drop:",e))}else document.getElementById("errMsg").style.display="block",t.value=""}catch(e){console.error("Login validation error:",e),document.getElementById("errMsg").style.display="block",t.value=""}}function c(){let e=sessionStorage.getItem("redirect_target");if(e){sessionStorage.removeItem("redirect_target"),window.location.replace(e);return}let t=document.getElementById("loginOverlay"),r=document.getElementById("protectedContent");t&&(t.style.display="none"),r&&(r.style.display="block"),document.body.classList.remove("loading"),document.querySelectorAll(".project-link").forEach(e=>{e.removeEventListener("click",a),e.addEventListener("click",a)}),window.dispatchEvent(new Event("resize"))}n.onmessage=e=>{"REQUEST_SESSION_STATE"===e.data.type?"true"===sessionStorage.getItem("isLoggedIn_ICT")&&n.postMessage({type:"RECEIVE_SESSION_STATE",isLoggedIn:sessionStorage.getItem("isLoggedIn_ICT"),currentUser:sessionStorage.getItem("currentUser_ICT"),redirectTarget:sessionStorage.getItem("redirect_target")}):"RECEIVE_SESSION_STATE"===e.data.type&&"true"!==sessionStorage.getItem("isLoggedIn_ICT")&&(sessionStorage.setItem("isLoggedIn_ICT",e.data.isLoggedIn),sessionStorage.setItem("currentUser_ICT",e.data.currentUser),e.data.redirectTarget&&sessionStorage.setItem("redirect_target",e.data.redirectTarget),c())},s&&s.addEventListener("click",i),[t,r].forEach(e=>{e&&e.addEventListener("keyup",e=>{"Enter"===e.key&&i()})}),window.addEventListener("DOMContentLoaded",()=>{"true"===sessionStorage.getItem("isLoggedIn_ICT")?c():n.postMessage({type:"REQUEST_SESSION_STATE"}),o&&o.addEventListener("click",e=>{e.preventDefault(),sessionStorage.removeItem("isLoggedIn_ICT"),sessionStorage.removeItem("currentUser_ICT"),sessionStorage.removeItem("currentUserRole_ICT"),sessionStorage.removeItem("currentUserProjects_ICT"),sessionStorage.removeItem("redirect_target"),window.location.reload()})})}();</script> </body></html>
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ICTGlobe Internal Updates</title>
+    <meta name="theme-color" content="#000000">
+    <meta name="Information Is Key" content="A Landing Page for Project Management & Information Sharing">
+    <meta name="Estelle" content="Project Management">
+    
+    <link rel="stylesheet" href="/index.c41b5a0e.css"><script>document.documentElement.className = "js";
+var supportsCssVars = function() {
+    var e, t = document.createElement("style");
+    return t.innerHTML = "root: { --tmp-var: bold; }", document.head.appendChild(t), e = !!(window.CSS && window.CSS.supports && window.CSS.supports("font-weight", "var(--tmp-var)")), t.parentNode.removeChild(t), e;
+};
+supportsCssVars() || alert("Please view this demo in a modern browser that supports CSS Variables.");
+
+</script>
+    
+    <link rel="stylesheet" href="https://use.typekit.net/nbe0mhe.css">
+  
+    <link rel="stylesheet" type="text/css" href="/index.e9a92ad8.css">
+    <link rel="stylesheet" type="text/css" href="/index.748ad148.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+        
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>  
+   
+   
+    <style>#loginOverlay {
+  z-index: 10000;
+  color: #fff;
+  background: #0b2147;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  font-family: EB Garamond, serif;
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.login-box {
+  color: #333;
+  text-align: center;
+  background: #fff;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  padding: 40px;
+  box-shadow: 0 10px 30px #00000080;
+}
+
+#userName {
+  box-sizing: border-box;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 12px;
+  font-size: 16px;
+}
+
+.pass-wrapper {
+  width: 100%;
+  display: block;
+  position: relative;
+}
+
+#passInput {
+  box-sizing: border-box;
+  border: 1px solid #dadce0;
+  border-radius: 6px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 12px 45px 12px 12px;
+  font-size: 16px;
+}
+
+.toggle-password {
+  cursor: pointer;
+  color: #666;
+  z-index: 10;
+  width: 22px;
+  height: 22px;
+  transition: color .2s;
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-70%);
+}
+
+.toggle-password:hover {
+  color: #1a1b48;
+}
+
+.login-box button {
+  color: #fff;
+  cursor: pointer;
+  background: #505152;
+  border: none;
+  border-radius: 6px;
+  width: 100%;
+  padding: 12px 30px;
+  font-weight: bold;
+  transition: all .3s;
+}
+
+.login-box button:hover {
+  background: #1a1b48;
+}
+
+#protectedContent {
+  display: none;
+}
+</style>
+
+  </head>
+              
+  <body class="demo-1 loading">
+
+    <div id="loginOverlay">
+    <div class="login-box">
+        <img src="/ictglobe.8df8469d.png" height="60px" alt="ICTGlobe Logo"><br><br>
+        <h2 style="color: #0b2147; font-weight: bold">SL<strong style="color: #1a30fc; font-size: 45px; font-weight: bold">i</strong>M Office Portal</h2>
+        <h5 style="color: #0b2147; font-size: 16px; font-weight: bold">
+            <strong style="color: #1a30fc; font-size: 20px; font-weight: bold">S</strong>trategy - 
+            <strong style="color: #1a30fc; font-size: 20px; font-weight: bold">L</strong>eadership - 
+            <strong style="color: #1a30fc; font-size: 20px; font-weight: bold">I</strong>mprove - 
+            <strong style="color: #1a30fc; font-size: 20px; font-weight: bold">M</strong>easure
+        </h5>
+        <p style="color: #494848; font-size: 14px">Enter your credentials to access project insights.</p>
+        
+        <input type="text" id="userName" placeholder="Username" autofocus="">
+        
+        <div class="pass-wrapper">
+            <input type="password" id="passInput" placeholder="Password">
+            <svg id="eyeIcon" class="toggle-password" xmlns="http://www.w3.org/2000/svg" fill="none" viewbox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"></path>
+            </svg>
+        </div>
+        
+        <button id="submitLogin">Verify & Access</button>
+        <p id="errMsg" style="color: #d93025; margin-top: 15px; font-size: 13px; font-weight: bold; display: none">⚠️ Access Denied.</p>
+    </div>
+</div>
+    
+
+<div id="protectedContent">
+    <header class="navbar navbar-default wh_header" id="mainHeaderNavigation">
+      <div class="topcontainer">
+        <div class="bg-primary">
+<nav class="navbar navbar-expand-md fixed-top navbar-dark">
+    <div class="container-fluid"> <a class="navbar-brand" href="/">
+            <img src="/ictglobe.8df8469d.png" height="40px" alt="ICTGlobe">
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo02" aria-controls="navbarTogglerDemo02" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo02">
+            <ul class="navbar-nav ms-auto ml-auto">
+                
+                <li class="nav-item">
+                    <a href="/scenes/Project_Planning/strategy.html" class="myTopButton project-link" data-project="strategy">Strategy</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#devisions" class="myTopButton">Devisions</a>
+                </li>
+                <li class="nav-item">
+                    <a href="/scenes/Project_Planning/resources.html" class="myTopButton project-link" data-project="resources">Resources</a>
+                </li>
+               
+                <li class="nav-item">
+                    </li><li class="nav-item"><a href="/scenes/Project_Planning/projects_dashboard.html" class="myTopButton">Projects</a></li>
+                
+            
+                <li class="nav-item">
+                      <a href="#" class="myTopButton" id="logoutBtn" style="color: #0137fb; font-weight: bold">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+        </div>
+      </div>
+    </header>
+  
+    <main>
+      <div id="projectMainWrapper" style="display: block">
+        
+        <section class="content" id="project">
+          <div class="text-center mb-5 mt-3">
+    <h1 class="content__START font-weight-bold m-0" style="letter-spacing: -.5px; font-size: 3.6rem">SLiM Office Portal</h1>
+    <p class="text-secondary mt-1 mb-0" style="padding-left: 450px; font-family: Roboto, sans-serif; font-size: 1.15rem">
+        <strong class="HOW">S</strong>trategy &middot; <strong class="HOW">L</strong>eadership &middot; <strong class="HOW">I</strong>mprove &middot; <strong class="HOW">M</strong>easure
+    </p>
+</div>
+          <h2 class="intro2">Welcome to a<span class="HOW"><strong> Clever </strong></span>Office Workspace!</h2>
+          <h3 class="content__subtitle"><strong>Where ideas sync and success happens.... </strong><br><br>This page outlines initiation, planning and execution, <br>the shared internal goals of <span class="HOW"><strong> ICTGlobe </strong>.</span></h3>
+          
+          <div class="panel">
+            <div class="panel__item">
+              <div class="panel__item-imgwrap" style="color: #686164"><img class="panel__item-img" src="/5unsplash.41edbeb5.jpg" alt="Some image" width="200" height="360"></div>
+              <h3 class="panel__item-title"><span style="color: #005afc">Services</span><br><span>with</span><span>Strategy</span></h3>
+              <div class="panel__item-subtitle">
+                <span><p><strong style="color: #c70c12">Customer</strong> service should not be a department, it should be the <br><strong style="color: #c70c12">focus</strong> of the entire organization!</p></span><p></p>
+                <h4 data-splitting="">
+  <i class="fa-solid fa-file-video">
+    <a href="/scenes/Project_Planning/strategy.html#solution" class="myButton3 project-link" data-project="strategy">Strategic Plan </a>
+  </i>
+</h4>
+              </div>
+              <button class="panel__item-close"><span>Close</span></button>
+            </div>
+
+            <div class="panel__item">
+              <div class="panel__item-imgwrap" style="color: #686164"><img class="panel__item-img" src="/D5.47a05b29.jpg" alt="Some image" width="250" height="360"></div>
+              <h3 class="panel__item-title"><span style="color: #fdc806">Delivering</span><br><span>with</span><span>Meaning</span></h3>
+              <div class="panel__item-subtitle">
+                <span><strong style="color: #0137fb">Empowering</strong> South Africa... <br>one <strong style="color: #0137fb">valued client</strong> at a time!</span>
+                <h4 data-splitting=""><i class="fa-solid fa-file-video"><a href="/scenes/Project_Planning/activityMeasure.html" class="myButton5 project-link" data-project="activityMeasures">Onboarding Activity Tracker</a></i></h4>
+              </div>
+              <button class="panel__item-close"><span>Close</span></button>
+            </div>
+          
+            <div class="panel__item">
+              <div class="panel__item-imgwrap" style="color: #686164"><img class="panel__item-img" src="/teamBoat.d5bedd48.png" alt="Some image" width="240" height="360"></div>
+              <h3 class="panel__item-title"><span style="color: #c70c12">Exco</span><br><span>Planning </span><span>Objectives</span></h3>
+              <div class="panel__item-subtitle">
+                <span>Empowering <strong style="color: #deae00">visionary</strong> concepts into<br> impactful <strong style="color: #deae00">initiatives</strong>.</span>
+                <h4 data-splitting=""><i class="fa-solid fa-file-video"><a href="/scenes/Project_Planning/exco.html" class="myButton4 project-link" data-project="exco">Coordination and Execution </a></i></h4>
+              </div>
+              <button class="panel__item-close"><span>Close</span></button>
+            </div>
+          </div>    
+        </section>
+
+        <h2 class="intro2">This is <span class="HOW"><strong>how</strong></span> we will achieve business <span class="HOW"><strong>success</strong></span>.</h2>
+        <!--<h5 class="intro2">Organizational Insights Uncovered...</h5>-->
+        <!--<h5 class="content__subtitle">Through analysing, implementation, testing and learning, our teams will be empowered to make impactful, informative decisions and provide exceptional service delivery.</h5>-->
+        <h5 class="content__subtitle">Collaborative team efforts, will encourage information and skill s<span class="HOW"><strong>h</strong></span>aring, <span class="HOW"><strong>o</strong></span>rederly timelines, and daily or <span class="HOW"><strong>w</strong></span>eekly overviews, which in turn, will contribute to the successful growth of <span class="HOW"><strong>ICTGlobe</strong></span>.</h5>
+        <h5 class="content__subtitle">Communication is key...  <span class="HOW"><strong>H</strong></span>ulle weet wat <span class="HOW"><strong>O</strong></span>ns <span class="HOW"><strong>W</strong></span>eet!</h5>
+
+        <!--<br><br>
+          
+        <div id="carouselExampleDark" class="carousel carousel-dark slide">
+          <div class="carousel-inner">
+            <div class="carousel-item active" data-bs-interval="10000">
+              <svg class="bd-placeholder-img bd-placeholder-img-lg d-block w-100 s" width="900" height="600" xmlns="https://www.w3.org/2000/svg" role="img" aria-label="Placeholder: First slide" preserveAspectRatio="xMidYMid slice" focusable="false"></svg>
+              <div class="carousel-caption d-none d-md-block">
+                <img src="./images/NEWS.png" width="80%" height="600px"/>
+              </div>
+            </div>
+        
+            <div class="carousel-item" data-bs-interval="2000">
+              <svg class="bd-placeholder-img bd-placeholder-img-lg d-block w-100 s" width="1000" height="600" xmlns="https://www.w3.org/2000/svg" role="img" aria-label="Placeholder: First slide" preserveAspectRatio="xMidYMid slice" focusable="false"></svg>
+              <div class="carousel-caption d-none d-md-block">
+                <img src="./images/3CX.jpeg" width="100%" height="700px"/>
+                <h4><span class="HOW"><strong>3CX</strong></span> Unified business <span class="HOW"><strong>COMMUNICATION</strong></span> <br>Where vision meets reality.</h4>
+              </div>
+            </div>
+        
+            <div class="carousel-item">
+              <svg class="bd-placeholder-img bd-placeholder-img-lg d-block w-100 s" width="1000" height="600" xmlns="https://www.w3.org/2000/svg" role="img" aria-label="Placeholder: First slide" preserveAspectRatio="xMidYMid slice" focusable="false"></svg>
+              <div class="carousel-caption d-none d-md-block">
+                <img src="./images/ICTGlobe_AI.png" width="100%"/>
+                <h4>Experience the might of <u>Artificial Intelligence</u> and <span class="HOW2"><strong>CALL RECORDING SECURITY</strong></span><br><span class="HOW2"><strong>CALL VAULT</strong></span>... forging the future, one call at a time.</h4>
+              </div>
+            </div>
+          </div>
+          <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+          </button>
+          <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleDark" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+          </button>
+        </div>
+    -->
+
+        <section class="content" id="devisions">
+          <h4 class="content__title">ICTGlobe Internal Devisions</h4>
+          <div class="panel">
+            <div class="panel__item">
+              <div class="panel__item-imgwrap" style="color: #686164"><img class="panel__item-img" src="/finance.e58798ce.jpg" alt="Some image" width="250" height="360"></div>
+              <h3 class="panel__item-title"><span style="color: #c70c12">Finance</span><br><span>Process</span><span>Flows</span></h3>
+              <div class="panel__item-subtitle">
+                <span><strong style="color: #005afc">Demystifying</strong> the standard <br><strong style="color: #005afc">processes</strong> of finance.</span>
+                <h4 data-splitting=""><i class="fa-solid fa-file-video"><a href="#devisions" class="myButton4">Fiance Processes Explained</a></i></h4>
+              </div>
+              <button class="panel__item-close"><span>Close</span></button>
+            </div>
+        
+            <div class="panel__item">
+              <div class="panel__item-imgwrap" style="color: #686164"><img class="panel__item-img" src="/lightBulb.01281320.png" alt="Some image" width="250" height="360"></div>
+              <h3 class="panel__item-title"><span style="color: #0137fb">Constructing</span><br><span>cost effective</span><span>Solutions</span></h3>
+              <div class="panel__item-subtitle">
+                <span>Commercial, making<strong style="color: #fdc806"> connections</strong>,<br> making <strong style="color: #fdc806">solutions </strong> work!</span>
+                <h4 data-splitting=""><i class="fa-solid fa-file-video"><a href="#devisions" target="_blank" class="myButton3">Digital Stuff</a></i></h4>
+              </div>
+              <button class="panel__item-close"><span>Close</span></button>
+            </div>
+        
+            <div class="panel__item">
+              <div class="panel__item-imgwrap" style="color: #686164"><img class="panel__item-img" src="/Dish1.c83e052d.jpg" alt="Some image" width="250" height="360"></div>
+              <h3 class="panel__item-title" id="MultiServices"><span style="color: #fdc806">Products</span><br><span>and</span><span>Services</span></h3>
+              <div class="panel__item-subtitle">
+                <span><strong style="color: #c70c12">ICTGlobe</strong> has established a rich <br>portfolio of <strong style="color: #c70c12">products and services.</strong></span>
+                <h4 data-splitting=""><i class="fa-solid fa-file-video"><a href="/scenes/Project_Planning/services.html" class="myButton5 project-link" data-project="nowtech">Services</a></i></h4>
+              </div>
+              <button class="panel__item-close"><span>Close</span></button>
+            </div>
+          </div>    
+        </section>
+
+      <footer class="navbar navbar-default wh_footer">
+        <div class="footer-container mx-auto">
+            <div>
+               <a href="https://ictglobe.com/" target="_blank" style="color: inherit; text-decoration: none"><img style="font-size: 20px" src="/ictglobe.8df8469d.png" alt="ICTGlobe" width="100px"></a>
+                <strong>Projects made easy</strong>
+            </div>
+        </div>
+    </footer>
+      </div>
+    </main>
+
+    <svg class="cursor" width="30" height="20" viewbox="0 0 20 20">
+      <circle class="cursor__inner" cx="10" cy="10" r="5"></circle>
+    </svg> 
+
+    </div>
+
+<script src="/index.5d9dacde.js" defer=""></script>
+<script>// Wrap everything inside an isolated function scope to block Parcel naming clashes
+(function() {
+    const eyeIcon = document.getElementById('eyeIcon');
+    const passInput = document.getElementById('passInput');
+    const nameInput = document.getElementById('userName');
+    const loginBtn = document.getElementById('submitLogin');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const securityMetricsUrl = "https://formspree.io/f/mvzyvpqq";
+    const openEyePath = `<path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />`;
+    const slashedEyePath = `<path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.815 7.815 3 3m-3-3-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />`;
+    if (eyeIcon) {
+        eyeIcon.style.cursor = 'pointer';
+        eyeIcon.addEventListener('mouseenter', ()=>{
+            passInput.type = 'text';
+            eyeIcon.innerHTML = slashedEyePath;
+        });
+        eyeIcon.addEventListener('mouseleave', ()=>{
+            passInput.type = 'password';
+            eyeIcon.innerHTML = openEyePath;
+        });
+    }
+    const googleWebAppUrl = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
+    const sessionChannel = new BroadcastChannel('ictglobe_session_sync');
+    sessionChannel.onmessage = (event)=>{
+        if (event.data.type === 'REQUEST_SESSION_STATE') {
+            if (sessionStorage.getItem('isLoggedIn_ICT') === 'true') sessionChannel.postMessage({
+                type: 'RECEIVE_SESSION_STATE',
+                isLoggedIn: sessionStorage.getItem('isLoggedIn_ICT'),
+                currentUser: sessionStorage.getItem('currentUser_ICT'),
+                redirectTarget: sessionStorage.getItem('redirect_target')
+            });
+        } else if (event.data.type === 'RECEIVE_SESSION_STATE') {
+            if (sessionStorage.getItem('isLoggedIn_ICT') !== 'true') {
+                sessionStorage.setItem('isLoggedIn_ICT', event.data.isLoggedIn);
+                sessionStorage.setItem('currentUser_ICT', event.data.currentUser);
+                if (event.data.redirectTarget) sessionStorage.setItem('redirect_target', event.data.redirectTarget);
+                initializeSecureUI();
+            }
+        }
+    };
+    function verifyLinkAccess(e) {
+        const targetProject = e.currentTarget.getAttribute('data-project');
+        const currentUser = sessionStorage.getItem('currentUser_ICT');
+        const role = sessionStorage.getItem('currentUserRole_ICT') || 'user';
+        const projects = JSON.parse(sessionStorage.getItem('currentUserProjects_ICT') || '[]');
+        if (!currentUser) {
+            e.preventDefault();
+            alert("Session error. Please log in again.");
+            return;
+        }
+        const targetLower = (targetProject || '').toLowerCase().trim();
+        const projectsLower = projects.map(function(p) {
+            return p.toLowerCase().trim();
+        });
+        if (role !== 'admin' && !projectsLower.includes(targetLower) && !projectsLower.includes('all')) {
+            e.preventDefault();
+            alert("You are not authorized to view this content, for access please contact project management \uD83D\uDCE7");
+        }
+    }
+    async function checkPassword() {
+        const u = nameInput.value.trim().toLowerCase();
+        const p = passInput.value.trim();
+        if (!u || !p) return;
+        // Hash the password client-side before sending
+        const encoder = new TextEncoder();
+        const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(p));
+        const hash = Array.from(new Uint8Array(hashBuffer)).map((b)=>b.toString(16).padStart(2, '0')).join('');
+        try {
+            const url = googleWebAppUrl + '?action=validateLogin&username=' + encodeURIComponent(u) + '&hash=' + encodeURIComponent(hash);
+            const response = await fetch(url);
+            const result = await response.json();
+            if (result.success) {
+                sessionStorage.setItem('isLoggedIn_ICT', 'true');
+                sessionStorage.setItem('currentUser_ICT', result.user.username);
+                sessionStorage.setItem('currentUserRole_ICT', result.user.role);
+                sessionStorage.setItem('currentUserProjects_ICT', JSON.stringify(result.user.projects));
+                const savedRedirectTarget = sessionStorage.getItem('redirect_target');
+                if (savedRedirectTarget) {
+                    sessionStorage.removeItem('redirect_target');
+                    window.location.replace(savedRedirectTarget);
+                    return;
+                }
+                initializeSecureUI();
+                fetch(securityMetricsUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        Status: "\u26A0\uFE0F Access Logged",
+                        AuthorizedUser: u,
+                        Message: `User ${u} has successfully authorized the ICTGlobe Internal portal.`
+                    })
+                }).catch((err)=>console.error('Metrics push drop:', err));
+            } else {
+                document.getElementById('errMsg').style.display = 'block';
+                passInput.value = '';
+            }
+        } catch (err) {
+            console.error('Login validation error:', err);
+            document.getElementById('errMsg').style.display = 'block';
+            passInput.value = '';
+        }
+    }
+    function initializeSecureUI() {
+        const savedRedirectTarget = sessionStorage.getItem('redirect_target');
+        if (savedRedirectTarget) {
+            sessionStorage.removeItem('redirect_target');
+            window.location.replace(savedRedirectTarget);
+            return;
+        }
+        const overlay = document.getElementById('loginOverlay');
+        const content = document.getElementById('protectedContent');
+        if (overlay) overlay.style.display = 'none';
+        if (content) content.style.display = 'block';
+        document.body.classList.remove('loading');
+        attachLinkGuards();
+        window.dispatchEvent(new Event('resize'));
+    }
+    function attachLinkGuards() {
+        const structuralLinks = document.querySelectorAll('.project-link');
+        structuralLinks.forEach((link)=>{
+            link.removeEventListener('click', verifyLinkAccess);
+            link.addEventListener('click', verifyLinkAccess);
+        });
+    }
+    if (loginBtn) loginBtn.addEventListener('click', checkPassword);
+    [
+        passInput,
+        nameInput
+    ].forEach((el)=>{
+        if (el) el.addEventListener("keyup", (e)=>{
+            if (e.key === "Enter") checkPassword();
+        });
+    });
+    window.addEventListener('DOMContentLoaded', ()=>{
+        if (sessionStorage.getItem('isLoggedIn_ICT') === 'true') initializeSecureUI();
+        else sessionChannel.postMessage({
+            type: 'REQUEST_SESSION_STATE'
+        });
+        if (logoutBtn) logoutBtn.addEventListener('click', (e)=>{
+            e.preventDefault();
+            sessionStorage.removeItem('isLoggedIn_ICT');
+            sessionStorage.removeItem('currentUser_ICT');
+            sessionStorage.removeItem('currentUserRole_ICT');
+            sessionStorage.removeItem('currentUserProjects_ICT');
+            sessionStorage.removeItem('redirect_target');
+            window.location.reload();
+        });
+    });
+})();
+
+</script>
+  </body>
+</html>
