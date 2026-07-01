@@ -1919,23 +1919,29 @@ async function fetchMasterSuiteDataset() {
             throw new Error("googleWebAppUrl is not defined in this scope.");
         }
 
-        // 2. Fetch the spreadsheet payload
-        const response = await fetch(googleWebAppUrl);
-        
+        // 2. Fetch the spreadsheet payload (explicit action for reliability)
+        const response = await fetch(googleWebAppUrl + '?action=readPortfolio');
+
         if (!response.ok) {
             throw new Error(`Network response failed: ${response.status} ${response.statusText}`);
         }
 
-        const data = await response.json();
-
-       // 3. Validate payload structural integrity
-        if (!Array.isArray(data)) {
-            throw new TypeError("Invalid data payload type received. Expected an Array.");
+        const rawText = await response.text();
+        let data;
+        try { data = JSON.parse(rawText); } catch(parseErr) {
+            throw new Error('Invalid JSON from AppScript: ' + rawText.substring(0, 200));
         }
 
-        // 4. SECURITY GATE: Filter raw payload based on user access permissions
-        const currentSessionUser = (window.currentUserName || "").trim().toLowerCase();
-        const isMasterAdmin = (window.currentUserRole === 'admin') || currentSessionUser.includes("admin");
+        // 3. Validate payload structural integrity
+        if (!Array.isArray(data)) {
+            console.error("Non-array response received:", data);
+            throw new TypeError("Invalid data payload type received. Expected an Array, got: " + typeof data);
+        }
+
+        // 4. SECURITY GATE: read session directly for reliability across all deployment modes
+        const currentSessionUser = (sessionStorage.getItem('currentUser_ICT') || window.currentUserName || "").trim().toLowerCase();
+        const sessionRole = (sessionStorage.getItem('currentUserRole_ICT') || window.currentUserRole || "").trim();
+        const isMasterAdmin = sessionRole === 'admin' || currentSessionUser.includes("admin");
 
         const securedData = data.filter(proj => {
             if (isMasterAdmin) return true; // Admins see all
