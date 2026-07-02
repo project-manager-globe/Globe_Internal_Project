@@ -920,6 +920,10 @@ footer.wh_footer {
 }
 
 body.app-has-sidebar {
+  background-color: #dbdeff;
+  background-image: url("https://www.transparenttextures.com/patterns/wave-grid.png");
+  background-repeat: repeat;
+  background-size: auto;
   margin-left: 220px;
   transition: margin-left .22s;
 }
@@ -970,17 +974,19 @@ body.app-has-sidebar.sidebar-is-collapsed {
             <span class="sidebar-nav-label">Services</span>
         </a>
     </div>
-    <!-- Workspace sub-nav — shown only when a project workspace is open -->
+    <!-- Workspace nav — replaces main nav while a project workspace is open -->
     <div id="sidebarWorkspaceSection" style="display: none">
-        <div class="sidebar-divider"></div>
-        <div style="letter-spacing: .9px; color: #475569; text-transform: uppercase; white-space: nowrap; padding: 8px 22px 2px; font-size: .68rem; font-weight: 700; overflow: hidden">
-            <i class="fas fa-folder-open me-1" style="font-size: .7rem"></i>
-            <span class="sidebar-nav-label">Workspace</span>
+        <div style="letter-spacing: .9px; color: #475569; text-transform: uppercase; white-space: nowrap; padding: 6px 22px 2px; font-size: .68rem; font-weight: 700; overflow: hidden">
+            <span class="sidebar-nav-label">Current Workspace</span>
         </div>
         <div id="sidebarWsProjectName" style="color: #3b82f6; white-space: nowrap; text-overflow: ellipsis; padding: 2px 22px 6px; font-size: .75rem; font-weight: 600; overflow: hidden"></div>
         <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsObjectivesCard'); return false;">
             <i class="fas fa-bullseye"></i>
             <span class="sidebar-nav-label">Objectives</span>
+        </a>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsSwotSection'); return false;">
+            <i class="fas fa-th-large"></i>
+            <span class="sidebar-nav-label">SWOT</span>
         </a>
         <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsPhaseProgressionCard'); return false;">
             <i class="fas fa-layer-group"></i>
@@ -995,6 +1001,10 @@ body.app-has-sidebar.sidebar-is-collapsed {
             <i class="fas fa-exclamation-triangle"></i>
             <span class="sidebar-nav-label">Risk Register</span>
             <span class="sidebar-badge" id="sidebarWsRiskCount" style="background: #dc2626; display: none"></span>
+        </a>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsStakeholderSection'); return false;">
+            <i class="fas fa-users"></i>
+            <span class="sidebar-nav-label">Stakeholders</span>
         </a>
         <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsTeamManagementBlock'); return false;">
             <i class="fas fa-user-friends"></i>
@@ -1017,6 +1027,11 @@ body.app-has-sidebar.sidebar-is-collapsed {
         <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsOperationalLogsSection'); return false;">
             <i class="fas fa-history"></i>
             <span class="sidebar-nav-label">Activity Log</span>
+        </a>
+        <div class="sidebar-divider"></div>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="document.getElementById('closeWorkspaceBtn').click(); return false;">
+            <i class="fas fa-arrow-left"></i>
+            <span class="sidebar-nav-label">Back to Projects</span>
         </a>
     </div>
 
@@ -1317,9 +1332,7 @@ body.app-has-sidebar.sidebar-is-collapsed {
 
 <div id="singleWorkspaceView" class="fade-view" style="padding-top: 30px; display: none">
         
-    <button id="closeWorkspaceBtn" class="btn btn-sm btn-outline-secondary mb-3">
-        <i class="fas fa-arrow-left"></i> Back to Dashboard Registry
-    </button>
+    <button id="closeWorkspaceBtn" style="display: none"></button>
     
     <h1 id="wsProjectName" class="content__START font-weight-bold m-0" style="letter-spacing: -.5px; font-size: 2.5rem">Loading...</h1>
     <p class="text-muted mt-1 mb-0" style="text-align: left; font-size: .9rem">
@@ -1407,7 +1420,100 @@ body.app-has-sidebar.sidebar-is-collapsed {
             <span id="wsProgressTotalCount" style="color: #64748b; font-size: .78rem; font-weight: 500">0 total</span>
         </div>
     </div>
-    <span id="wsStatusBadge" class="d-none"></span>
+    <span id="wsStatusBadge" style="display: none !important"></span>
+
+    <!-- ===== SWOT ANALYSIS ===== -->
+    <div id="wsSwotSection" class="card shadow-sm border-0 p-4 bg-white mt-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-dark mb-0"><i class="fas fa-th-large text-primary me-2"></i>SWOT Analysis</h5>
+            <div class="d-flex gap-2">
+                <button id="wsGenerateSwotBtn" class="btn btn-sm btn-outline-secondary admin-only-action" style="display: none" onclick="generateAiSwot()" title="Generate SWOT with AI">
+                    🤖 <span class="sidebar-nav-label">AI Generate</span>
+                </button>
+                <button id="wsEditSwotBtn" class="btn btn-sm btn-outline-primary admin-only-action" style="display: none" onclick="openSwotEdit()">
+                    <i class="fas fa-edit me-1"></i>Edit
+                </button>
+            </div>
+        </div>
+        <!-- VIEW MODE -->
+        <div id="wsSwotView">
+            <div class="row g-3">
+                <div class="col-6">
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; min-height: 90px; padding: 14px">
+                        <p class="fw-bold mb-2" style="color: #16a34a; text-transform: uppercase; letter-spacing: .5px; font-size: .85rem">Strengths</p>
+                        <ul id="wsSwotS" style="text-align: left; margin: 0; padding: 0; list-style: outside"></ul>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; min-height: 90px; padding: 14px">
+                        <p class="fw-bold mb-2" style="color: #dc2626; text-transform: uppercase; letter-spacing: .5px; font-size: .85rem">Weaknesses</p>
+                        <ul id="wsSwotW" style="text-align: left; margin: 0; padding: 0; list-style: outside"></ul>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; min-height: 90px; padding: 14px">
+                        <p class="fw-bold mb-2" style="color: #2563eb; text-transform: uppercase; letter-spacing: .5px; font-size: .85rem">Opportunities</p>
+                        <ul id="wsSwotO" style="text-align: left; margin: 0; padding: 0; list-style: outside"></ul>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; min-height: 90px; padding: 14px">
+                        <p class="fw-bold mb-2" style="color: #d97706; text-transform: uppercase; letter-spacing: .5px; font-size: .85rem">Threats</p>
+                        <ul id="wsSwotT" style="text-align: left; margin: 0; padding: 0; list-style: outside"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- EDIT MODE -->
+        <div id="wsSwotEdit" style="display: none">
+            <div class="row g-3">
+                <div class="col-6">
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px">
+                        <p class="fw-bold mb-2" style="color: #16a34a; text-transform: uppercase; letter-spacing: .5px; font-size: .85rem">Strengths</p>
+                        <ul id="wsSwotEditS" style="margin: 0 0 8px; padding: 0; list-style: outside"></ul>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="wsSwotInputS" class="form-control form-control-sm" placeholder="Add strength…" onkeydown="if(event.key==='Enter'){event.preventDefault();addSwotItem('S');}">
+                            <button class="btn btn-sm btn-outline-success flex-shrink-0" onclick="addSwotItem('S')"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px">
+                        <p class="fw-bold mb-2" style="color: #dc2626; text-transform: uppercase; letter-spacing: .5px; font-size: .85rem">Weaknesses</p>
+                        <ul id="wsSwotEditW" style="margin: 0 0 8px; padding: 0; list-style: outside"></ul>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="wsSwotInputW" class="form-control form-control-sm" placeholder="Add weakness…" onkeydown="if(event.key==='Enter'){event.preventDefault();addSwotItem('W');}">
+                            <button class="btn btn-sm btn-outline-danger flex-shrink-0" onclick="addSwotItem('W')"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px">
+                        <p class="fw-bold mb-2" style="color: #2563eb; text-transform: uppercase; letter-spacing: .5px; font-size: .85rem">Opportunities</p>
+                        <ul id="wsSwotEditO" style="margin: 0 0 8px; padding: 0; list-style: outside"></ul>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="wsSwotInputO" class="form-control form-control-sm" placeholder="Add opportunity…" onkeydown="if(event.key==='Enter'){event.preventDefault();addSwotItem('O');}">
+                            <button class="btn btn-sm btn-outline-primary flex-shrink-0" onclick="addSwotItem('O')"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 14px">
+                        <p class="fw-bold mb-2" style="color: #d97706; text-transform: uppercase; letter-spacing: .5px; font-size: .85rem">Threats</p>
+                        <ul id="wsSwotEditT" style="margin: 0 0 8px; padding: 0; list-style: outside"></ul>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="wsSwotInputT" class="form-control form-control-sm" placeholder="Add threat…" onkeydown="if(event.key==='Enter'){event.preventDefault();addSwotItem('T');}">
+                            <button class="btn btn-sm btn-outline-warning flex-shrink-0" onclick="addSwotItem('T')"><i class="fas fa-plus"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-sm btn-primary" onclick="saveSwot()"><i class="fas fa-save me-1"></i>Save</button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="cancelSwotEdit()">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <div class="row mb-4" id="wsPhaseProgressionCard">
         <div class="col-12">
@@ -1595,6 +1701,101 @@ body.app-has-sidebar.sidebar-is-collapsed {
                 <!-- Risk details table -->
                 <div id="wsRiskTableContainer">
                     <p class="text-muted fst-italic small text-center py-4"><i class="fas fa-shield-alt me-2 opacity-25"></i>No risks registered for this project.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== STAKEHOLDER ANALYSIS ===== -->
+    <div class="row mb-4" id="wsStakeholderSection">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 p-4 bg-white">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-users text-primary me-2"></i>Stakeholder Analysis</h5>
+                    <button id="wsAddStakeholderBtn" class="btn btn-sm btn-outline-primary admin-only-action" style="display: none" onclick="openAddStakeholder()">
+                        <i class="fas fa-plus me-1"></i>Add Stakeholder
+                    </button>
+                </div>
+                <!-- Influence / Interest Matrix -->
+                <div class="mb-4 pb-3 border-bottom">
+                    <div style="flex-wrap: wrap; align-items: flex-start; gap: 32px; display: flex">
+                        <div>
+                            <p class="fw-bold mb-2 text-uppercase" style="letter-spacing: .5px; color: #334155; font-size: .88rem">
+                                <i class="fas fa-th me-1"></i>Stakeholder Matrix
+                            </p>
+                            <div style="align-items: stretch; gap: 10px; display: flex">
+                                <div style="justify-content: center; align-items: center; width: 18px; display: flex">
+                                    <span style="writing-mode: vertical-rl; color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; font-size: .65rem; font-weight: 700; transform: rotate(180deg)">Influence</span>
+                                </div>
+                                <div>
+                                    <div style="text-align: center; margin-bottom: 5px; padding-left: 60px">
+                                        <span style="color: #64748b; letter-spacing: 1.5px; text-transform: uppercase; font-size: .65rem; font-weight: 700">← Interest →</span>
+                                    </div>
+                                    <div style="grid-template-columns: 60px repeat(2, 140px); gap: 6px; margin-bottom: 4px; display: grid">
+                                        <div></div>
+                                        <div style="text-align: center; color: #64748b; font-size: .68rem; font-weight: 700">Low</div>
+                                        <div style="text-align: center; color: #64748b; font-size: .68rem; font-weight: 700">High</div>
+                                    </div>
+                                    <div id="wsStakeholderMatrix" style="grid-template-rows: repeat(2, 90px); grid-template-columns: 60px repeat(2, 140px); gap: 6px; display: grid"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding-top: 28px">
+                            <p style="color: #475569; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; font-size: .68rem; font-weight: 700">Engagement Strategy</p>
+                            <div style="flex-direction: column; gap: 7px; display: flex">
+                                <div style="align-items: center; gap: 9px; display: flex"><span style="background: #fdba74; border-radius: 4px; flex-shrink: 0; width: 18px; height: 18px"></span><span style="color: #475569; font-size: .78rem; font-weight: 600">Keep Satisfied</span></div>
+                                <div style="align-items: center; gap: 9px; display: flex"><span style="background: #fca5a5; border-radius: 4px; flex-shrink: 0; width: 18px; height: 18px"></span><span style="color: #475569; font-size: .78rem; font-weight: 600">Key Players — Manage Closely</span></div>
+                                <div style="align-items: center; gap: 9px; display: flex"><span style="background: #bfdbfe; border-radius: 4px; flex-shrink: 0; width: 18px; height: 18px"></span><span style="color: #475569; font-size: .78rem; font-weight: 600">Monitor</span></div>
+                                <div style="align-items: center; gap: 9px; display: flex"><span style="background: #bbf7d0; border-radius: 4px; flex-shrink: 0; width: 18px; height: 18px"></span><span style="color: #475569; font-size: .78rem; font-weight: 600">Keep Informed</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="wsStakeholderTableContainer">
+                    <p class="text-muted fst-italic small text-center py-4"><i class="fas fa-users me-2 opacity-25"></i>No stakeholders registered for this project.</p>
+                </div>
+                <!-- Add / Edit Form -->
+                <div id="wsStakeholderForm" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: none" class="mt-3">
+                    <p class="fw-bold mb-3" id="wsStakeholderFormTitle" style="color: #1e293b; font-size: .82rem">Add Stakeholder</p>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted mb-1">Name</label>
+                            <input type="text" id="wsStkhName" class="form-control form-control-sm" placeholder="Full name">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted mb-1">Role / Title</label>
+                            <input type="text" id="wsStkhRole" class="form-control form-control-sm" placeholder="e.g. Project Sponsor">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold text-muted mb-1">Organization</label>
+                            <input type="text" id="wsStkhOrg" class="form-control form-control-sm" placeholder="e.g. ICTGlobe">
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label small fw-bold text-muted mb-1">Influence</label>
+                            <select id="wsStkhInfluence" class="form-select form-select-sm">
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High" selected="">High</option>
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <label class="form-label small fw-bold text-muted mb-1">Interest</label>
+                            <select id="wsStkhInterest" class="form-select form-select-sm">
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High" selected="">High</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-muted mb-1">Notes</label>
+                            <input type="text" id="wsStkhNotes" class="form-control form-control-sm" placeholder="Brief notes…">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-sm btn-primary" onclick="saveStakeholder()"><i class="fas fa-save me-1"></i>Save</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="closeStakeholderForm()">Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2198,16 +2399,19 @@ window.scrollToWsSection = function(sectionId) {
 };
 window.showSidebarWorkspace = function(projectName) {
     const section = document.getElementById('sidebarWorkspaceSection');
+    const mainNav = document.querySelector('.sidebar-nav-body');
     if (!section) return;
     const nameEl = document.getElementById('sidebarWsProjectName');
     if (nameEl) nameEl.textContent = projectName || '';
+    if (mainNav) mainNav.style.display = 'none';
     section.style.display = 'block';
-    // Small delay so DOM counts are populated before we read them
     setTimeout(window.refreshSidebarWsCounts, 600);
 };
 window.hideSidebarWorkspace = function() {
     const section = document.getElementById('sidebarWorkspaceSection');
+    const mainNav = document.querySelector('.sidebar-nav-body');
     if (section) section.style.display = 'none';
+    if (mainNav) mainNav.style.display = '';
 };
 window.refreshSidebarWsCounts = function() {
     function syncBadge(badgeId, sourceId) {
@@ -2906,6 +3110,8 @@ function launchWorkspaceHub(projectId) {
     document.getElementById('wsProjectManager').innerText = project.projectManager || project.manager || '---';
     document.getElementById('wsClassification').innerText = project.classification || '---';
     populateObjectivesSection(project);
+    populateSwotSection(project);
+    populateStakeholders(project);
     // Team members — count + populate both views
     const teamStr = project.team || project.members || "";
     const teamArr = teamStr ? teamStr.toString().split(',').map((s)=>s.trim()).filter((s)=>s.length > 0) : [];
@@ -3863,6 +4069,10 @@ function recalcWorkspaceProgress() {
 // ── Objectives & Goals ────────────────────────────────────────────────────
 let wsGoalsTemp = [];
 let wsObjectiveQuill = null;
+function canEditWorkspaceContent() {
+    const r = (window.currentUserRole || '').toLowerCase().trim();
+    return r === 'admin' || r === 'team lead' || r === 'teamlead' || r === 'lead';
+}
 function populateObjectivesSection(project) {
     const objective = project.objective || '';
     let goals = [];
@@ -3875,7 +4085,7 @@ function populateObjectivesSection(project) {
     if (dispEl) dispEl.innerHTML = objective ? `<div class="ql-editor" style="padding:0;">${objective}</div>` : '<span style="color:#94a3b8; font-style:italic; font-size:0.85rem;">No objective defined yet.</span>';
     renderGoalsList(goals);
     const editBtn = document.getElementById('wsEditObjectivesBtn');
-    if (editBtn) editBtn.style.display = window.currentUserRole === 'admin' ? '' : 'none';
+    if (editBtn) editBtn.style.display = canEditWorkspaceContent() ? '' : 'none';
 }
 function renderGoalsList(goals) {
     const list = document.getElementById('wsGoalsList');
@@ -3967,6 +4177,320 @@ function saveObjectives() {
         renderGoalsList(wsGoalsTemp);
         cancelObjectivesEdit();
     }).catch(()=>alert('Save failed. Please try again.'));
+}
+// ─── SWOT Analysis ───────────────────────────────────────────────────────────
+let wsSwotTemp = {
+    S: [],
+    W: [],
+    O: [],
+    T: []
+};
+function populateSwotSection(project) {
+    let swot = {
+        S: [],
+        W: [],
+        O: [],
+        T: []
+    };
+    try {
+        const p = JSON.parse(project.swot || '{}');
+        swot.S = p.S || [];
+        swot.W = p.W || [];
+        swot.O = p.O || [];
+        swot.T = p.T || [];
+    } catch (e) {}
+    [
+        'S',
+        'W',
+        'O',
+        'T'
+    ].forEach((q)=>renderSwotQuadrant(q, swot[q]));
+    const btn = document.getElementById('wsEditSwotBtn');
+    if (btn) btn.style.display = canEditWorkspaceContent() ? '' : 'none';
+    const aiBtn = document.getElementById('wsGenerateSwotBtn');
+    if (aiBtn) aiBtn.style.display = canEditWorkspaceContent() ? '' : 'none';
+}
+function renderSwotQuadrant(q, items) {
+    const list = document.getElementById('wsSwot' + q);
+    if (!list) return;
+    const colors = {
+        S: '#16a34a',
+        W: '#dc2626',
+        O: '#2563eb',
+        T: '#d97706'
+    };
+    if (!items || !items.length) {
+        list.innerHTML = '<li style="color:#94a3b8;font-size:0.82rem;font-style:italic;list-style:none;">None added yet.</li>';
+        return;
+    }
+    list.innerHTML = items.map((item)=>`
+        <li style="display:flex;align-items:flex-start;gap:8px;margin-bottom:5px;">
+            <i class="fas fa-circle" style="color:${colors[q]};font-size:0.45rem;margin-top:7px;flex-shrink:0;"></i>
+            <span style="font-size:0.85rem;color:#374151;line-height:1.5;">${item}</span>
+        </li>`).join('');
+}
+function openSwotEdit() {
+    const proj = (window.projectDataset || []).find((p)=>p.projectId === activeWorkspaceProjectId);
+    let swot = {
+        S: [],
+        W: [],
+        O: [],
+        T: []
+    };
+    try {
+        if (proj && proj.swot) {
+            const p = JSON.parse(proj.swot);
+            swot.S = p.S || [];
+            swot.W = p.W || [];
+            swot.O = p.O || [];
+            swot.T = p.T || [];
+        }
+    } catch (e) {}
+    wsSwotTemp = {
+        S: swot.S.slice(),
+        W: swot.W.slice(),
+        O: swot.O.slice(),
+        T: swot.T.slice()
+    };
+    [
+        'S',
+        'W',
+        'O',
+        'T'
+    ].forEach(renderSwotEditList);
+    document.getElementById('wsSwotView').style.display = 'none';
+    document.getElementById('wsSwotEdit').style.display = '';
+}
+function cancelSwotEdit() {
+    document.getElementById('wsSwotView').style.display = '';
+    document.getElementById('wsSwotEdit').style.display = 'none';
+}
+function renderSwotEditList(q) {
+    const list = document.getElementById('wsSwotEdit' + q);
+    if (!list) return;
+    list.innerHTML = wsSwotTemp[q].map((item, idx)=>`
+        <li style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+            <span style="flex:1;font-size:0.85rem;color:#374151;">${item}</span>
+            <button type="button" onclick="removeSwotItem('${q}',${idx})" style="border:none;background:none;color:#94a3b8;cursor:pointer;padding:2px;"><i class="fas fa-times"></i></button>
+        </li>`).join('');
+}
+function addSwotItem(q) {
+    const input = document.getElementById('wsSwotInput' + q);
+    const val = (input.value || '').trim();
+    if (!val) return;
+    wsSwotTemp[q].push(val);
+    input.value = '';
+    renderSwotEditList(q);
+    input.focus();
+}
+function removeSwotItem(q, idx) {
+    wsSwotTemp[q].splice(idx, 1);
+    renderSwotEditList(q);
+}
+function saveSwot() {
+    const swotJson = JSON.stringify(wsSwotTemp);
+    const proj = (window.projectDataset || []).find((p)=>p.projectId === activeWorkspaceProjectId);
+    if (proj) proj.swot = swotJson;
+    [
+        'S',
+        'W',
+        'O',
+        'T'
+    ].forEach((q)=>renderSwotQuadrant(q, wsSwotTemp[q]));
+    cancelSwotEdit();
+    fetch(googleWebAppUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({
+            action: 'updateSwot',
+            projectId: activeWorkspaceProjectId,
+            swot: swotJson
+        })
+    }).catch(()=>{});
+}
+async function generateAiSwot() {
+    const btn = document.getElementById('wsGenerateSwotBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Generating\u2026';
+    }
+    try {
+        const url = googleWebAppUrl + '?action=generateSwot&projectId=' + encodeURIComponent(activeWorkspaceProjectId);
+        const res = await fetch(url);
+        const data = await res.json();
+        if (data.status === 'ok' && data.swot) {
+            wsSwotTemp = {
+                S: data.swot.S || [],
+                W: data.swot.W || [],
+                O: data.swot.O || [],
+                T: data.swot.T || []
+            };
+            [
+                'S',
+                'W',
+                'O',
+                'T'
+            ].forEach(renderSwotEditList);
+            document.getElementById('wsSwotView').style.display = 'none';
+            document.getElementById('wsSwotEdit').style.display = '';
+        } else alert('AI generation failed: ' + (data.message || 'Unknown error. Check that ANTHROPIC_API_KEY is set in Script Properties.'));
+    } catch (e) {
+        alert('AI generation failed. Please try again.');
+    } finally{
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '\uD83E\uDD16 <span class="sidebar-nav-label">AI Generate</span>';
+        }
+    }
+}
+// ─── Stakeholder Analysis ─────────────────────────────────────────────────────
+let wsStakeholdersTemp = [];
+let wsStakeholderEditIndex = -1;
+function populateStakeholders(project) {
+    try {
+        wsStakeholdersTemp = JSON.parse(project.stakeholders || '[]');
+    } catch (e) {
+        wsStakeholdersTemp = [];
+    }
+    renderStakeholderTable(wsStakeholdersTemp);
+    const btn = document.getElementById('wsAddStakeholderBtn');
+    if (btn) btn.style.display = canEditWorkspaceContent() ? '' : 'none';
+}
+function renderStakeholderTable(list) {
+    renderStakeholderMatrix(list);
+    const container = document.getElementById('wsStakeholderTableContainer');
+    if (!container) return;
+    if (!list || !list.length) {
+        container.innerHTML = '<p class="text-muted fst-italic small text-center py-4"><i class="fas fa-users me-2 opacity-25"></i>No stakeholders registered for this project.</p>';
+        return;
+    }
+    const badgeColor = (v)=>v === 'High' ? '#dc2626' : v === 'Medium' ? '#ea580c' : '#2563eb';
+    const badgeBg = (v)=>v === 'High' ? '#fef2f2' : v === 'Medium' ? '#fff7ed' : '#eff6ff';
+    const ic = badgeColor;
+    const io = badgeColor;
+    const isAdmin = canEditWorkspaceContent();
+    container.innerHTML = `<div style="overflow-x:auto;">
+        <table class="table table-sm mb-0" style="font-size:0.85rem;">
+            <thead><tr style="border-bottom:2px solid #e2e8f0;">
+                <th style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;">Name</th>
+                <th style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;">Role</th>
+                <th style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;">Organization</th>
+                <th style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;">Influence</th>
+                <th style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;">Interest</th>
+                <th style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px;">Notes</th>
+                ${isAdmin ? '<th style="padding:8px 10px;"></th>' : ''}
+            </tr></thead>
+            <tbody>${list.map((s, idx)=>`
+                <tr style="border-bottom:1px solid #f1f5f9;">
+                    <td style="padding:8px 10px;font-weight:600;color:#1e293b;">${s.name || "\u2014"}</td>
+                    <td style="padding:8px 10px;color:#374151;">${s.role || "\u2014"}</td>
+                    <td style="padding:8px 10px;color:#374151;">${s.org || "\u2014"}</td>
+                    <td style="padding:8px 10px;"><span style="background:${badgeBg(s.influence)};color:${badgeColor(s.influence)};padding:2px 9px;border-radius:20px;font-size:0.75rem;font-weight:600;">${s.influence || 'Low'}</span></td>
+                    <td style="padding:8px 10px;"><span style="background:${badgeBg(s.interest)};color:${badgeColor(s.interest)};padding:2px 9px;border-radius:20px;font-size:0.75rem;font-weight:600;">${s.interest || 'Low'}</span></td>
+                    <td style="padding:8px 10px;color:#64748b;font-size:0.82rem;">${s.notes || "\u2014"}</td>
+                    ${isAdmin ? `<td style="padding:8px 10px;white-space:nowrap;">
+                        <button onclick="editStakeholder(${idx})" style="border:none;background:none;color:#3b82f6;cursor:pointer;margin-right:6px;"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteStakeholder(${idx})" style="border:none;background:none;color:#dc2626;cursor:pointer;"><i class="fas fa-trash"></i></button>
+                    </td>` : ''}
+                </tr>`).join('')}
+            </tbody>
+        </table></div>`;
+}
+function openAddStakeholder() {
+    wsStakeholderEditIndex = -1;
+    document.getElementById('wsStakeholderFormTitle').innerText = 'Add Stakeholder';
+    [
+        'wsStkhName',
+        'wsStkhRole',
+        'wsStkhOrg',
+        'wsStkhNotes'
+    ].forEach((id)=>document.getElementById(id).value = '');
+    document.getElementById('wsStkhInfluence').value = 'High';
+    document.getElementById('wsStkhInterest').value = 'High';
+    document.getElementById('wsStakeholderForm').style.display = '';
+    document.getElementById('wsStkhName').focus();
+}
+function editStakeholder(idx) {
+    const s = wsStakeholdersTemp[idx];
+    if (!s) return;
+    wsStakeholderEditIndex = idx;
+    document.getElementById('wsStakeholderFormTitle').innerText = 'Edit Stakeholder';
+    document.getElementById('wsStkhName').value = s.name || '';
+    document.getElementById('wsStkhRole').value = s.role || '';
+    document.getElementById('wsStkhOrg').value = s.org || '';
+    document.getElementById('wsStkhInfluence').value = s.influence || 'High';
+    document.getElementById('wsStkhInterest').value = s.interest || 'High';
+    document.getElementById('wsStkhNotes').value = s.notes || '';
+    document.getElementById('wsStakeholderForm').style.display = '';
+    document.getElementById('wsStkhName').focus();
+}
+function deleteStakeholder(idx) {
+    if (!confirm('Remove this stakeholder?')) return;
+    wsStakeholdersTemp.splice(idx, 1);
+    renderStakeholderTable(wsStakeholdersTemp);
+    persistStakeholders();
+}
+function closeStakeholderForm() {
+    document.getElementById('wsStakeholderForm').style.display = 'none';
+}
+function saveStakeholder() {
+    const name = document.getElementById('wsStkhName').value.trim();
+    if (!name) {
+        alert('Name is required.');
+        return;
+    }
+    const entry = {
+        id: wsStakeholderEditIndex >= 0 ? wsStakeholdersTemp[wsStakeholderEditIndex].id || 'STK-' + Math.floor(1000 + Math.random() * 9000) : 'STK-' + Math.floor(1000 + Math.random() * 9000),
+        name,
+        role: document.getElementById('wsStkhRole').value.trim(),
+        org: document.getElementById('wsStkhOrg').value.trim(),
+        influence: document.getElementById('wsStkhInfluence').value,
+        interest: document.getElementById('wsStkhInterest').value,
+        notes: document.getElementById('wsStkhNotes').value.trim()
+    };
+    if (wsStakeholderEditIndex >= 0) wsStakeholdersTemp[wsStakeholderEditIndex] = entry;
+    else wsStakeholdersTemp.push(entry);
+    renderStakeholderTable(wsStakeholdersTemp);
+    closeStakeholderForm();
+    persistStakeholders();
+}
+function renderStakeholderMatrix(list) {
+    const el = document.getElementById('wsStakeholderMatrix');
+    if (!el) return;
+    const isHigh = (v)=>v === 'High' || v === 'Medium';
+    const cats = {
+        HH: (list || []).filter((s)=>isHigh(s.influence) && isHigh(s.interest)),
+        HL: (list || []).filter((s)=>isHigh(s.influence) && !isHigh(s.interest)),
+        LH: (list || []).filter((s)=>!isHigh(s.influence) && isHigh(s.interest)),
+        LL: (list || []).filter((s)=>!isHigh(s.influence) && !isHigh(s.interest))
+    };
+    const chips = (items)=>items.length ? items.map((s)=>`<span style="display:inline-block;background:rgba(0,0,0,0.08);border-radius:12px;padding:1px 8px;font-size:0.72rem;font-weight:600;color:#1e293b;margin:2px;">${s.name}</span>`).join('') : '<span style="font-size:0.72rem;color:#94a3b8;font-style:italic;">\u2014</span>';
+    const cell = (bg, border, color, label, items)=>`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:8px;overflow:hidden;">
+            <p style="font-size:0.65rem;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.5px;margin:0 0 5px 0;">${label}</p>
+            <div style="line-height:1.6;">${chips(items)}</div>
+        </div>`;
+    const rowLabel = (txt)=>`<div style="display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:0.68rem;color:#64748b;font-weight:700;">${txt}</div>`;
+    el.innerHTML = rowLabel('High') + cell('#fff7ed', '#fdba74', '#ea580c', 'Keep Satisfied', cats.HL) + cell('#fef2f2', '#fca5a5', '#dc2626', 'Key Players', cats.HH) + rowLabel('Low') + cell('#eff6ff', '#bfdbfe', '#2563eb', 'Monitor', cats.LL) + cell('#f0fdf4', '#bbf7d0', '#16a34a', 'Keep Informed', cats.LH);
+}
+function persistStakeholders() {
+    const json = JSON.stringify(wsStakeholdersTemp);
+    const proj = (window.projectDataset || []).find((p)=>p.projectId === activeWorkspaceProjectId);
+    if (proj) proj.stakeholders = json;
+    fetch(googleWebAppUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({
+            action: 'updateStakeholders',
+            projectId: activeWorkspaceProjectId,
+            stakeholders: json
+        })
+    }).catch(()=>{});
 }
 // ─────────────────────────────────────────────────────────────────────────────
 function recalcPhaseProgress(phaseName) {

@@ -425,6 +425,13 @@ window.addEventListener('DOMContentLoaded', ()=>{
   transform: scale(1.25);
   box-shadow: 0 20px 40px #00000040;
 }
+
+body.app-has-sidebar {
+  background-color: #dbdeff !important;
+  background-image: url("https://www.transparenttextures.com/patterns/wave-grid.png") !important;
+  background-repeat: repeat !important;
+  background-size: auto !important;
+}
 </style>
 </head>
 <body class="app-has-sidebar">
@@ -437,13 +444,20 @@ window.addEventListener('DOMContentLoaded', ()=>{
         </a>
     </div>
     <div class="sidebar-nav-body">
-        <a href="/scenes/Project_Planning/projects_dashboard.html" class="sidebar-nav-item"><i class="fas fa-chart-pie"></i><span class="sidebar-nav-label">Projects</span></a>
-        <a href="/scenes/Project_Planning/exco.html" class="sidebar-nav-item"><i class="fas fa-users"></i><span class="sidebar-nav-label">EXCO</span></a>
-        <a href="/scenes/Project_Planning/activityMeasure.html" class="sidebar-nav-item"><i class="fas fa-user-graduate"></i><span class="sidebar-nav-label">Onboarding</span></a>
+        <div style="letter-spacing: .9px; color: #475569; text-transform: uppercase; white-space: nowrap; padding: 6px 22px 2px; font-size: .68rem; font-weight: 700; overflow: hidden">
+            <span class="sidebar-nav-label">Strategy</span>
+        </div>
+        <a href="#" class="sidebar-nav-item" onclick="strategyScrollTo('companyContainer'); return false;"><i class="fas fa-rocket"></i><span class="sidebar-nav-label">Company Overview</span></a>
+        <a href="#" class="sidebar-nav-item" onclick="strategyScrollTo('pillarsContainer'); return false;"><i class="fas fa-th-large"></i><span class="sidebar-nav-label">Strategic Pillars</span></a>
+        <a href="#" class="sidebar-nav-item" onclick="strategyScrollTo('productsContainer'); return false;"><i class="fas fa-boxes"></i><span class="sidebar-nav-label">Products & Innovation</span></a>
+        <a href="#" class="sidebar-nav-item" onclick="strategyScrollTo('alignmentContainer'); return false;"><i class="fas fa-project-diagram"></i><span class="sidebar-nav-label">Departmental Alignment</span></a>
+        <a href="#" class="sidebar-nav-item" onclick="strategyScrollTo('dualTrackContainer'); return false;"><i class="fas fa-tachometer-alt"></i><span class="sidebar-nav-label">Dual-Track Engines</span></a>
+        <a href="#" class="sidebar-nav-item" onclick="strategyScrollTo('resellerHubContainer'); return false;"><i class="fas fa-cubes"></i><span class="sidebar-nav-label">The Reseller Hub</span></a>
+        <a href="#" class="sidebar-nav-item" onclick="strategyScrollTo('supportMatrixContainer'); return false;"><i class="fas fa-layer-group"></i><span class="sidebar-nav-label">Support Tier Matrix</span></a>
+        <a href="#" class="sidebar-nav-item" onclick="strategyScrollTo('bcpEcosystemContainer'); return false;"><i class="fas fa-globe"></i><span class="sidebar-nav-label">BCP Ecosystem</span></a>
+        <a href="#" class="sidebar-nav-item" onclick="strategyScrollTo('kpiContainer'); return false;"><i class="fas fa-flag-checkered"></i><span class="sidebar-nav-label">Milestones & KPIs</span></a>
         <div class="sidebar-divider"></div>
-        <a href="/scenes/Project_Planning/strategy.html" class="sidebar-nav-item active"><i class="fas fa-bullseye"></i><span class="sidebar-nav-label">Strategy</span></a>
-        <a href="/scenes/Project_Planning/resources.html" class="sidebar-nav-item"><i class="fas fa-folder-open"></i><span class="sidebar-nav-label">Resources</span></a>
-        <a href="/scenes/Project_Planning/services.html" class="sidebar-nav-item"><i class="fas fa-tools"></i><span class="sidebar-nav-label">Services</span></a>
+        <a href="/index.html" class="sidebar-nav-item" style="color: #94a3b8"><i class="fas fa-arrow-left"></i><span class="sidebar-nav-label">Back</span></a>
     </div>
     <div class="sidebar-footer-block">
         <div class="sidebar-user-row"><i class="fas fa-user-circle"></i><span class="sidebar-nav-label" id="sidebarUsernameDisplay"></span></div>
@@ -493,47 +507,15 @@ document.addEventListener('DOMContentLoaded', function() {
     </header>
 
 <body>
-<input type="checkbox" id="menu-toggle" checked="">
-<div class="menu dflex">
-  <div class="elements-container dflex">
-    <a class="element" href="#companyContainer" style="padding-top: 70px">
-      <span><i class="fas fa-rocket me-2"></i> Company Overview</span>
-    </a>
-    <a class="element" href="#pillarsContainer">
-      <span><i class="fas fa-th-large me-2"></i> Strategice Pillars</span>
-    </a>
-    <a class="element" href="#productsContainer">
-      <span><i class="fas fa-boxes me-2"></i> Products & Innovation</span>
-    </a>
-    <a class="element" href="#alignmentContainer">
-      <span><i class="fas fa-project-diagram me-2"></i> Departmental Alignment</span>
-    </a>
-    <a class="element" href="#dualTrackContainer">
-      <span><i class="fas fa-tachometer-alt me-2"></i> Dual-Track Engines</span>   
-    </a>
-    <a class="element" href="#resellerHubContainer">
-      <span><i class="fas fa-cubes me-2"></i> The Reseller Hub</span>   
-    </a>
-    <a class="element" href="#supportMatrixContainer">
-      <span><i class="fas fa-layer-group me-2"></i> Support Tier Matrix</span>
-    </a>
-    <a class="element" href="#bcpEcosystemContainer">
-      <span><i class="fas fa-globe me-2"></i> BCP Ecosystem</span>
-    </a>
-    <a class="element" href="#kpiContainer">
-      <span><i class="fas fa-flag-checkered me-2"></i> Milestones & KPI Targets</span>
-    </a>
-  </div>
+<script>function strategyScrollTo(id) {
+    var el = document.getElementById(id);
+    if (el) el.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
 
-  <div class="menu-container-btn">
-    <div class="menu-toggle-btn">
-      <label class="menu-btn text-center" for="menu-toggle">
-          <i class="fa fa-close"></i>
-          <i class="fa fa-bars"></i>
-        </label>
-    </div>
-  </div>
-</div>
+</script>
 
 <!-- Intro Section -->
   <div id="topContainer" class="hello"> 
