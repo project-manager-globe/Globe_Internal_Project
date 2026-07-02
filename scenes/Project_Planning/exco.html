@@ -263,7 +263,33 @@
         #excoChatThread span, #excoChatThread div { text-align: left !important; }
     </style>
 </head>
-<body>
+<body class="app-has-sidebar">
+
+<aside class="app-sidebar" id="appSidebar">
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Menu"><i class="fas fa-bars"></i></button>
+    <div class="sidebar-brand-block">
+        <a href="../../index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+            <img src="./Pimages/ictglobe_white.png" alt="ICTGlobe">
+        </a>
+    </div>
+    <div class="sidebar-nav-body">
+        <a href="./projects_dashboard.html" class="sidebar-nav-item"><i class="fas fa-chart-pie"></i><span class="sidebar-nav-label">Projects</span></a>
+        <a href="./exco.html" class="sidebar-nav-item active"><i class="fas fa-users"></i><span class="sidebar-nav-label">EXCO</span></a>
+        <a href="./activityMeasure.html" class="sidebar-nav-item"><i class="fas fa-user-graduate"></i><span class="sidebar-nav-label">Onboarding</span></a>
+        <div class="sidebar-divider"></div>
+        <a href="./strategy.html" class="sidebar-nav-item"><i class="fas fa-bullseye"></i><span class="sidebar-nav-label">Strategy</span></a>
+        <a href="./resources.html" class="sidebar-nav-item"><i class="fas fa-folder-open"></i><span class="sidebar-nav-label">Resources</span></a>
+        <a href="./services.html" class="sidebar-nav-item"><i class="fas fa-tools"></i><span class="sidebar-nav-label">Services</span></a>
+    </div>
+    <div class="sidebar-footer-block">
+        <div class="sidebar-user-row"><i class="fas fa-user-circle"></i><span class="sidebar-nav-label" id="sidebarUsernameDisplay"></span></div>
+        <a href="#" class="sidebar-nav-item" onclick="sessionStorage.clear();window.location.href='../../index.html';return false;"><i class="fas fa-sign-out-alt"></i><span class="sidebar-nav-label">Logout</span></a>
+    </div>
+</aside>
+<script>
+function toggleSidebar(){var s=document.getElementById('appSidebar');var c=s.classList.toggle('collapsed');document.body.classList.toggle('sidebar-is-collapsed',c);try{localStorage.setItem('globeSidebarCollapsed',c?'1':'0');}catch(e){}}
+document.addEventListener('DOMContentLoaded',function(){var s=document.getElementById('appSidebar');if(s&&localStorage.getItem('globeSidebarCollapsed')==='1'){s.classList.add('collapsed');document.body.classList.add('sidebar-is-collapsed');}var u=sessionStorage.getItem('currentUser_ICT');var el=document.getElementById('sidebarUsernameDisplay');if(u&&el)el.textContent=u;});
+</script>
 
     <header class="navbar navbar-default wh_header" id="test">
         <div class="topcontainer w-100">

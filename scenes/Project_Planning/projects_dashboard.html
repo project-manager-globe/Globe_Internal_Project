@@ -285,7 +285,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
         display: flex !important;
         align-items: center !important;
         justify-content: space-between !important;
-        background-color: #0c101b !important;
+        background-color: #121358 !important;
         padding: 15px 30px !important;
         width: 100% !important;
         box-sizing: border-box !important;
@@ -504,13 +504,199 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
 }
+
+/* ── Collapsible Sidebar Navigation ──────────────────────────────────── */
+#mainHeaderNavigation { display: none !important; }
+
+.app-sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    width: 220px;
+    background: #121358;
+    z-index: 1060;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.22s ease;
+    overflow: hidden;
+    box-shadow: 2px 0 14px rgba(0,0,0,0.22);
+}
+.app-sidebar.collapsed { width: 76px; }
+
+.sidebar-toggle-btn {
+    background: none; border: none;
+    color: #64748b; padding: 14px 22px;
+    cursor: pointer; font-size: 1rem;
+    text-align: left; width: 100%;
+    transition: color 0.14s; flex-shrink: 0;
+}
+.sidebar-toggle-btn:hover { color: #e2e8f0; }
+
+.sidebar-brand-block {
+    display: flex; align-items: center; gap: 10px;
+    padding: 2px 16px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    flex-shrink: 0; overflow: hidden;
+}
+.sidebar-brand-block img {
+    height: 28px;
+    flex-shrink: 0;
+    transition: height 0.22s ease, opacity 0.18s;
+    object-fit: contain;
+    max-width: 100%;
+}
+.sidebar-brand-block a:hover img { opacity: 0.75; }
+.app-sidebar.collapsed .sidebar-brand-block img { height: 18px; max-width: 46px; }
+.app-sidebar.collapsed .sidebar-brand-block {
+    justify-content: center;
+    padding: 2px 0 14px;
+}
+.sidebar-brand-text {
+    color: #e2e8f0; font-weight: 700; font-size: 0.88rem;
+    white-space: nowrap; transition: opacity 0.18s;
+}
+.app-sidebar.collapsed .sidebar-brand-text { opacity: 0; pointer-events: none; }
+
+.sidebar-nav-body { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 8px 0; }
+
+.sidebar-nav-item {
+    display: flex; align-items: center; gap: 13px;
+    padding: 11px 22px;
+    color: #fff; text-decoration: none !important;
+    white-space: nowrap; cursor: pointer;
+    transition: background 0.14s, color 0.14s, transform 0.14s, font-size 0.14s;
+    font-size: 0.85rem; font-weight: 500;
+    border-left: 3px solid transparent;
+}
+.sidebar-nav-item:hover { background: rgba(255,255,255,0.12); color: #fff; transform: translateX(4px); font-size: 0.88rem; }
+.sidebar-nav-item.active { background: rgba(255,255,255,0.12); color: #fff; border-left-color: #3b82f6; }
+.sidebar-nav-item i { width: 18px; text-align: center; font-size: 0.92rem; flex-shrink: 0; }
+
+.sidebar-nav-label { transition: opacity 0.18s; overflow: hidden; }
+.app-sidebar.collapsed .sidebar-nav-label { opacity: 0; pointer-events: none; }
+
+.sidebar-badge {
+    margin-left: auto; background: #1d4ed8; color: #fff;
+    border-radius: 10px; font-size: 0.68rem; padding: 1px 7px;
+    font-weight: 700; transition: opacity 0.18s; flex-shrink: 0;
+}
+.app-sidebar.collapsed .sidebar-badge { opacity: 0; }
+
+.sidebar-divider { height: 1px; background: rgba(255,255,255,0.12); margin: 6px 0; }
+
+.sidebar-footer-block { border-top: 1px solid rgba(255,255,255,0.12); padding: 8px 0; flex-shrink: 0; }
+.sidebar-user-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 22px; color: #fff;
+    font-size: 0.78rem; white-space: nowrap; overflow: hidden;
+}
+.sidebar-user-row i { flex-shrink: 0; width: 20px; text-align: center; font-size: 1.1rem; color: #fff; }
+
+/* Body shift to accommodate sidebar */
+body.app-has-sidebar { margin-left: 220px; transition: margin-left 0.22s ease; }
+body.app-has-sidebar.sidebar-is-collapsed { margin-left: 76px; }
+/* ───────────────────────────────────────────────────────────────────── */
   </style>
 
 
 </head>
-<body>
+<body class="app-has-sidebar">
 
-   
+<aside class="app-sidebar" id="appSidebar">
+    <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle Menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-brand-block">
+        <a href="../../index.html" style="display:flex; align-items:center; gap:10px; text-decoration:none;">
+            <img src="./Pimages/ictglobe_white.png" alt="ICTGlobe">
+        </a>
+    </div>
+    <div class="sidebar-nav-body">
+        <a href="./projects_dashboard.html" class="sidebar-nav-item active">
+            <i class="fas fa-chart-pie"></i>
+            <span class="sidebar-nav-label">Projects</span>
+            <span class="sidebar-badge" id="sidebarProjectCount"></span>
+        </a>
+        <a href="./exco.html" class="sidebar-nav-item">
+            <i class="fas fa-users"></i>
+            <span class="sidebar-nav-label">EXCO</span>
+        </a>
+        <a href="./activityMeasure.html" class="sidebar-nav-item">
+            <i class="fas fa-user-graduate"></i>
+            <span class="sidebar-nav-label">Onboarding</span>
+        </a>
+        <div class="sidebar-divider"></div>
+        <a href="./strategy.html" class="sidebar-nav-item">
+            <i class="fas fa-bullseye"></i>
+            <span class="sidebar-nav-label">Strategy</span>
+        </a>
+        <a href="./resources.html" class="sidebar-nav-item">
+            <i class="fas fa-folder-open"></i>
+            <span class="sidebar-nav-label">Resources</span>
+        </a>
+        <a href="./services.html" class="sidebar-nav-item">
+            <i class="fas fa-tools"></i>
+            <span class="sidebar-nav-label">Services</span>
+        </a>
+    </div>
+    <!-- Workspace sub-nav — shown only when a project workspace is open -->
+    <div id="sidebarWorkspaceSection" style="display:none;">
+        <div class="sidebar-divider"></div>
+        <div style="padding:8px 22px 2px; font-size:0.68rem; font-weight:700; letter-spacing:0.9px; color:#475569; text-transform:uppercase; white-space:nowrap; overflow:hidden;">
+            <i class="fas fa-folder-open me-1" style="font-size:0.7rem;"></i>
+            <span class="sidebar-nav-label">Workspace</span>
+        </div>
+        <div id="sidebarWsProjectName" style="padding:2px 22px 6px; font-size:0.75rem; color:#3b82f6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600;"></div>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsPhaseProgressionCard'); return false;">
+            <i class="fas fa-layer-group"></i>
+            <span class="sidebar-nav-label">Phase Progress</span>
+        </a>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsKanbanSection'); return false;">
+            <i class="fas fa-columns"></i>
+            <span class="sidebar-nav-label">Tasks</span>
+            <span class="sidebar-badge" id="sidebarWsTaskCount" style="display:none;"></span>
+        </a>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsRiskSection'); return false;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span class="sidebar-nav-label">Risk Register</span>
+            <span class="sidebar-badge" id="sidebarWsRiskCount" style="background:#dc2626; display:none;"></span>
+        </a>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsTeamManagementBlock'); return false;">
+            <i class="fas fa-user-friends"></i>
+            <span class="sidebar-nav-label">Team</span>
+            <span class="sidebar-badge" id="sidebarWsTeamCount" style="background:#0369a1; display:none;"></span>
+        </a>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsGanttSection'); return false;">
+            <i class="fas fa-project-diagram"></i>
+            <span class="sidebar-nav-label">Gantt</span>
+        </a>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsResourcesSection'); return false;">
+            <i class="fas fa-paperclip"></i>
+            <span class="sidebar-nav-label">Resources</span>
+            <span class="sidebar-badge" id="sidebarWsResourceCount" style="background:#16a34a; display:none;"></span>
+        </a>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsTeamsChatSection'); return false;">
+            <i class="fas fa-comments"></i>
+            <span class="sidebar-nav-label">Teams Chat</span>
+        </a>
+        <a href="#" class="sidebar-nav-item sidebar-ws-item" onclick="scrollToWsSection('wsOperationalLogsSection'); return false;">
+            <i class="fas fa-history"></i>
+            <span class="sidebar-nav-label">Activity Log</span>
+        </a>
+    </div>
+
+    <div class="sidebar-footer-block">
+        <div class="sidebar-user-row">
+            <i class="fas fa-user-circle"></i>
+            <span class="sidebar-nav-label" id="sidebarUsernameDisplay"></span>
+        </div>
+        <a href="#" class="sidebar-nav-item" onclick="sessionStorage.clear(); window.location.href='../../index.html'; return false;">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="sidebar-nav-label">Logout</span>
+        </a>
+    </div>
+</aside>
+
     <header class="navbar navbar-default wh_header" id="mainHeaderNavigation">
       <div class="topcontainer">
         <div class="bg-primary">
@@ -540,7 +726,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
     <div id="mainDashboardView" class="dashboard-container fade-view" style="display: block !important; width: 100% !important;">
         <main>
             <div class="text-center mb-5 mt-3">
-                <h1 class="content__START font-weight-bold m-0" style="font-size: 2.6rem; letter-spacing: -0.5px; padding-top: 50px;">SLiM Project Suite</h1>
+                <h1 class="content__START font-weight-bold m-0" style="font-size: 2.6rem; letter-spacing: -0.5px; padding-top: 8px;">SLiM Project Suite</h1>
                 <p class="text-secondary mt-1 mb-0" style="font-size: 1.15rem; font-family: 'Roboto', sans-serif;">
                     <strong class="HOW">S</strong>trategy &middot; <strong class="HOW">L</strong>eadership &middot; <strong class="HOW">I</strong>mprove &middot; <strong class="HOW">M</strong>easure
                 </p>
@@ -954,7 +1140,7 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
         </div>
     </div>
 
-    <div class="row mb-4">
+    <div class="row mb-4" id="wsKanbanSection">
         <div class="col-12">
             <div class="card shadow-sm border-0 p-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1379,6 +1565,33 @@ function populateRoleDropdowns(selectedManager, selectedLead) {
     </div>
 </div>
 
+<div class="custom-modal-overlay" id="deleteProjectOverlay" style="display:none;">
+    <div class="custom-modal-window" style="max-width:460px;">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h5 class="fw-bold text-danger m-0"><i class="fas fa-exclamation-triangle me-2"></i>Delete Project</h5>
+            <button type="button" style="cursor:pointer; background:transparent; border:none; font-size:1.3rem; line-height:1; color:#64748b;" onclick="closeDeleteProjectModal();">&times;</button>
+        </div>
+        <div class="mb-3 p-3 rounded" style="background:#fff5f5; border:1px solid #fecaca;">
+            <p class="mb-1 fw-bold text-dark" style="font-size:0.88rem;">You are about to permanently delete:</p>
+            <p class="mb-0 fw-bold text-danger" id="deleteProjectNameDisplay" style="font-size:1rem;"></p>
+            <small class="text-muted" id="deleteProjectIdDisplay"></small>
+        </div>
+        <p class="mb-2" style="font-size:0.85rem; color:#64748b;"><i class="fas fa-info-circle text-warning me-1"></i>This will remove the project record and <strong>all associated tasks</strong> permanently.</p>
+        <p class="mb-4 fw-bold text-danger" style="font-size:0.9rem;"><i class="fas fa-ban me-1"></i>This action cannot be undone.</p>
+        <div class="mb-4">
+            <label class="form-label small fw-bold text-secondary mb-1">Type <span class="text-danger fw-bold">DELETE</span> to confirm</label>
+            <input type="text" id="deleteConfirmInput" class="form-control form-control-sm" placeholder="Type DELETE here" autocomplete="off"
+                oninput="document.getElementById('confirmDeleteBtn').disabled = (this.value !== 'DELETE');">
+        </div>
+        <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeDeleteProjectModal();">Cancel</button>
+            <button type="button" id="confirmDeleteBtn" class="btn btn-sm btn-danger px-4" onclick="confirmDeleteProject()" disabled>
+                <i class="fas fa-trash-alt me-1"></i>Confirm Delete
+            </button>
+        </div>
+    </div>
+</div>
+
   <div class="custom-modal-overlay" id="customFormOverlay">
     <div class="custom-modal-window">
         <form id="createProjectForm">
@@ -1647,6 +1860,99 @@ let projectDataset = [];
     let activeWorkspaceProjectToken = null; 
     const googleWebAppUrl = "https://script.google.com/macros/s/AKfycby-DpopUU-VyOXnRaAWV4NC43Dx_igOXUXSbgmCZTcrhEM3ELDKKhBHytJqwf_FqG9gOQ/exec";
 
+    // ── Sidebar workspace sub-nav ────────────────────────────────────────────
+    window.scrollToWsSection = function(sectionId) {
+        const el = document.getElementById(sectionId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.showSidebarWorkspace = function(projectName) {
+        const section = document.getElementById('sidebarWorkspaceSection');
+        if (!section) return;
+        const nameEl = document.getElementById('sidebarWsProjectName');
+        if (nameEl) nameEl.textContent = projectName || '';
+        section.style.display = 'block';
+        // Small delay so DOM counts are populated before we read them
+        setTimeout(window.refreshSidebarWsCounts, 600);
+    };
+
+    window.hideSidebarWorkspace = function() {
+        const section = document.getElementById('sidebarWorkspaceSection');
+        if (section) section.style.display = 'none';
+    };
+
+    window.refreshSidebarWsCounts = function() {
+        function syncBadge(badgeId, sourceId) {
+            const badge = document.getElementById(badgeId);
+            const source = document.getElementById(sourceId);
+            if (!badge || !source) return;
+            const val = source.textContent.trim();
+            const num = parseInt(val);
+            if (!isNaN(num) && num > 0) {
+                badge.textContent = num;
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        syncBadge('sidebarWsTaskCount',     'wsTotalTasksCount');
+        syncBadge('sidebarWsRiskCount',     'wsRiskTotal');
+        syncBadge('sidebarWsTeamCount',     'wsTeamCount');
+        syncBadge('sidebarWsResourceCount', 'wsResourceCount');
+    };
+    // ────────────────────────────────────────────────────────────────────────
+
+    // ── Sidebar toggle ───────────────────────────────────────────────────────
+    window.toggleSidebar = function() {
+        const sidebar = document.getElementById('appSidebar');
+        const collapsed = sidebar.classList.toggle('collapsed');
+        document.body.classList.toggle('sidebar-is-collapsed', collapsed);
+        try { localStorage.setItem('globeSidebarCollapsed', collapsed ? '1' : '0'); } catch(e) {}
+    };
+    // ────────────────────────────────────────────────────────────────────────
+
+    // ── DELETE PROJECT (Admin only) ──────────────────────────────────────────
+    window.openDeleteProjectModal = function(projectId, projectName) {
+        if (window.currentUserRole !== 'admin') return;
+        document.getElementById('deleteProjectNameDisplay').textContent = projectName;
+        document.getElementById('deleteProjectIdDisplay').textContent = 'ID: ' + projectId;
+        document.getElementById('deleteConfirmInput').value = '';
+        document.getElementById('confirmDeleteBtn').disabled = true;
+        window._pendingDeleteProjectId = projectId;
+        document.getElementById('deleteProjectOverlay').style.display = 'flex';
+        setTimeout(() => document.getElementById('deleteConfirmInput').focus(), 50);
+    };
+
+    window.closeDeleteProjectModal = function() {
+        document.getElementById('deleteProjectOverlay').style.display = 'none';
+        window._pendingDeleteProjectId = null;
+    };
+
+    window.confirmDeleteProject = function() {
+        const projectId = window._pendingDeleteProjectId;
+        if (!projectId || window.currentUserRole !== 'admin') return;
+        const btn = document.getElementById('confirmDeleteBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Deleting...';
+        fetch(googleWebAppUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: "deleteProject", projectId: projectId, requestedBy: window.currentUserName || "admin" })
+        })
+        .then(() => {
+            window.closeDeleteProjectModal();
+            alert('Project and all associated tasks have been deleted.');
+            fetchMasterSuiteDataset();
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash-alt me-1"></i>Confirm Delete';
+            alert('Error communicating with server. Please try again.');
+        });
+    };
+    // ────────────────────────────────────────────────────────────────────────
+
     function fetchTeamUsers() {
         fetch(googleWebAppUrl + '?action=readUsers')
             .then(r => r.json())
@@ -1671,6 +1977,18 @@ let projectDataset = [];
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+        // Sidebar — restore collapsed state and show username
+        (function() {
+            const sidebar = document.getElementById('appSidebar');
+            if (sidebar && localStorage.getItem('globeSidebarCollapsed') === '1') {
+                sidebar.classList.add('collapsed');
+                document.body.classList.add('sidebar-is-collapsed');
+            }
+            const uname = sessionStorage.getItem('currentUser_ICT');
+            const nameEl = document.getElementById('sidebarUsernameDisplay');
+            if (uname && nameEl) nameEl.textContent = uname;
+        })();
+
         fetchTeamUsers();
 
         // Overlay Modals management hooks
@@ -1714,14 +2032,15 @@ let projectDataset = [];
                 
                 // Toggle view scopes seamlessly
                 if (workspaceView) workspaceView.style.display = "none";
-                
+                if (typeof hideSidebarWorkspace === 'function') hideSidebarWorkspace();
+
                 // Show the main containers back
                 document.querySelectorAll('main, .row, .recent-orders').forEach(el => {
                     if (el.id !== 'singleWorkspaceView' && !el.closest('#singleWorkspaceView')) {
                         el.style.display = "";
                     }
                 });
-                
+
                 activeWorkspaceProjectId = null;
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });
@@ -1954,7 +2273,7 @@ if (createProjForm) {
         fetchMasterSuiteDataset();
     });
 
-    // Master API Feed Data Pull (Optimized for Stability & Clean Compilation)
+    // Master API Feed Data Pull (Optimized for Stability & Clean Compilation)ll
 async function fetchMasterSuiteDataset() {
     try {
         // 1. Safety check for the endpoint configuration
@@ -1995,6 +2314,8 @@ async function fetchMasterSuiteDataset() {
         // 4b. Secure filtered data to the global registry variable safely
         projectDataset = securedData;
         window.projectDataset = securedData;
+        const sidebarCount = document.getElementById('sidebarProjectCount');
+        if (sidebarCount) sidebarCount.textContent = securedData.length || '';
 
 
         // 5. Diagnostic Logging
@@ -2167,11 +2488,16 @@ async function fetchMasterSuiteDataset() {
                        <i class="fas fa-lock me-1"></i> Restricted
                    </button>`;
 
-            // ADMIN EDIT CONTROL
+            // ADMIN EDIT + DELETE CONTROLS
             const isSystemAdmin = window.currentUserRole === 'admin';
             const editProjectBtnHTML = isSystemAdmin
                 ? `<button class="btn btn-sm btn-outline-secondary px-2 ms-1 fw-bold" onclick="openEditProjectModal('${projectIdToken}')" title="Manage Project Settings" style="border-radius:6px; font-size:0.75rem;">
                        <i class="fas fa-cog"></i>
+                   </button>`
+                : ``;
+            const deleteProjectBtnHTML = isSystemAdmin
+                ? `<button class="btn btn-sm btn-outline-danger px-2 ms-1 fw-bold" onclick="openDeleteProjectModal('${projectIdToken}', '${(p.projectName || p.name || '').replace(/'/g, "\\'")}')" title="Delete Project Permanently" style="border-radius:6px; font-size:0.75rem;">
+                       <i class="fas fa-trash-alt"></i>
                    </button>`
                 : ``;
 
@@ -2203,6 +2529,7 @@ async function fetchMasterSuiteDataset() {
                     <div class="d-flex align-items-center">
                         ${workspaceBtnHTML}
                         ${editProjectBtnHTML}
+                        ${deleteProjectBtnHTML}
                     </div>
                 </td>
             `;
@@ -2372,7 +2699,9 @@ async function fetchMasterSuiteDataset() {
             });
         }
 
-        document.getElementById('wsProjectName').innerText = project.projectName || project.name || "Unnamed Project";
+        const wsDisplayName = project.projectName || project.name || "Unnamed Project";
+        document.getElementById('wsProjectName').innerText = wsDisplayName;
+        if (typeof showSidebarWorkspace === 'function') showSidebarWorkspace(wsDisplayName);
         document.getElementById('wsProjectToken').innerText = projectId;
         document.getElementById('wsSponsor').innerText = project.sponsor || '---';
         document.getElementById('wsTeamLead').innerText = project.teamLead || project.lead || '---';
