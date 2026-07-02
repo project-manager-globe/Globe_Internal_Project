@@ -24,11 +24,11 @@ body {
 	--color-bg: #F9FAFE;
 	--color-link: #111;
 	--color-link-hover: #111;
-	--color-page:url("https://transparenttextures.com/patterns/scribble-light.png");
+	--color-page:url("https://www.transparenttextures.com/patterns/3px-tile.png");
 	--color-info: #c0c0c2;
 	--color-btn:#6d79a1;
 	color: var(--color-text);
-	background-color: white;
+	background-color: rgb(156, 152, 152);
 	font-family: niveau-grotesk, sans-serif;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
